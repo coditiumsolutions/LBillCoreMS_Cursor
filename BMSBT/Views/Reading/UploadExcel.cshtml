@@ -1,0 +1,72 @@
+﻿
+@{
+    ViewData["Title"] = "Upload Excel";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<h3>Upload Excel File</h3>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">@TempData["Message"]</div>
+}
+<style>
+    .form-group input[type="file"] {
+        width: 250px; /* Adjust width as needed */
+        padding: 5px;
+        font-size: 14px;
+    }
+
+    button.btn-primary {
+        padding: 5px 15px;
+        font-size: 14px;
+    }
+
+</style>
+
+<form asp-controller="Reading" asp-action="UploadExcelFile" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <input type="file" name="file" class="form-control" required />
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+<!-- Displaying Excel Format -->
+<h4>Recomended Excel Format:</h4>
+<table class="table table-bordered excel-format">
+    <thead>
+        <!-- Excel Column Names -->
+        <tr class="excel-columns">
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+            <th>D</th>
+            <th>E</th>
+            <th>F</th>
+            <th>G</th>
+            <th>H</th>
+            <th>I</th>
+        </tr>
+        <!-- Column Headers -->
+        <tr>
+            <td>BT No</td>
+            <td>Billing Month</td>
+            <td>Billing Year</td>
+            <td>Current Reading 1</td>
+            <td>Previous Reading 1</td>
+            <td>Current Reading 2</td>
+            <td>Previous Reading 2</td>
+            <td>Current Reading 3</td>
+            <td>Previous Reading 3</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="9" class="text-center">[Your Data Will Be Here]</td>
+        </tr>
+    </tbody>
+</table>
+
+
+

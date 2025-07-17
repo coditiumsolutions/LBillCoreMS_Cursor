@@ -1,0 +1,59 @@
+﻿@{
+    ViewData["Title"] = "Maintenance Charges";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+
+<!-- Create New Button -->
+<a asp-action="CreateTariff" class="btn btn-primary mb-3">Create New</a>
+<!-- Search Bar -->
+<div class="search-panel mb-3">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:980px; display:inline-block; margin-right:10px;" />
+</div>
+
+<!-- Maintenance Tariffs Table -->
+<div class="table-responsive">
+    <table id="maintenanceTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Plot Type</th>
+                <th>Size</th>
+                <th>Charges</th>
+                <th>Tax</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.Uid">
+                    <td>@item.Project</td>
+                    <td>@item.PlotType</td>
+                    <td>@item.Size</td>
+                    <td>@item.Charges</td>
+                    <td>@item.Tax</td>
+                    <td>
+                        <!-- Edit Button -->
+                        <a asp-action="EditTariff" asp-route-id="@item.Uid" class="btn btn-sm btn-success">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#searchInput').on('keyup', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('#maintenanceTable tbody tr').each(function () {
+                    var row = $(this);
+                    var matches = row.text().toLowerCase().includes(searchText);
+                    row.toggle(matches);
+                });
+            });
+        });
+    </script>
+}

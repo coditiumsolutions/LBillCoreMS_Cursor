@@ -1,0 +1,116 @@
+﻿@model List<BMSBT.Models.Fine>
+
+@{
+    ViewData["Title"] = "Fine Records";
+    Layout = "~/Views/Shared/_LayoutFine.cshtml";
+}
+
+<h2>Fine Records</h2>
+
+<form method="get" class="mb-3">
+    <div class="form-row align-items-end">
+
+        <div class="col-md-2">
+            <label for="FineMonth">Month</label>
+            <select name="FineMonth" class="form-control">
+                <option value="">-- Month --</option>
+                @{
+                    var months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames;
+                    for (int i = 0; i < 12; i++)
+                    {
+                        var month = months[i];
+                        if (!string.IsNullOrEmpty(month))
+                        {
+                            <option value="@month" selected="@(Context.Request.Query["FineMonth"] == month ? "selected" : null)">
+                                @month
+                            </option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="FineYear">Year</label>
+            <select name="FineYear" class="form-control">
+                <option value="">-- Year --</option>
+                @{
+                    int startYear = 2020;
+                    int currentYear = DateTime.Now.Year;
+                    for (int i = startYear; i <= currentYear + 2; i++)
+                    {
+                        <option value="@i" selected="@(Context.Request.Query["FineYear"] == i.ToString() ? "selected" : null)">
+                            @i
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="BTNo">BT No</label>
+            <input type="text" name="BTNo" class="form-control" value="@Context.Request.Query["BTNo"]" placeholder="BT No" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="CustomerName">Customer Name</label>
+            <input type="text" name="CustomerName" class="form-control" value="@Context.Request.Query["CustomerName"]" placeholder="Customer Name" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary mt-4">Search</button>
+        </div>
+
+    </div>
+</form>
+
+
+
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>BT No</th>
+            <th>Customer Name</th>
+            <th>Project</th>
+            <th>Month/Year</th>
+            
+            <th>Service</th>
+            <th>Amount</th>
+            <th>Fine By</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var fine in Model)
+        {
+            <tr ondblclick="openDetails(@fine.FineID)" data-id="@fine.FineID">
+                <td>@fine.BTNo</td>
+                <td>@fine.CustomerName</td>
+                <td>@fine.ProjectName</td>
+                <td>@fine.FineMonth / @fine.FineYear</td>
+              
+                <td>@fine.FineService</td>
+                <td>@fine.FineToCharge</td>
+                <td>@fine.FineEnteredBy</td>
+                <td>@fine.FineEnterDate.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@fine.FineID" class="btn btn-info btn-sm">View</a>
+                    <a asp-action="Edit" asp-route-id="@fine.FineID" class="btn btn-warning btn-sm">Edit</a>
+                    @* <a asp-action="Delete" asp-route-id="@fine.FineID" class="btn btn-danger btn-sm">Delete</a> *@
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        function openDetails(fineId) {
+            if (!fineId) return;
+            window.location.href = '/Fine/Details/' + fineId;
+        }
+    </script>
+}
+

@@ -1,0 +1,257 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BMSBT.Models.CustomersDetail>
+
+@{
+    ViewData["Title"] = "Generate Maint";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<style>
+    /* Styles for dropdowns and table */
+    .dropdown-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+
+    .custom-dropdown {
+        width: 200px;
+        height: 40px;
+        padding: 5px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .table th {
+        cursor: pointer;
+    }
+
+    .sort-icon::after {
+        content: '↕';
+        margin-left: 5px;
+        opacity: 0.5;
+    }
+
+    .sort-asc::after {
+        content: '↑';
+        opacity: 1;
+    }
+
+    .sort-desc::after {
+        content: '↓';
+        opacity: 1;
+    }
+</style>
+
+<h2>Generate Maintenance Billsss</h2>
+
+<!-- Filter Form for Grid -->
+<form method="get" asp-controller="MaintenanceBill" asp-action="Index">
+    <div class="dropdown-container">
+        <select id="projectDropdown" name="project" class="form-control custom-dropdown">
+            <option value="">-- Projects --</option>
+            @foreach (var proj in (ViewBag.Projects as List<string>) ?? new List<string>())
+            {
+                <option value="@proj" selected="@(Context.Request.Query["project"] == proj ? "selected" : "")">@proj</option>
+            }
+        </select>
+
+        <select id="subprojectDropdown" name="subproject" class="form-control custom-dropdown">
+            <option value="">-- Sector --</option>
+            @foreach (var sub in (ViewBag.Sector as List<string>) ?? new List<string>())
+            {
+                <option value="@sub" selected="@(Context.Request.Query["Sector"] == sub ? "selected" : "")">@sub</option>
+            }
+        </select>
+
+        <select id="tariffDropdown" name="tariff" class="form-control custom-dropdown">
+            <option value="">-- Tariffs --</option>
+            @foreach (var tariff in (ViewBag.Tariffs as List<string>) ?? new List<string>())
+            {
+                <option value="@tariff" selected="@(Context.Request.Query["tariff"] == tariff ? "selected" : "")">@tariff</option>
+            }
+        </select>
+
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<!-- Additional Controls for Creating Records -->
+<div class="row" style="margin-bottom:20px;">
+    <div class="col-md-3">
+        <label for="monthFilter">Month</label>
+        <input type="text" id="monthFilter" class="form-control" placeholder="Enter month" />
+    </div>
+    <div class="col-md-3">
+        <label for="yearFilter">Year</label>
+        <input type="text" id="yearFilter" class="form-control" placeholder="Enter year" />
+    </div>
+    <div class="col-md-3">
+        <label for="projectFilter">Project</label>
+        <select id="projectFilter" class="form-control">
+            <option value="">-- Select Project --</option>
+            @foreach (var proj in (ViewBag.Projects as List<string>) ?? new List<string>())
+            {
+                <option value="@proj">@proj</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3" style="margin-top:25px;">
+        <button id="createRecordsButton" type="button" class="btn btn-success form-control">Create Records</button>
+    </div>
+</div>
+
+<!-- Maintenance Table with Selectable Rows -->
+<div class="table-responsive">
+    <table id="maintenanceTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th data-sort="CustomerName" class="sort-icon">Customer Name</th>
+                <th data-sort="Btno" class="sort-icon">BT No</th>
+                <th data-sort="BillStatusMaint" class="sort-icon">Bill Status Maint</th>
+                <th data-sort="Project" class="sort-icon">Project</th>
+                <th data-sort="SubProject" class="sort-icon">SubProject</th>
+                <th data-sort="TariffName" class="sort-icon">Tariff</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <!-- Ensure that your CustomersDetail model contains a unique numeric ID property (e.g., uid) -->
+                        <input type="checkbox" class="record-checkbox" value="@item.Uid" />
+                    </td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.Btno</td>
+                    <td>@item.BillStatusMaint</td>
+                    <td>@item.Project</td>
+                    <td>@item.SubProject</td>
+                    <td>@item.TariffName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination Links -->
+<div class="text-center">
+    @Html.PagedListPager(Model, page => Url.Action("Index", new
+        {
+            page,
+            project = Context.Request.Query["project"].ToString(),
+            subproject = Context.Request.Query["subproject"].ToString(),
+            tariff = Context.Request.Query["tariff"].ToString()
+        }))
+</div>
+
+<!-- Results Container for AJAX Responses -->
+<div id="resultsContainer" style="display:none; margin-top: 20px;">
+    <h4>Bill Generation Results</h4>
+    <table id="resultsTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- AJAX results will be appended here -->
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        // Sorting functionality for table columns
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById('maintenanceTable');
+            const headers = table.querySelectorAll('th[data-sort]');
+
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const index = Array.from(header.parentElement.children).indexOf(header);
+                    const rows = Array.from(table.querySelectorAll('tbody tr'));
+                    const isAsc = header.classList.contains('sort-asc');
+
+                    // Remove sort classes from all headers
+                    headers.forEach(h => {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                        h.classList.add('sort-icon');
+                    });
+
+                    // Toggle sort class for clicked header
+                    header.classList.remove('sort-icon');
+                    header.classList.add(isAsc ? 'sort-desc' : 'sort-asc');
+
+                    // Sort rows based on the cell content at the given index
+                    const sortedRows = rows.sort((a, b) => {
+                        const aText = a.children[index].textContent.trim();
+                        const bText = b.children[index].textContent.trim();
+                        return isAsc ?
+                            bText.localeCompare(aText, undefined, { numeric: true }) :
+                            aText.localeCompare(bText, undefined, { numeric: true });
+                    });
+
+                    // Update table body with sorted rows
+                    const tbody = table.querySelector('tbody');
+                    tbody.innerHTML = '';
+                    sortedRows.forEach(row => tbody.appendChild(row));
+                });
+            });
+        });
+
+        // Create Records Button AJAX functionality
+        $(document).ready(function () {
+            $("#createRecordsButton").click(function () {
+                var selectedIds = [];
+                $(".record-checkbox:checked").each(function () {
+                    selectedIds.push(parseInt($(this).val()));
+                });
+
+                if (selectedIds.length === 0) {
+                    alert("No records selected.");
+                    return;
+                }
+
+                var selectedMonth = $("#monthFilter").val();
+                var selectedYear = $("#yearFilter").val();
+                var selectedProject = $("#projectFilter").val();
+
+                $.ajax({
+                    url: '@Url.Action("GenerateMaintenanceBills", "MaintenanceBill")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        selectedIds: selectedIds,
+                        month: selectedMonth,
+                        year: selectedYear,
+                        project: selectedProject
+                    }),
+                    success: function (response) {
+                        if (response.success) {
+                            $("#resultsTable tbody").empty(); // Clear previous results
+                            response.results.forEach(function (result, index) {
+                                var row = "<tr><td>" + (index + 1) + "</td><td>" + result + "</td></tr>";
+                                $("#resultsTable tbody").append(row);
+                            });
+
+                            $(".record-checkbox").prop("checked", false);
+                            $("#resultsContainer").show();
+                        } else {
+                            alert("Warning: " + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert("An error occurred while creating records.");
+                    }
+                });
+            });
+        });
+    </script>
+}

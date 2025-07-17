@@ -1,0 +1,63 @@
+﻿@model BMSBT.Models.OperatorsSetup
+
+@{
+    ViewData["Title"] = "Create Operator Setup";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<h4>Create Operator Setup</h4>
+
+<form asp-action="Create" method="post">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="OperatorID" class="form-label"></label>
+            <input asp-for="OperatorID" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="OperatorName" class="form-label"></label>
+            <input asp-for="OperatorName" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="BillingMonth" class="form-label"></label>
+            <select asp-for="BillingMonth" class="form-control" asp-items="ViewBag.Months">
+                <option value="">-- Select Month --</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="BillingYear" class="form-label"></label>
+            <select asp-for="BillingYear" class="form-control" asp-items="ViewBag.Years">
+                <option value="">-- Select Year --</option>
+            </select>
+        </div>
+    </div>
+
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="BankName" class="form-label"></label>
+            <input asp-for="BankName" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="FPARate1" class="form-label"></label>
+            <input asp-for="FPARate1" class="form-control" />
+        </div>
+    </div>
+
+    <!-- Add more fields as needed -->
+
+    <div class="row mb-3">
+        <div class="col-md-12 text-end">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

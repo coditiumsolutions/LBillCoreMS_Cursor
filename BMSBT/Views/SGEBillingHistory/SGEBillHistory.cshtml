@@ -1,0 +1,60 @@
+﻿
+@{
+    ViewData["Title"] = "SGEBillHistory";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+}
+
+@model List<BMSBT.Models.ElectricityBill>
+
+<h4>Customer Billing History</h4>
+
+<form method="get" asp-action="SGEBillHistory">
+    <div class="mb-3 row">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Customer No or BT No</label>
+            <input type="text" name="searchCustomer" value="@ViewBag.SearchValue" class="form-control" placeholder="Enter Customer No or BT No" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+</form>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Invoice No</th>
+                <th>Customer No</th>
+                <th>BT No</th>
+                <th>Billing Month</th>
+                <th>Billing Year</th>
+                <th>Bill Amount</th>
+                <th>Payment Status</th>
+                <th>Last Updated</th>
+                <th>History</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model)
+            {
+                <tr>
+                    <td>@bill.InvoiceNo</td>
+                    <td>@bill.CustomerNo</td>
+                    <td>@bill.Btno</td>
+                    <td>@bill.BillingMonth</td>
+                    <td>@bill.BillingYear</td>
+                    <td>@bill.BillAmount</td>
+                    <td>@bill.PaymentStatus</td>
+                    <td>@(bill.LastUpdated?.ToString("dd-MMM-yyyy HH:mm"))</td>
+                    <td><pre class="small">@bill.History</pre></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (!string.IsNullOrEmpty(ViewBag.SearchValue))
+{
+    <div class="alert alert-warning">No records found for "@ViewBag.SearchValue".</div>
+}

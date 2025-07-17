@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Reading Dashboard";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<h2>📊 Reading Dashboard</h2>
+
+<div class="row text-center mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body">
+                <h4>Total Readings</h4>
+                <h2>@ViewBag.TotalReadings</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body">
+                <h4>Current Month Readings</h4>
+                <h2>@ViewBag.CurrentMonthReadings</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white shadow-sm">
+            <div class="card-body">
+                <h4>Pending Readings</h4>
+                <h2>@ViewBag.PendingReadings</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4>🔗 Quick Actions</h4>
+<div class="row">
+    <div class="col-md-3">
+        <a class="btn btn-outline-primary w-100 mb-2" asp-action="SearchCustomer">➕ Add Reading</a>
+    </div>
+    <div class="col-md-3">
+        <a class="btn btn-outline-secondary w-100 mb-2" asp-action="ShowReading">📄 View Readings</a>
+    </div>
+    <div class="col-md-3">
+        <a class="btn btn-outline-warning w-100 mb-2" asp-action="SearchCustomer">👥 View Customers by Sector</a>
+    </div>
+    <div class="col-md-3">
+        <a class="btn btn-outline-info w-100 mb-2" asp-action="Reports">📊 Reports</a>
+    </div>
+</div>

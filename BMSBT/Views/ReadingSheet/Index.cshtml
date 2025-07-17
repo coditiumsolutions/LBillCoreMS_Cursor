@@ -1,0 +1,176 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<style>
+    /* Style for the dropdowns */
+    select {
+        width: 200px; /* Adjust width as needed */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        color: #333;
+        background-color: #f9f9f9;
+        margin-right: 10px; /* Space between dropdowns */
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        /* Hover and focus effects for dropdowns */
+        select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+    /* Style for the button */
+    button.btn-primary {
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        /* Hover effect for the button */
+        button.btn-primary:hover {
+            background-color: #0056b3;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5);
+        }
+
+   
+
+   
+</style>
+@* <form method="get">
+    <label for="yearDropdown">Year:</label>
+   <select id="yearDropdown" name="selectedYear">
+        <option value="">All</option>
+        @foreach (var year in ViewBag.Years)
+        {
+            var selectedYear = year == ViewBag.SelectedYear ? "selected" : "";
+            <option value="@year" >
+                @year
+            </option>
+        }
+    </select>
+
+    <label for="monthDropdown">Month:</label>
+    <select id="monthDropdown" name="selectedMonth">
+        <option value="">All</option>
+        @foreach (var month in ViewBag.Months)
+        {
+            @month
+        }
+    </select>
+
+    <button type="submit">Apply Filters</button>
+</form> *@
+
+
+<div class="row-container">
+   @*  <form id="filterForm" method="get" class="filter-form">
+        <select id="yearDropdown" name="selectedYear" onchange="this.form.submit()">
+            <option value="">Select Year</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>            
+            <!-- Add more categories as needed -->
+        </select>
+
+        <select id="monthDropdown" name="selectedMonth" onchange="this.form.submit()">
+            <option value="">Select Month</option>
+            <option value="November">November</option>
+            <option value="December">December</option>            
+            <!-- Add more categories as needed -->
+        </select>
+
+    </form>   *@
+
+@*     <form id="filterForm" method="get" class="filter-form">
+    <select id="yearDropdown" name="selectedYear" onchange="this.form.submit()">
+        <option value="">Select Year</option>
+        <option value="2024" @(ViewBag.SelectedYear == "2024" ? "selected" : "")>2024</option>
+        <option value="2025" @(ViewBag.SelectedYear == "2025" ? "selected" : "")>2025</option>
+        <!-- Add more years dynamically if needed -->
+    </select>
+
+    <select id="monthDropdown" name="selectedMonth" onchange="this.form.submit()">
+        <option value="">Select Month</option>
+        <option value="November" @(ViewBag.SelectedMonth == "November" ? "selected" : "")>November</option>
+        <option value="December" @(ViewBag.SelectedMonth == "December" ? "selected" : "")>December</option>
+        <!-- Add more months dynamically if needed -->
+    </select>
+</form> *@
+<form id="filterForm" method="get" class="filter-form">
+
+        <select id="yearDropdown" name="selectedYear" >
+            <option value="">Select Year</option>
+            @foreach (var year in ViewBag.Years)
+            {
+                <option value="@year.Value">@year.Text</option>
+
+            }
+        </select>
+
+        <select id="monthDropdown" name="selectedMonth" >
+            <option value="">Select Month</option>
+            @foreach (var month in ViewBag.Months)
+            {
+                <option value="@month.Value">@month.Text</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-primary">Apply Changes</button>
+</form>
+
+
+
+</div>
+
+
+<div style="width: 600px; height: 400px;">
+    <canvas id="subProjectChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartLabels));
+        const data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartData));
+
+        const ctx = document.getElementById('subProjectChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Customers',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+

@@ -1,0 +1,318 @@
+﻿@model BMSBT.DTO.CustomerBillingViewModel
+
+@{
+    ViewData["Title"] = "Create Customer";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- jQuery is used for the AJAX call -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+   
+   
+</head>
+<body>
+    <div class="card shadow-lg">
+        <div class="card-header text-white" style="background-color:#101f63;">
+            <h3 class="mb-0" style="margin-left:10px">Customer Form</h3>
+        </div>
+        <div class="card-body">
+
+
+
+            <div class="container">
+                <form method="post">
+                    <div class="row">
+                        
+                        <div class="col-md-3">
+                            <label asp-for="CustomerNo" class="form-label">Customer No</label>
+                            <input asp-for="CustomerNo" class="form-control" required/>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Btno" class="form-label">BT No</label>
+                            <input asp-for="Btno" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="CustomerName" class="form-label">Customer Name</label>
+                            <input asp-for="CustomerName" class="form-control" required />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="Cnicno" class="form-label">CNIC No</label>
+                            <input asp-for="Cnicno" class="form-control" required />
+                        </div>
+
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label asp-for="City" class="form-label">City</label>
+                            <input asp-for="City" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Project" class="form-label">Project</label>
+                            <select asp-for="Project" class="form-control" required>
+                                <option value="">--select Project--</option>
+                                <option value="Mohlanwal">Mohlanwal</option>
+                                <option value="Orchards">Orchards</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="SubProject" class="form-label">Sub Project</label>
+                            <input asp-for="SubProject" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="TariffName" class="form-label">Tariff Name</label>
+                            <select asp-for="TariffName" class="form-control" required>
+                                <option value="">--Select Tariff Name--</option>
+                                <option value="A-2-a">A-2-a</option>
+                                <option value="A-1">A-1</option>
+                                <option value="E-1-i">E-1-i</option>
+                                <option value="E-1-ii">E-1-ii</option>
+                                <option value="Special Discount">Special Discount</option>
+
+                            </select>
+                        </div>
+
+                        
+                    </div>
+
+
+
+                    <div class="row mt-3">
+
+
+
+
+                        <div class="col-md-3">
+                            <label asp-for="Size" class="form-label">Size</label>
+                            <input asp-for="Size" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Sector" class="form-label">Sector</label>
+                            <select asp-for="Sector" class="form-control" required>
+                                <option value="">--Select Sector--</option>
+                                <option value="SERVICES (OFFICES)">SERVICES (OFFICES)</option>
+                                <option value="SERVICES (PARKS)">SERVICES (PARKS)</option>
+                                <option value="SERVICES (STREET LIGHTS)">SERVICES (STREET LIGHTS)</option>
+                                <option value="SERVICES (WATER TANK)">SERVICES (WATER TANK)</option>
+                                <option value="SERVICES (ACCOMMODATION)">SERVICES (ACCOMMODATION)</option>
+                                <option value="F">F</option>
+                                <option value="C">C</option>
+                                <option value="E">E</option>
+                                <option value="B">B</option>
+                                <option value="COM MOBILE TOWER">COM MOBILE TOWER</option>
+
+
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="col-md-3">
+                            <label asp-for="Block" class="form-label">Block</label>
+                            <input asp-for="Block" class="form-control" required />
+                        </div>
+
+
+                        <div class="col-md-3">
+                            <label asp-for="PloNo" class="form-label">Plot No</label>
+                            <input asp-for="PloNo" class="form-control" required />
+                        </div>
+
+
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label asp-for="MeterType" class="form-label">Meter Type</label>
+                            <input asp-for="MeterType" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Ntnnumber" class="form-label">NTN Number</label>
+                            <input asp-for="Ntnnumber" class="form-control" required />
+                        </div>
+
+
+                        <div class="col-md-3">
+                            <label asp-for="BankNo" class="form-label">Bank No</label>
+                            <input asp-for="BankNo" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="PlotType" class="form-label">Plot Type</label>
+                            <input asp-for="PlotType" class="form-control" required />
+                        </div>
+                    </div>
+
+                 
+
+                    <div class="row mt-3">
+
+                       
+                        <div class="col-md-3">
+                            <label asp-for="BtnoMaintenance" class="form-label">BT No Maintenance</label>
+                            <input asp-for="BtnoMaintenance" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Category" class="form-label">Category</label>
+
+                            <select asp-for="Category" class="form-control" required>
+                                <option value="">--Select Category--</option>
+                                <option value="Bahria Self Consumption">Bahria Self Consumption</option>
+                                <option value="Commercial">Commercial</option>
+                                <option value="No Pessession">No Pessession</option>
+                                <option value="Residential">Residential</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="LocationSeqNo" class="form-label">Location Seq No</label>
+                            <input asp-for="LocationSeqNo" class="form-control" required />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="FatherName" class="form-label">Father Name</label>
+                            <input asp-for="FatherName" class="form-control" required />
+                        </div>
+
+
+
+
+                    </div>
+
+                    <div class="row mt-3">
+
+
+                        
+                        <div class="col-md-3">
+                            <label asp-for="MobileNo" class="form-label">Mobile No</label>
+                            <input asp-for="MobileNo" class="form-control" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="TelephoneNo" class="form-label">Telephone No</label>
+                            <input asp-for="TelephoneNo" class="form-control" required />
+                        </div>
+
+
+                        <div class="col-md-3">
+                            <label asp-for="InstalledOn" class="form-label">Installed On</label>
+                            <input asp-for="InstalledOn" class="form-control" type="date" required />
+                        </div>
+
+
+
+                        <div class="col-md-3" style="margin-top:25px">
+
+                            <div class="col-md-12 text-end">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="reset" class="btn btn-secondary">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+
+                   
+
+                   
+
+                   
+                </form>
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+
+
+
+    <script>
+            $(document).ready(function () {
+            $(".bill-row").on("dblclick", function () {
+                var uid = $(this).data("uid");
+                console.log("Clicked UID:", uid);
+
+                if (!uid) {
+                    alert("No UID found!");
+                    return;
+                }
+
+                var requestData = { uids: uid.toString() }; // Convert to string
+
+                console.log("Request Data:", JSON.stringify(requestData));
+
+                fetch('/PrintEMultiBill', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.blob()) // Convert to a blob (PDF)
+                .then(blob => {
+                    if (blob.size === 0) {
+                        alert("Received empty PDF data.");
+                        return;
+                    }
+
+                    var url = URL.createObjectURL(blob);
+                    window.open(url, '_blank'); // Open PDF in new tab
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+
+
+
+
+
+
+
+    </script>
+
+
+
+    <script type="text/javascript">
+        function editbill(uid) {
+            // Construct the URL to the EditBill action, ensuring the UID is URL-encoded.
+            var url = '/EBillU/EditBill?uid=' + encodeURIComponent(uid);
+            // Redirect the user to the constructed URL.
+            window.location.href = url;
+        }
+    </script>
+
+</body>
+</html>

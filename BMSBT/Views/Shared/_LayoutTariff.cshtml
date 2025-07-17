@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+    @*   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> *@
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+
+    <title>@ViewData["Title"] - Billing System</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/css/SGStyleSheet.css" />
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+
+    <!-- jQuery -->
+    @*   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> *@
+
+    <!-- DataTables CSS -->
+    @* <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" /> *@
+
+    <!-- DataTables JS -->
+    @* <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> *@
+
+
+</head>
+<body>
+
+    <!-- First Top Bar -->
+    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
+            </a>
+            <span class="navbar-text text-white">Bahria Town: Billing System</span>
+        </div>
+    </nav>
+
+    <!-- Second Top Bar -->
+    <nav class="navbar navbar-expand-lg navbar2-top">
+        <div class="container">
+            <span class="navbar-text text-black">
+                <a asp-controller="Home" asp-action="Index">
+                    Back Main Menu - Welcome, @ViewBag.UserName
+                </a> -
+
+
+                <a asp-controller="Login" asp-action="Logout"
+                   class="btn btn-link text-black"
+                   onclick="return confirm('Are you sure you want to log out?');">Logout</a>
+            </span>
+        </div>
+
+
+    </nav>
+
+    <!-- Third Top Bar -->
+    <nav class="navbar navbar-expand-lg navbar3-top">
+        <div class="container">
+            <span class="navbar-text text-white"></span>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- Left Sidebar -->
+            <div class="col-md-3 col-lg-2 p-3 sidebar">
+                <h4>Tariffs</h4>
+
+
+                <ul class="nav flex-column">
+                    
+
+                     <li>
+                        <a asp-controller="Tariff" asp-action="create">
+                            <i class='fas fa-plus' style="color: yellowgreen; font-size: 14px;"></i>
+                            Create New
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a asp-controller="Tariff" asp-action="Index">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Tariff Details
+                        </a>
+                    </li>
+
+
+                   
+
+                   
+
+                
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="Index">
+                 
+                            <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
+                            Click To: E-Bills
+                        </a>
+                    </li>
+
+
+
+                </ul>
+            </div>
+
+            <!-- Right Content Area -->
+            <div class="col-md-9 col-lg-10 content-area p-3">
+                @RenderBody()
+            </div>
+
+        </div>
+    </div>
+
+    @*   <!-- Footer -->
+    <footer class="footer text-white text-center py-3 footerarea">
+        <p>&copy; 2024 My Application. All rights reserved.</p>
+    </footer> *@
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

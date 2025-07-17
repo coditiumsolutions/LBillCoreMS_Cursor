@@ -1,0 +1,31 @@
+﻿
+@{
+    ViewData["Title"] = "Upload Excel File";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<h2>Upload Reading Sheet</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<form asp-action="UploadReading" asp-controller="ReadingSheet" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">Select Excel File:</label>
+        <input type="file" name="file" id="file" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Upload</button>
+</form>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}

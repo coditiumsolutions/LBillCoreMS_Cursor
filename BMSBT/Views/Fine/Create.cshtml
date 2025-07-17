@@ -1,0 +1,345 @@
+﻿@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_LayoutFine.cshtml";
+}
+
+@model BMSBT.Models.Fine
+@{
+    ViewData["Title"] = "Create Fine";
+}
+
+<form asp-action="Create" method="post">
+    <div class="container">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <!-- Row 1 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Enter BT No (Search)</div>
+            <div class="col-md-4">
+                <input type="text" id="btnoInput" class="form-control" placeholder="Search BT No" />
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-info" onclick="fetchCustomer()">Search</button>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-2">Select System</div>
+            <div class="col-md-4">
+                <select id="projectSelect" class="form-control">
+                    <option value="">-- Select System --</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+            </div>            
+        </div>
+
+
+        
+
+
+        <!-- Row 2 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Project Name</div>
+            <div class="col-md-4"><input asp-for="ProjectName" id="ProjectName" class="form-control" /></div>
+
+            <div class="col-md-2">Customer Name</div>
+            <div class="col-md-4"><input asp-for="CustomerName" id="CustomerName" class="form-control" /></div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Block</div>
+            <div class="col-md-4"><input asp-for="Block" id="Block" class="form-control" /></div>
+
+            <div class="col-md-2">Sector</div>
+            <div class="col-md-4"><input asp-for="Sector" id="Sector" class="form-control" /></div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="row mb-3">
+            <div class="col-md-2"><label asp-for="FineMonth" class="form-label"></label></div>
+            <div class="col-md-4">
+                <select asp-for="FineMonth" class="form-control">
+                    <option>January</option>
+                    <option>February</option>
+                    <option>March</option>
+                    <option>April</option>
+                    <option>May</option>
+                    <option>June</option>
+                    <option>July</option>
+                    <option>August</option>
+                    <option>September</option>
+                    <option>October</option>
+                    <option>November</option>
+                    <option>December</option>
+                </select>
+            </div>
+            <div class="col-md-2">BTNo</div>
+            <div class="col-md-4"><input asp-for="BTNo" id="BTNo" class="form-control" /></div>
+        </div>
+
+        <!-- Row 5 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Fine Year</div>
+            <div class="col-md-4">
+                <select asp-for="FineYear" class="form-control">
+                    @{
+                        int startYear = 2020;
+                        int currentYear = DateTime.Now.Year;
+                        for (int i = startYear; i <= currentYear + 2; i++)
+                        {
+                            <option value="@i" selected="@(i == currentYear ? "selected" : null)">@i</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">Fine Date</div>
+            <div class="col-md-4">
+                <input asp-for="DateFine" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+        </div>
+
+        <!-- Row 6 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Department Fine</div>
+            <div class="col-md-4">
+                <select asp-for="Department" class="form-control">
+                    <option value="">-- Select Department --</option>
+                    <option>Accounts</option>
+                    <option>Operations</option>
+                    <option>Security</option>
+                    <option>Maintenance</option>
+                    <option>Electricity</option>
+                    <option>Others</option>
+                </select>
+                <span asp-validation-for="Department" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-2">Fine Type</div>
+            <div class="col-md-4">
+                <select asp-for="FineType" class="form-control">
+                    <option value="">-- Select Fine Type --</option>
+                    <option>Late Payment</option>
+                    <option>Violation</option>
+                    <option>Illegal Construction</option>
+                    <option>Non-Payment</option>
+                    <option>Overuse</option>
+                    <option>Other</option>
+                </select>
+                <span asp-validation-for="FineType" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Row 7 -->
+        <div class="row mb-3">
+            <div class="col-md-2"><label asp-for="FineCategory" class="form-label"></label></div>
+            <div class="col-md-4">
+                <select asp-for="FineCategory" class="form-control">
+                    <option>Electricity</option>
+                    <option>Maintenance</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">Fine Amount</div>
+            <div class="col-md-4">
+                <input asp-for="FineAmount" class="form-control" />
+                <span asp-validation-for="FineAmount" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Row 8 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Waived Amount</div>
+            <div class="col-md-4"><input asp-for="WaivedAmount" class="form-control" /></div>
+
+            <div class="col-md-2">Adjustment Amount</div>
+            <div class="col-md-4"><input asp-for="AdjustmentAmount" class="form-control" /></div>
+        </div>
+
+        <!-- Row 9 -->
+        <div class="row mb-3">
+            <div class="col-md-2">Fine to Charge</div>
+            <div class="col-md-4"><input asp-for="FineToCharge" class="form-control" /></div>
+
+            <div class="col-md-2">Fine Entered By</div>
+            <div class="col-md-4">
+                <input asp-for="FineEnteredBy" class="form-control" readonly />
+            </div>
+        </div>
+
+        <!-- Row 10 -->
+        <div class="row mb-3">
+            <div class="col-md-2"><label asp-for="FineEnterDate" class="form-label"></label></div>
+            <div class="col-md-4">
+                <input asp-for="FineEnterDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="col-md-2">Comments</div>
+            <div class="col-md-4">
+                <input asp-for="Comments" class="form-control" />
+                <span asp-validation-for="Comments" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Row 11 -->
+        <div class="row mb-3">
+            <div class="col-md-2"><label asp-for="History" class="form-label"></label></div>
+            <div class="col-md-10"><textarea asp-for="History" class="form-control"></textarea></div>
+        </div>
+
+        <!-- Submit -->
+        <div class="row mt-4">
+            <div class="col-md-12 text-center">
+                <button type="submit" class="btn btn-primary">Save Fine</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+
+
+       function fetchCustomer() {
+        const btNo = document.getElementById("btnoInput").value.trim();
+        const project = document.getElementById("projectSelect").value;
+
+        if (!btNo || !project) {
+            alert("Please enter BT No and select Project");
+            return;
+        }
+
+        fetch(`/Fine/GetCustomerByBTNo?btNo=${btNo}&project=${project}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert(data.message || "Customer not found.");
+                    clearCustomerFields();
+                    return;
+                }
+
+                const model = data.model;
+                document.getElementById("ProjectName").value = model.projectName || "";
+                document.getElementById("CustomerName").value = model.customerName || "";
+                document.getElementById("Block").value = model.block || "";
+                document.getElementById("Sector").value = model.sector || "";
+                document.getElementById("BTNo").value = model.btNo || "";
+                // continue populating as needed
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while fetching customer data.");
+                clearCustomerFields();
+            });
+    }
+
+
+
+    // function fetchCustomer() {
+    //     const btNo = document.getElementById("btnoInput").value.trim();
+    //     if (!btNo) {
+    //         alert("Please enter a BT No");
+    //         return;
+    //     }
+
+    //     console.log("Searching for BT No:", btNo);
+
+    //     fetch(`/Fine/GetCustomerByBTNo?btNo=${btNo}`)
+    //         .then(response => {
+    //             console.log("Response status:", response.status);
+
+    //             if (!response.ok) {
+    //                 throw new Error(`Server error: ${response.status}`);
+    //             }
+
+    //             Check if response is actually JSON
+    //             const contentType = response.headers.get("content-type");
+    //             if (!contentType || !contentType.includes("application/json")) {
+    //                 throw new Error("Response is not JSON");
+    //             }
+
+    //             return response.json();
+    //         })
+    //         .then(data => {
+    //             console.log("Received data:", data);
+
+    //             if (!data.success) {
+    //                 alert(data.message || "Customer not found for BT No: " + btNo);
+    //                 clearCustomerFields();
+    //                 return;
+    //             }
+
+    //             alert('Customer Found Successfully!');
+
+    //             Access the model object
+    //             const model = data.model;
+    //             console.log("Model data:", model);
+
+    //             Populate form fields with model data
+    //             document.getElementById("ProjectName").value = model.projectName || "";
+    //             document.getElementById("CustomerName").value = model.customerName || "";
+    //             document.getElementById("Block").value = model.block || "";
+    //             document.getElementById("Sector").value = model.sector || "";
+    //             document.getElementById("BTNo").value = model.btNo || "";
+
+    //             Set the month dropdown to the model's FineMonth
+    //             const monthSelect = document.querySelector('select[name="FineMonth"]');
+    //             if (monthSelect && model.FineMonth) {
+    //                 monthSelect.value = model.FineMonth;
+    //             }
+
+    //             Set the year dropdown to the model's FineYear
+    //             const yearSelect = document.querySelector('select[name="FineYear"]');
+    //             if (yearSelect && model.FineYear) {
+    //                 yearSelect.value = model.FineYear;
+    //             }
+
+    //             Set the date fields
+    //             if (model.DateFine) {
+    //                 const dateInput = document.querySelector('input[name="DateFine"]');
+    //                 if (dateInput) {
+    //                     dateInput.value = new Date(model.DateFine).toISOString().split('T')[0];
+    //                 }
+    //             }
+
+    //             if (model.FineEnterDate) {
+    //                 const enterDateInput = document.querySelector('input[name="FineEnterDate"]');
+    //                 if (enterDateInput) {
+    //                     enterDateInput.value = new Date(model.FineEnterDate).toISOString().split('T')[0];
+    //                 }
+    //             }
+
+    //             Set the FineEnteredBy field
+    //             if (model.FineEnteredBy) {
+    //                 const enteredByInput = document.querySelector('input[name="FineEnteredBy"]');
+    //                 if (enteredByInput) {
+    //                     enteredByInput.value = model.FineEnteredBy;
+    //                 }
+    //             }
+    //         })
+    //         .catch((error) => {
+    //             console.error("Error:", error);
+    //             alert("Error: " + error.message);
+    //             clearCustomerFields();
+    //         });
+    // }
+
+    function clearCustomerFields() {
+        document.getElementById("ProjectName").value = "";
+        document.getElementById("CustomerName").value = "";
+        document.getElementById("Block").value = "";
+        document.getElementById("Sector").value = "";
+        document.getElementById("BTNo").value = "";
+
+        // Also clear other fields that might have been populated
+        const monthSelect = document.querySelector('select[name="FineMonth"]');
+        if (monthSelect) monthSelect.value = "January";
+
+        const yearSelect = document.querySelector('select[name="FineYear"]');
+        if (yearSelect) yearSelect.value = new Date().getFullYear();
+
+        const enteredByInput = document.querySelector('input[name="FineEnteredBy"]');
+        if (enteredByInput) enteredByInput.value = "";
+    }
+</script>

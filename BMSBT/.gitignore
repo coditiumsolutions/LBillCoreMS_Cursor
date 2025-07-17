@@ -1,0 +1,25 @@
+# Build artifacts and large files
+Build/
+*.zip
+bin/
+obj/
+packages/
+
+# Visual Studio files
+*.suo
+*.user
+.vs/
+.vscode/
+
+# NuGet packages
+*.nupkg
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

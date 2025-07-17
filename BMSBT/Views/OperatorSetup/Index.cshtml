@@ -1,0 +1,46 @@
+﻿
+@model IEnumerable<BMSBT.Models.OperatorsSetup>
+
+@{
+    ViewData["Title"] = "Operator Setup List";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<h3>Operator Setup List</h3>
+
+<a asp-action="Create" class="btn btn-primary mb-3">Add New Operator</a>
+
+<table class="table table-bordered table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Operator ID</th>
+            <th>Operator Name</th>
+            <th>Billing Month</th>
+            <th>Billing Year</th>
+            <th>Bank Name</th>
+            <th>Issue Date</th>
+            <th>Due Date</th>
+            <th>FPA Rate</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.OperatorID</td>
+                <td>@item.OperatorName</td>
+                <td>@item.BillingMonth</td>
+                <td>@item.BillingYear</td>
+                <td>@item.BankName</td>
+                <td>@item.IssueDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.DueDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.FPARate1</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.Uid" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

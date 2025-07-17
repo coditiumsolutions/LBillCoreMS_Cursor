@@ -1,0 +1,58 @@
+﻿@model BMSBT.Models.MaintenanceTarrif
+
+@{
+    ViewData["Title"] = "Create Maintenance Tariff";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<div class="card shadow-lg">
+    <div class="card-header text-white" style="background-color:#101f63;">
+        <h3 class="mb-0">Maintenance Charges</h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="CreateTariff" method="post">
+            <div class="row">
+                <div class="col-md-3">
+                    <label asp-for="Project" class="form-label"></label>
+                    <input asp-for="Project" class="form-control" required />
+                    <span asp-validation-for="Project" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PlotType" class="form-label"></label>
+                    <input asp-for="PlotType" class="form-control" required />
+                    <span asp-validation-for="PlotType" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Size" class="form-label"></label>
+                    <input asp-for="Size" class="form-control" required />
+                    <span asp-validation-for="Size" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Charges" class="form-label"></label>
+                    <input asp-for="Charges" class="form-control" required />
+                    <span asp-validation-for="Charges" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+               
+                <div class="col-md-3 ">
+                    <label asp-for="Tax" class="form-label"></label>
+                    <input asp-for="Tax" class="form-control" required />
+                    <span asp-validation-for="Tax" class="text-danger"></span>
+                </div>
+                <div  style="margin-top:30px">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </div>
+
+          
+            
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

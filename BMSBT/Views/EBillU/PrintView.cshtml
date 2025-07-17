@@ -1,0 +1,25 @@
+﻿@model BMSBT.Models.ElectricityBill
+
+@{
+    ViewData["Title"] = "Print Electricity Bill";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml"; // or "_Layout.cshtml"
+}
+
+<h2 class="text-center mb-4">Electricity Bill Details</h2>
+
+<table class="table table-bordered table-striped">
+    <tr><th>Invoice No</th><td>@Model.InvoiceNo</td></tr>
+    <tr><th>BT No</th><td>@Model.Btno</td></tr>
+    <tr><th>Customer Name</th><td>@Model.CustomerName</td></tr>
+    <tr><th>Billing Month</th><td>@Model.BillingMonth</td></tr>
+    <tr><th>Billing Year</th><td>@Model.BillingYear</td></tr>
+    <tr><th>Bill Amount</th><td>@Model.BillAmount</td></tr>
+    <tr><th>Sector</th><td>@Model.Sector</td></tr>
+    <tr><th>History</th><td>@(Model.History?.Length > 200 ? Model.History.Substring(0, 200) + "..." : Model.History)</td></tr>
+</table>
+
+<div class="text-center mt-4">
+    <button class="btn btn-primary" onclick="window.print()">Print</button>
+    <a asp-action="SearchPrintBills" asp-controller="EBillU" class="btn btn-secondary">Back</a>
+</div>
+

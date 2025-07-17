@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Reading Details";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+<!-- Search & Filter Panel -->
+<div class="search-panel">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:300px; display:inline-block; margin-right:10px;" />
+
+    <!-- Billing Month Dropdown -->
+    <select id="Month" class="form-control" style="width:200px; display:inline-block; margin-right:10px;">
+        <option value="">Select Month</option>
+        <option value="January">January</option>
+        <option value="February">February</option>
+        <option value="March">March</option>
+        <option value="April">April</option>
+        <option value="May">May</option>
+        <option value="June">June</option>
+        <option value="July">July</option>
+        <option value="August">August</option>
+        <option value="September">September</option>
+        <option value="October">October</option>
+        <option value="November">November</option>
+        <option value="December">December</option>
+    </select>
+
+    <!-- Billing Year Dropdown -->
+    <select id="Year" class="form-control" style="width:150px; display:inline-block;">
+        <option value="">Select Year</option>
+        @for (int year = DateTime.Now.Year; year >= 2000; year--)
+        {
+            <option value="@year">@year</option>
+        }
+    </select>
+</div>
+
+<!-- Main Table -->
+<div class="table-responsive" style="margin-top:40px">
+    <table id="readingTable" class="table">
+        <thead>
+            <tr>
+                <th>BT No</th>
+                <th>Meter Type</th>
+                <th>Billing Month</th>
+                <th>Billing Year</th>
+              
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr class="reading-row" data-uid="@item.Uid" data-month="@item.Month" data-year="@item.Year">
+                    <td>@item.Btno</td>
+                    <td>@item.MeterType</td>
+                    <td>@item.Month</td>
+                    <td>@item.Year</td>
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Search and filter functionality
+            function filterRecords() {
+                var searchText = $('#searchInput').val().toLowerCase();
+                var selectedMonth = $('#Month').val();
+                var selectedYear = $('#Year').val();
+
+                $('.reading-row').each(function () {
+                    var row = $(this);
+                    var rowText = row.text().toLowerCase();
+                    var rowMonth = row.data('month');
+                    var rowYear = row.data('year');
+
+                    var matchesSearch = rowText.includes(searchText);
+                    var matchesMonth = (selectedMonth === "" || rowMonth === selectedMonth);
+                    var matchesYear = (selectedYear === "" || rowYear == selectedYear);
+
+                    row.toggle(matchesSearch && matchesMonth && matchesYear);
+                });
+            }
+
+            $('#searchInput, #Month, #Year').on('input change', filterRecords);
+
+            // Handle double-click event on table rows
+            $('.reading-row').on('dblclick', function () {
+                var uid = $(this).data('uid');
+                if (uid) {
+                    window.location.href = '@Url.Action("Edit", "ReadingSheet")' + '?id=' + uid;
+                }
+            });
+        });
+    </script>
+}

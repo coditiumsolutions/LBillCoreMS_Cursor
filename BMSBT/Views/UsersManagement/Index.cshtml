@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+
+
+<!-- Create New User Button -->
+<a asp-action="CreateUser" class="btn btn-primary mb-3">+ Create New User</a>
+<!-- Search Bar -->
+<div class="search-panel mb-3">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:990px; display:inline-block; margin-right:10px;" />
+</div>
+<!-- Users Table -->
+<div class="table-responsive">
+    <table id="userTable" class="table table-striped">
+        <thead>
+            <tr>
+              
+                <th>Employee ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr data-id="@user.Uid"> 
+                    <td>@user.EmployeeId</td>
+                    <td>@user.Username</td>
+                    <td>@user.Role</td>
+                    <td>
+                        <!-- Edit Button -->
+                        <a asp-action="EditUser" asp-route-id="@user.Uid" class="btn btn-sm btn-success">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#searchInput').on('keyup', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('#userTable tbody tr').each(function () {
+                    var row = $(this);
+                    var matches = row.text().toLowerCase().includes(searchText);
+                    row.toggle(matches);
+                });
+            });
+        });
+    </script>
+}

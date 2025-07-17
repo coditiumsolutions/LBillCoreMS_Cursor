@@ -1,0 +1,123 @@
+﻿@model BMSBT.Models.CustomersDetail
+
+@{
+    ViewData["Title"] = "Customer Details";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #ffffff; /* White background */
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.15);
+        font-family: Arial, sans-serif;
+    }
+
+        .custom-table th {
+            background-color: #00bfff; /* Lighter Blue */
+            color: #000000;
+            font-weight: bold;
+            padding: 10px;
+            text-align: left;
+            width: 20%; /* Smaller column width */
+        }
+
+        .custom-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            background-color: #f9f9f9; /* Soft Gray */
+            width: 30%; /* Adjusted size */
+        }
+
+        .custom-table tr:nth-child(odd) td {
+            background-color: #fffbe6; /* Light Yellow */
+        }
+
+        .custom-table tr:hover td {
+            background-color: #dff9fb; /* Light Cyan on Hover */
+        }
+
+    h3 {
+        color: #2c3e50;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .btn-warning {
+        background-color: #f39c12; /* Orange */
+        border: none;
+        padding: 8px 15px;
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background-color: #7f8c8d; /* Gray */
+        border: none;
+        padding: 8px 15px;
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+
+    .btn-warning:hover {
+        background-color: #e67e22; /* Darker Orange */
+    }
+
+    .btn-secondary:hover {
+        background-color: #636e72; /* Darker Gray */
+    }
+</style>
+
+<h3>Customer Details</h3>
+
+<table class="custom-table">
+    <tr>
+        <th>BT No.</th>
+        <td>@Model.Btno</td>
+        <th>Customer Name</th>
+        <td>@Model.CustomerName</td>
+    </tr>
+    <tr>
+        <th>Project</th>
+        <td>@Model.Project</td>
+        <th>Block</th>
+        <td>@Model.Block</td>
+    </tr>
+    <tr>
+        <th>Sector</th>
+        <td>@Model.Sector</td>
+        <th>Plot No</th>
+        <td>@Model.PloNo</td>
+    </tr>
+    <tr>
+        <th>Category</th>
+        <td>@Model.Category</td>
+        <th>Customer No</th>
+        <td>@Model.CustomerNo</td>
+    </tr>
+    <tr>
+        <th>SubProject</th>
+        <td>@Model.SubProject</td>
+        <th>Tariff Name</th>
+        <td>@Model.TariffName</td>
+    </tr>
+</table>
+
+<a href="@Url.Action("Edit", "Customers", new { id = Model.Uid })" class="btn btn-warning">Edit</a>
+<a href="@Url.Action("SearchAll", "Customers")" class="btn btn-secondary">Back to List</a>
+
+<a href="@Url.Action("Create", "Fine", new { btNo = Model.Btno })" class="btn btn-success">Add Fine</a>
+
+<script>
+    $('#studentsTable').DataTable({
+        paging: true,
+        searching: true,
+        lengthChange: true,
+        pageLength: 10
+    });
+</script>

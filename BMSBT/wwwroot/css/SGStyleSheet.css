@@ -1,0 +1,149 @@
+﻿body {
+}
+/* custom.css */
+
+.sidebar {
+    height: 100vh;
+    position: fixed;
+    background-color: #00203FFF;
+    color: #b8df10;
+
+}
+
+.content-area {
+    margin-left: 17%; /* Adjust based on sidebar width */
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #FFD700;
+}
+
+.navbar1-top1 {
+    background-color: #FFD700;
+}
+
+.navbar2-top2 {
+    background-color: #143d59;
+}
+
+.navbar1-top3 {
+    background-color: #FFFFFFFF;
+}
+
+.navbar2-top4 {
+    background-color: #000000FF;
+}
+
+.navbar1-top {
+    background-color: #F2AA4CFF;
+    background-color: #FFD700;
+    background-color: #00203FFF;
+    height: 60px; /* Adjust as needed */
+    line-height: 60px; /* Vertically centers text in the navbar */
+}
+
+.navbar2-top {
+    background-color: #00203FFF;
+    background-color: #FFF;
+    height: 40px; /* Adjust as needed */
+    line-height: 40px; /* Vertically centers text in the navbar */
+}
+
+.navbar3-top {
+    background-color: #DAA03DFF;
+    height: 10px; /* Adjust as needed */
+    line-height: 10px; /* Vertically centers text in the navbar */
+}
+
+.footerarea {
+    background-color: #00203FFF;
+    height: 40px; /* Adjust as needed */
+    line-height: 40px; /* Vertically centers text in the navbar */
+}
+
+.sidebar ul li a {
+    text-align: left;
+    color: rgba(255, 255, 255, 0.8);
+    color: white;
+    border-bottom: 2px solid #999;
+    border-bottom: 4px solid groove;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+}
+
+    .sidebar ul li a:hover {
+        color: white;
+        background: #3B559E;
+    }
+
+.sidebar.active {
+    min-width: 80px;
+    max-width: 80px;
+    text-align: center;
+}
+
+    .sidebar.active .sidebar-header h3,
+    .sidebar.active .CTAs {
+        display: none;
+    }
+
+    .sidebar.active .sidebar-header strong {
+        display: block;
+    }
+
+.sidebar ul li a {
+    text-align: left;
+    color: rgba(255, 255, 255, 0.8);
+    color: #b8df10;
+    color: white;
+    border-bottom: 2px solid #999;
+    border-bottom: 1px solid #D4AF37;
+}
+
+.sub-menu {
+    margin-left: 20px;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #495057;
+}
+
+.sg-sidebar {
+    background-color: #142141;
+    height: 100vh;
+}
+.logo-margin {
+    margin-left: 10px; /* Adjust as needed */
+}
+
+.custom-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+    .custom-table th, .custom-table td {
+        width: 20%; /* Adjust as needed */
+        height: 50px; /* Adjust as needed */
+        padding: 10px; /* Optional: Adjust padding */
+        text-align: left;
+    }
+
+.quick-links-block {
+    margin-top: 30px; /* Space above the block */
+    padding: 10px; /* Inner spacing */
+    background-color: #4c6278; /* Light background to differentiate */
+    border-radius: 4px; /* Optional rounded corners */
+}
+
+    .quick-links-block h4 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .quick-links-block a {
+        font-size: 12px; /* Smaller font size for quick links */
+    }

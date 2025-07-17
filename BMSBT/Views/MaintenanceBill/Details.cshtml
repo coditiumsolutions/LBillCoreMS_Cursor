@@ -1,0 +1,122 @@
+﻿@model MaintenanceBill
+
+<style>
+    .invoice-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .invoice-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #007bff;
+    }
+
+        .invoice-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #007bff;
+        }
+
+    .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .invoice-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+    .invoice-footer {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .btn-secondary {
+        background-color: #007bff;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+<div class="invoice-container">
+    <div class="invoice-header">
+        <h2>Maintenance Bill</h2>
+        <p><strong>Invoice No:</strong> @Model.InvoiceNo</p>
+    </div>
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Customer No</td>
+                <td>@Model.CustomerNo</td>
+            </tr>
+            <tr>
+                <td>Customer Name</td>
+                <td>@Model.CustomerName</td>
+            </tr>
+            <tr>
+                <td>Issue Date</td>
+                <td>@Model.IssueDate</td>
+            </tr>
+            <tr>
+                <td>Due Date</td>
+                <td>@Model.DueDate</td>
+            </tr>
+            <tr>
+                <td>Tax Amount</td>
+                <td>@Model.TaxAmount</td>
+            </tr>
+            <tr>
+                <td>Bill Amount (Due Date)</td>
+                <td>@Model.BillAmountInDueDate</td>
+            </tr>
+            <tr>
+                <td>Bill Amount (After Due Date)</td>
+                <td>@Model.BillAmountAfterDueDate</td>
+            </tr>
+            <tr>
+                <td>Month</td>
+                <td>@Model.BillingMonth</td>
+            </tr>
+            <tr>
+                <td>Year</td>
+                <td>@Model.BillingYear</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="invoice-footer">
+        <a href="@Url.Action("MaintenanceBills", "Maintenance")" class="btn-secondary">Back to List</a>
+    </div>
+</div>

@@ -1,0 +1,106 @@
+﻿@model BMSBT.Models.User
+@{
+    ViewData["Title"] = "Create User";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-lg">
+        <div class="card-header text-white" style="background-color:#101f63;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Create User</h3>
+                <a asp-action="Users" class="btn btn-light btn-sm">
+                    <i class="fas fa-list mr-1"></i>User List
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateUser" method="post">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="EmployeeId" class="form-label">Employee ID</label>
+                        <input asp-for="EmployeeId" class="form-control" placeholder="Enter Employee ID" />
+                        <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Username" class="form-label">Username</label>
+                        <input asp-for="Username" class="form-control" placeholder="Choose Username" />
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="PasswordHash" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input asp-for="PasswordHash" class="form-control" type="password" placeholder="Enter Password" />
+                            <button class="btn btn-outline-secondary" type="button" id="showPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Role" class="form-label">Roles</label>
+                        <select asp-for="Role" class="form-control select2-multiple" multiple="multiple" name="Role">
+
+                            <option value="Admin">Admin</option>
+                            <option value="User">User</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Analyst">Analyst</option>
+                            <option value="Viewer">Viewer</option>
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fas fa-save mr-1"></i>Save User
+                        </button>
+                        <a asp-action="Users" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </a>
+                    </div>
+                </div>
+                
+                <div asp-validation-summary="All" class="text-danger mt-3"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Select2 CSS and JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for multi-select
+            $('.select2-multiple').select2({
+                placeholder: 'Select roles',
+                allowClear: true,
+                closeOnSelect: false
+            });
+
+            // Password show/hide toggle
+            $('#showPasswordToggle').on('click', function() {
+                var passwordInput = $('input[name="PasswordHash"]');
+                var type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+                passwordInput.attr('type', type);
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
+        });
+    </script>
+    
+    <!-- Client-side validation -->
+    <partial name="_ValidationScriptsPartial" />
+}

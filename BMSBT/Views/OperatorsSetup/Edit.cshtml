@@ -1,0 +1,135 @@
+﻿@model BMSBT.Models.OperatorsSetup
+@{
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<div class="card shadow-lg">
+    <div class="card-header text-white" style="background-color:#101f63;">
+        <h3 class="mb-0" style="margin-left:10px">Edit Operator Setup</h3>
+    </div>
+    <div class="card-body">
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label asp-for="OperatorID" class="control-label"></label>
+                    <input asp-for="OperatorID" class="form-control" readonly />
+                    <span asp-validation-for="OperatorID" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="OperatorName" class="control-label"></label>
+                    <input asp-for="OperatorName" class="form-control" />
+                    <span asp-validation-for="OperatorName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="BillingMonth" class="control-label"></label>
+                    <select asp-for="BillingMonth" class="form-control">
+                        <option value="">Select Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                    <span asp-validation-for="BillingMonth" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="BillingYear" class="control-label"></label>
+                    <select asp-for="BillingYear" class="form-control">
+                        <option value="">Select Year</option>
+                        @for (int year = 2020; year <= 2040; year++)
+                        {
+                            <option value="@year">@year</option>
+                        }
+                    </select>
+                    <span asp-validation-for="BillingYear" class="text-danger"></span>
+                </div>
+
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label asp-for="BankName" class="control-label"></label>
+                    <input asp-for="BankName" class="form-control" />
+                    <span asp-validation-for="BankName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ReadingDate" class="control-label"></label>
+                    <input asp-for="ReadingDate" type="date" class="form-control" />
+                    <span asp-validation-for="ReadingDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="IssueDate" class="control-label"></label>
+                    <input asp-for="IssueDate" type="date" class="form-control" />
+                    <span asp-validation-for="IssueDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DueDate" class="control-label"></label>
+                    <input asp-for="DueDate" type="date" class="form-control" />
+                    <span asp-validation-for="DueDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label asp-for="PaidDate" class="control-label"></label>
+                    <input asp-for="PaidDate" type="date" class="form-control" />
+                    <span asp-validation-for="PaidDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ValidDate" class="control-label"></label>
+                    <input asp-for="ValidDate" type="date" class="form-control" />
+                    <span asp-validation-for="ValidDate" class="text-danger"></span>
+                </div>
+                        <div class="col-md-3">
+                            <label asp-for="FPAMonth1" class="form-label">FPA Month</label>
+                            <select asp-for="FPAMonth1" class="form-control">
+                                <option value="">Select Month</option>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="FPAYEAR1" class="form-label">FPA Year</label>
+                            <select asp-for="FPAYEAR1" class="form-control">
+                                <option value="">Select Year</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="FPARate1" class="form-label"></label>
+                            <input asp-for="FPARate1" class="form-control" />
+                        </div>
+            </div>
+
+            <div class="form-group mt-4">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="AllOperators" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>

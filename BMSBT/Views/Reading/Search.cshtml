@@ -1,0 +1,132 @@
+﻿@model IEnumerable<BMSBT.Models.ReadingSheet>
+@{
+    ViewData["Title"] = "SearchReadingSheet";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+    var hasSearched = Context.Request.Query.ContainsKey("search") && !string.IsNullOrEmpty(Context.Request.Query["search"]);
+}
+<style>
+    /* Center align search box */
+    .search-container {
+        max-width: 600px;
+        margin: 20px auto;
+        text-align: center;
+    }
+
+    /* Flexbox for alignment */
+    .search-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px; /* Space between input and button */
+    }
+
+    /* Search input styling */
+    .search-input {
+        width: 50%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    /* Button styling */
+    .search-button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+
+        .search-button:hover {
+            background-color: #0056b3;
+        }
+
+    /* Style the table */
+    .table {
+        border-collapse: collapse;
+        width: 100%;
+        background-color: #f8f9fa;
+    }
+
+        .table th {
+            background-color: #142141;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .table td {
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Add hover effect */
+        .table tbody tr:hover {
+            background-color: #e0e0e0;
+            transition: 0.3s;
+        }
+
+    /* No records message */
+    .message {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: red;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="search-container">
+    @* <h3>Search by BT No. or Customer No.</h3> *@
+    <form method="get" action="@Url.Action("Search")" class="search-box">
+        <input type="text" name="search" class="form-control search-input" placeholder="Enter BT No or Customer No" />
+        <button type="submit" class="search-button">Search</button>
+    </form>
+</div>
+
+@if (!hasSearched)
+{
+    <p class="message">Please enter BT No. or Customer Name</p>
+}
+else if (!Model.Any())
+{
+    <p class="message">No records found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>BT No.</th>
+                <th>Month</th>
+                <th>Year</th>
+                <th>Previous Reading</th>
+                <th>Current Reading</th>  
+                <th>Creation Detail</th>
+               
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr ondblclick="window.location.href='@Url.Action("ViewReading", "Reading", new { id = item.Uid })'" style="cursor: pointer;">
+                    <td>@item.Btno</td>
+                    <td>@item.Month</td>
+                    <td>@item.Year</td>
+                    <td>@item.Previous1</td>
+                    <td>@item.Present1</td>
+                    <td>@item.CreatedBy, @item.CreatedOn</td>
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<script>
+    function openRecord(id) {
+        window.location.href = '/ReadingSheet/Details/' + id;
+    }
+</script>

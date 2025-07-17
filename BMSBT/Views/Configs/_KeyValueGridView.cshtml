@@ -1,0 +1,26 @@
+﻿@model IEnumerable<BMSBT.Models.Configuration>
+
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+<tbody>
+    @foreach (var item in Model)
+    {
+        <tr data-id="@item.Uid" class="clickable-row">
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Uid">Edit</a> |
+                <a asp-action="Detail" asp-route-id="@item.Uid">Details</a>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ConfigId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ConfigKey)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ConfigValue)
+            </td>
+           
+        </tr>
+    }
+</tbody>

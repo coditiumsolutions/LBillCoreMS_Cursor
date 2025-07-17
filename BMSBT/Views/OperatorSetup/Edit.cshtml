@@ -1,0 +1,79 @@
+﻿@model BMSBT.Models.OperatorsSetup
+
+@{
+    ViewData["Title"] = "Edit Operator";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<h3>Edit Operator</h3>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Uid" />
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="OperatorID" class="form-label"></label>
+            <input asp-for="OperatorID" class="form-control" readonly />
+            <span asp-validation-for="OperatorID" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="OperatorName" class="form-label"></label>
+            <input asp-for="OperatorName" class="form-control" />
+            <span asp-validation-for="OperatorName" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="BillingMonth" class="form-label">Billing Month</label>
+            <select asp-for="BillingMonth" class="form-select" asp-items="ViewBag.MonthList"></select>
+            <span asp-validation-for="BillingMonth" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="BillingYear" class="form-label">Billing Year</label>
+            <select asp-for="BillingYear" class="form-select" asp-items="ViewBag.YearList"></select>
+            <span asp-validation-for="BillingYear" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="BankName" class="form-label"></label>
+            <input asp-for="BankName" class="form-control" />
+            <span asp-validation-for="BankName" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="IssueDate" class="form-label"></label>
+            <input asp-for="IssueDate" class="form-control" type="date" />
+            <span asp-validation-for="IssueDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="DueDate" class="form-label"></label>
+            <input asp-for="DueDate" class="form-control" type="date" />
+            <span asp-validation-for="DueDate" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="FPARate1" class="form-label">FPA Rate 1</label>
+            <input asp-for="FPARate1" class="form-control" />
+            <span asp-validation-for="FPARate1" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-success">Save</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

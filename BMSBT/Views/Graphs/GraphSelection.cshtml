@@ -1,0 +1,115 @@
+﻿
+@{
+    ViewData["Title"] = "GraphSelection";
+    Layout = "~/Views/Shared/_LayoutReports.cshtml";
+}
+
+
+<style>
+    select {
+        width: 200px; /* Adjust width as needed */
+        padding: 8px; /* Increase padding for better appearance */
+        font-size: 16px; /* Make text more readable */
+        border-radius: 5px; /* Rounded corners */
+        border: 1px solid #ccc; /* Light border */
+        background-color: #fff; /* White background */
+    }
+</style>
+<!-- Canvas for the chart -->
+@* <canvas id="myChart" width="400" height="200"></canvas> *@
+
+@* <div style="width: 600px; height: 400px;">
+    <canvas id="projectChart"></canvas>
+</div> *@
+@* 
+<p>Total Customers: <span id="totalCustomers"></span></p> *@
+<p>Select Graph(s)</p>
+<select id="chartTypePie">
+    <option value="pie">Pie</option>
+    <option value="doughnut">Doughnut</option>
+    <option value="radar">Radar</option>
+    <option value="polarArea">PolarArea</option>
+</select>
+
+<select id="chartTypeBar">
+    <option value="bar">Bar</option>
+    <option value="line">Line</option>    
+    
+</select>
+
+<div style="display: flex; gap: 20px;">
+    <!-- Pie Chart -->
+    <div style="width: 400px; height: 400px;">
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- Bar Chart -->
+    <div style="width: 600px; height: 400px;">
+        <canvas id="barChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get both canvases
+        const pieCanvas = document.getElementById('pieChart');
+        const barCanvas = document.getElementById('barChart');
+
+        if (!pieCanvas || !barCanvas) {
+            console.error("Canvas elements not found!");
+            return;
+        }
+
+        const pieCtx = pieCanvas.getContext('2d');
+        const barCtx = barCanvas.getContext('2d');
+
+        // Data from server
+        const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels));
+        const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData));
+
+        // Default chart types
+        let pieChartType = 'pie';
+        let barChartType = 'bar';
+
+        function createChart(ctx, type) {
+            return new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Customers per Project',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(245, 183, 39, 0.8)',
+                            'rgba(39, 54, 245, 0.8)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Initialize charts
+        let pieChart = createChart(pieCtx, pieChartType);
+        let barChart = createChart(barCtx, barChartType);
+
+        // Change pie chart type
+        document.getElementById("chartTypePie").addEventListener("change", function () {
+            pieChartType = this.value;
+            pieChart.destroy();
+            pieChart = createChart(pieCtx, pieChartType);
+        });
+
+        // Change bar chart type
+        document.getElementById("chartTypeBar").addEventListener("change", function () {
+            barChartType = this.value;
+            barChart.destroy();
+            barChart = createChart(barCtx, barChartType);
+        });
+    });
+</script>

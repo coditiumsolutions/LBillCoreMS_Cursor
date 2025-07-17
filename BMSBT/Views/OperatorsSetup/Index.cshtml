@@ -1,0 +1,36 @@
+﻿@model IEnumerable<BMSBT.Models.OperatorsSetup>
+
+@{
+    ViewData["Title"] = "Operators List";
+}
+
+<h2>Operators Setup</h2>
+<a asp-action="Create" class="btn btn-primary mb-3">Add New Operator</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>OperatorID</th>
+            <th>OperatorName</th>
+            <th>BillingMonth</th>
+            <th>BillingYear</th>
+            <th>BankName</th>
+            <th>CreatedBy</th>
+            <th>CreatedOn</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.OperatorID</td>
+                <td>@item.OperatorName</td>
+                <td>@item.BillingMonth</td>
+                <td>@item.BillingYear</td>
+                <td>@item.BankName</td>
+                <td>@item.CreatedBy</td>
+                <td>@item.CreatedOn?.ToString("dd-MMM-yyyy")</td>
+            </tr>
+        }
+    </tbody>
+</table>

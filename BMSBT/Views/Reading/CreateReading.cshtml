@@ -1,0 +1,97 @@
+﻿@model BMSBT.Models.ReadingSheet
+@{
+    ViewData["Title"] = "Add New Reading";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<h4>Add Reading</h4>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            width: 40%; /* Increased from 30% to 40% */
+            font-weight: bold;
+        }
+
+        .form-group .form-control {
+            width: 60%; /* Adjusted to match label width */
+        }
+
+    .btn-container {
+        text-align: center;
+        margin-top: 30px; /* Increased spacing */
+    }
+
+    .btn {
+        padding: 10px 30px;
+        margin: 0 10px; /* space between buttons */
+    }
+</style>
+
+<div class="form-container">
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+    <form asp-action="CreateReading" method="post">
+        <div class="form-group">
+            <label>BT No:</label>
+            <input asp-for="Btno" class="form-control" readonly required />
+        </div>
+
+        <div class="form-group">
+            <label>Billing Month:</label>
+            <select asp-for="Month" class="form-control" required>
+                <option value="">-- Select Month --</option>
+                @foreach (var month in ViewBag.BillingMonths)
+                {
+                    <option value="@month">@month</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Billing Year:</label>
+            <select asp-for="Year" class="form-control" required>
+                <option value="">-- Select Year --</option>
+                @foreach (var year in ViewBag.BillingYears)
+                {
+                    <option value="@year">@year</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Current Reading:</label>
+            <input asp-for="Present1" type="number" class="form-control" required />
+        </div>
+
+        <div class="form-group">
+            <label>Previous Reading:</label>
+            <input asp-for="Previous1" type="number" class="form-control" required />
+        </div>
+
+        <div class="btn-container">
+            <button type="submit" class="btn btn-success">Save</button>
+            <a asp-action="ShowReading" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

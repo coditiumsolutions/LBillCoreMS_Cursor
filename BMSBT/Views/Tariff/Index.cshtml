@@ -1,0 +1,74 @@
+﻿@{
+    ViewData["Title"] = "Tarrif Management";
+    Layout = "~/Views/Shared/_LayoutTariff.cshtml";
+}
+
+
+<!-- Create New Tarrif Button -->
+<a asp-action="Create" class="btn btn-primary mb-3">Create New Tarrif</a>
+
+
+
+
+
+<!-- Search Bar -->
+<div class="search-panel mb-3">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:980px; display:inline-block; margin-right:10px;" />
+</div>
+
+<!-- Tarrif Table -->
+<div class="table-responsive">
+    <table id="tarrifTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tarrif ID</th>
+                <th>Tarrif Name</th>
+                <th>Tarrif Type</th>
+                <th>Meter Type</th>
+                <th>Slab</th>
+                <th>Status</th>
+                <th>Range</th>
+                <th>Rate 1</th>
+                <th>Rate 2</th>
+                <th>Min Charges</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tarrif in Model)
+            {
+                <tr data-id="@tarrif.Uid">
+                    <td>@tarrif.Uid</td>
+                    <td>@tarrif.TarrifName</td>
+                    <td>@tarrif.TarrifType</td>
+                    <td>@tarrif.MeterType</td>
+                    <td>@tarrif.Slab</td>
+                    <td>@tarrif.Status</td>
+                    <td>@tarrif.Range</td>
+                    <td>@tarrif.Rate1</td>
+                    <td>@tarrif.Rate2</td>
+                    <td>@tarrif.MinCharges</td>
+                    <td>
+                        <!-- Edit Button -->
+                        <a asp-action="Edit" asp-route-id="@tarrif.Uid" class="btn btn-sm btn-success">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#searchInput').on('keyup', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('#tarrifTable tbody tr').each(function () {
+                    var row = $(this);
+                    var matches = row.text().toLowerCase().includes(searchText);
+                    row.toggle(matches);
+                });
+            });
+        });
+    </script>
+}

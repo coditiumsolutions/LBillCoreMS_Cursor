@@ -1,0 +1,123 @@
+﻿@* @model IEnumerable<BMSBT.Models.Tarrif>
+
+@{
+    ViewData["Title"] = "AllTarrifs";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<head>
+    <style>
+        .table-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .table-cell {
+            height: 20px; /* Adjust to desired height */
+            width: 50px; /* Adjust to desired width */
+            text-align: center; /* Optional: center text in the cells */
+            vertical-align: middle; /* Optional: vertically center text */
+        }
+
+        /* If you want different dimensions for headers */
+        .table-header-cell {
+            height: 60px; /* Header cell height */
+            width: 50px; /* Header cell width */
+        }
+    </style>
+</head>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<div class="table-container">
+    <table id="studentsTable" class="table table-striped table-bordered dt-responsive nowrap" width="100%" cellspacing="0">
+    <thead>
+        <tr>
+            
+            <th>
+                @Html.DisplayNameFor(model => model.)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Frequency)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TariffType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RateType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StartRange)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EndRange)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Rate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Phrate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Ophrate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Uid">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.Uid">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Uid">Delete</a>
+                    </td>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.TariffId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TariffName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Frequency)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TariffType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RateType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StartRange)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EndRange)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Rate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Phrate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Ophrate)
+            </td>
+            
+        </tr>
+}
+    </tbody>
+</table>
+<script>
+
+    $('#studentsTable').DataTable({
+        paging: true,
+        searching: true,
+        lengthChange: true,
+        pageLength: 10
+    });
+
+</script>
+</div> *@

@@ -1,0 +1,74 @@
+﻿@model BMSBT.Models.CustomersDetail
+
+@{
+    ViewData["Title"] = "Edit Customer";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+
+<h3 class="text-center text-primary mb-4">Edit Customer</h3>
+
+<div class="container bg-light p-4 rounded shadow-sm">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Uid" />
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">BT No.</label>
+                <input type="text" class="form-control" asp-for="Btno" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Customer Name</label>
+                <input type="text" class="form-control" asp-for="CustomerName" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Project</label>
+                <input type="text" class="form-control" asp-for="Project" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Block</label>
+                <input type="text" class="form-control" asp-for="Block" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Sector</label>
+                <input type="text" class="form-control" asp-for="Sector" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Plot No</label>
+                <input type="text" class="form-control" asp-for="PloNo" />
+            </div>
+
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Category</label>
+                <input type="text" class="form-control" asp-for="Category" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">CustomerNo</label>
+                <input type="text" class="form-control" asp-for="CustomerNo" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">SubProject</label>
+                <input type="text" class="form-control" asp-for="SubProject" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">TariffName</label>
+                <input type="text" class="form-control" asp-for="TariffName" />
+            </div>
+
+
+           
+
+        </div>
+
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+            <a href="@Url.Action("SearchAll", "Customers")" class="btn btn-secondary px-4">Cancel</a>
+        </div>
+    </form>
+</div>
+

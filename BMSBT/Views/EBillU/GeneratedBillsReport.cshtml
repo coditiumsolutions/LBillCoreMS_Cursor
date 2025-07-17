@@ -1,0 +1,161 @@
+﻿@model BMSBT.Models.ModedGenertedBillReport
+@{
+    ViewData["Title"] = "Generated Bills Report";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+}
+
+<h2>Generated Bills Report</h2>
+<style>
+    .bill-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+        .bill-table th, .bill-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .bill-table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+    .created-row {
+        background-color: #d4edda; /* Light green for created bills */
+        color: #155724;
+    }
+
+    .pending-row {
+        background-color: #f8d7da; /* Light red for pending bills */
+        color: #721c24;
+    }
+
+    .form-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+        .form-container select {
+            width: 200px;
+            height: 40px;
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        .form-container button {
+            height: 42px;
+            padding: 5px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+            .form-container button:hover {
+                background-color: #0056b3;
+            }
+
+    h3 {
+        margin-top: 30px;
+        padding: 10px;
+        background-color: #f4f4f4;
+        border-left: 5px solid #007bff;
+    }
+
+</style>
+
+
+<h2>Generated Bills Report</h2>
+
+<form asp-action="GeneratedBillsReport" method="get">
+    <div class="form-container">
+        <label for="SelectedMonth">Select Month:</label>
+        <select asp-for="SelectedMonth">
+            <option value="">-- Select Month --</option>
+            @foreach (var month in Enumerable.Range(1, 12))
+            {
+                var monthName = new DateTime(2000, month, 1).ToString("MMMM");
+                <option value="@monthName">@monthName</option>
+            }
+        </select>
+
+        <label for="SelectedYear">Select Year:</label>
+        <select asp-for="SelectedYear">
+            <option value="">-- Select Year --</option>
+            @for (int year = DateTime.Now.Year; year >= 2000; year--)
+            {
+                <option value="@year">@year</option>
+            }
+        </select>
+
+        <button type="submit">Generate Report</button>
+    </div>
+</form>
+
+@if (Model.GeneratedBills.Any())
+{
+    <h3>Created Bills</h3>
+    <table class="bill-table">
+        <thead>
+            <tr>
+                <th>Customer ID</th>
+                <th>Customer Name</th>
+                <th>Billing Month</th>
+                <th>Billing Year</th>
+                <th>Bill Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model.GeneratedBills.Where(b => b.BillStatus == "Created"))
+            {
+                <tr class="created-row">
+                    <td>@bill.CustomerID</td>
+                    <td>@bill.CustomerName</td>
+                    <td>@bill.BillingMonth</td>
+                    <td>@bill.BillingYear</td>
+                    <td>@bill.BillAmount</td>
+                    <td>@bill.BillStatus</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h3>Pending Bills</h3>
+    <table class="bill-table">
+        <thead>
+            <tr>
+                <th>Customer ID</th>
+                <th>Customer Name</th>
+                <th>Billing Month</th>
+                <th>Billing Year</th>
+                <th>Bill Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model.GeneratedBills.Where(b => b.BillStatus == "Pending"))
+            {
+                <tr class="pending-row">
+                    <td>@bill.CustomerID</td>
+                    <td>@bill.CustomerName</td>
+                    <td>@bill.BillingMonth</td>
+                    <td>@bill.BillingYear</td>
+                    <td>@bill.BillAmount</td>
+                    <td>@bill.BillStatus</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (!string.IsNullOrEmpty(Model.SelectedMonth) && !string.IsNullOrEmpty(Model.SelectedYear))
+{
+    <p>No records found for @Model.SelectedMonth @Model.SelectedYear.</p>
+}

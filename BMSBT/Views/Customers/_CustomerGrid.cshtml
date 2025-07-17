@@ -1,0 +1,28 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersDetail>
+
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+<tbody>
+    @foreach (var item in Model)
+    {
+        <tr data-id="@item.Uid" class="clickable-row">
+            <td>
+                @* <a asp-action="Edit" asp-route-id="@item.Uid">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Uid">Details</a> *@
+                <input type="checkbox"
+                       class="record-checkbox"
+                       value="@item.Uid"
+                       data-btno="@item.Btno"
+                       data-customer-name="@item.CustomerName"
+                       data-tariff-name="@item.TariffName" />
+            </td>
+            <td>@Html.DisplayFor(modelItem => item.CustomerName)</td>
+            <td>@Html.DisplayFor(modelItem => item.Btno)</td>                      
+            <td>@Html.DisplayFor(modelItem => item.Project)</td>
+            <td>@Html.DisplayFor(modelItem => item.SubProject)</td>
+            <td>@Html.DisplayFor(modelItem => item.Sector)</td>
+            <td>@Html.DisplayFor(modelItem => item.TariffName)</td>
+        </tr>
+    }
+</tbody>

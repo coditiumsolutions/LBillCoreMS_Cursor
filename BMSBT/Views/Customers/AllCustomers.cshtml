@@ -1,0 +1,549 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BMSBT.Models.CustomersDetail>
+
+@{
+    ViewData["Title"] = "Generate Electricity";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+    var groupedByProject = Model.GroupBy(c => c.Project)
+        .Select(p => new
+        {
+            Project = p.Key,
+            Blocks = p.GroupBy(c => c.Block).OrderBy(b => b.Key)
+        });
+}
+<!-- Existing styles remain unchanged -->
+<style>
+    .dropdown-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+
+    .custom-dropdown {
+        width: 200px;
+        height: 40px;
+        padding: 5px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Rest of your existing styles */
+    .page-size-dropdown {
+        width: 100px;
+    }
+
+    /* Simple white grid style */
+    .table,
+    .nested-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+    }
+
+        /* Table header and cell styling */
+        .table th,
+        .table td,
+        .nested-table th,
+        .nested-table td {
+            padding: 8px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        /* Ensure headers remain white and are clickable */
+        .table th {
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+    /* Group header rows (Project, Block, Category) */
+    .project-header,
+    .block-header,
+    .category-header {
+        background-color: #fff;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    /* Optional: Hover effect (if you want a subtle change on hover) */
+    .table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+
+    .sort-icon::after {
+        content: '↕';
+        margin-left: 5px;
+        opacity: 0.5;
+    }
+
+    .sort-asc::after {
+        content: '↑';
+        opacity: 1;
+    }
+
+    .sort-desc::after {
+        content: '↓';
+        opacity: 1;
+    }
+
+
+
+    .pagination {
+        margin: 20px 0;
+        justify-content: center;
+    }
+
+        .pagination li {
+            margin: 0 5px;
+        }
+
+            .pagination li a, .pagination li span {
+                color: #ccc;
+                padding: 6px 12px;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                text-decoration: none;
+            }
+
+            .pagination li.active span {
+                background-color: #ccc;
+                color: white;
+                border-color: #ccc;
+            }
+
+    .search-panel {
+        margin-bottom: 20px;
+    }
+
+    .project-header {
+        cursor: pointer;
+    }
+
+    .block-header {
+        background-color: #f5f5f5 !important;
+        cursor: pointer;
+    }
+    /* New styling for category header rows */
+    .category-header {
+        background-color: #f0f8ff !important;
+        cursor: pointer;
+    }
+
+    .project-blocks {
+        margin-left: 20px;
+    }
+
+    .block-content {
+        margin-left: 40px;
+    }
+
+    .nested-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s;
+    }
+
+    .rotate-icon {
+        transform: rotate(90deg);
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+        color: white;
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+
+
+    /* Add this for the filter form */
+    .filter-form {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #e9ecef;
+    }
+
+    /* Add styling for sector dropdown */
+    .sector-dropdown {
+        width: 200px;
+    }
+</style>
+
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Generating Bills...</div>
+</div>
+
+<!-- Filter Form -->
+<form id="filterForm" class="filter-form" action="@Url.Action("AllCustomers", "Customers")" method="get">
+    <div class="dropdown-container">
+        <select id="projectDropdown" name="project" class="form-control custom-dropdown">
+            <option value="">-- All Projects --</option>
+            @foreach (var proj in (ViewBag.Projects as List<string>) ?? new List<string>())
+            {
+                if (Context.Request.Query["project"].ToString() == proj)
+                {
+                    <option value="@proj" selected>@proj</option>
+                }
+                else
+                {
+                    <option value="@proj">@proj</option>
+                }
+            }
+        </select>
+
+        <select id="sectorDropdown" name="sector" class="form-control custom-dropdown">
+            <option value="">-- All Sectors --</option>
+            @foreach (var sec in (ViewBag.Sectors as List<string>) ?? new List<string>())
+            {
+                if (Context.Request.Query["sector"].ToString() == sec)
+                {
+                    <option value="@sec" selected>@sec</option>
+                }
+                else
+                {
+                    <option value="@sec">@sec</option>
+                }
+            }
+        </select>
+
+        <select id="sectorDropdown" name="block" class="form-control custom-dropdown sector-dropdown">
+            <option value="">-- All Blocks --</option>
+            @foreach (var block in (ViewBag.Blocks as List<string>) ?? new List<string>())
+            {
+                if (Context.Request.Query["block"].ToString() == block)
+                {
+                    <option value="@block" selected>@block</option>
+                }
+                else
+                {
+                    <option value="@block">@block</option>
+                }
+            }
+        </select>
+
+        <!-- Generate Bill button remains -->
+        <button  type="button" class="btn btn-success" style="width:150px">Operations</button>
+    </div>
+</form>
+
+<!-- Search Panel -->
+<div class="search-panel">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:900px; display:inline-block; margin-right:10px;" />
+    <button id="searchButton" class="btn btn-secondary" style="margin-top:-10px">Search</button>
+</div>
+
+
+<!-- Main Table -->
+<div class="table-responsive">
+    <table id="maintenanceTable" class="table">
+        <thead>
+            <tr>
+                <th style="width:50px;"></th>
+                <th style="width:400px;">
+                    <input type="checkbox" id="selectAll" title="Select All Records" />
+                </th>
+                <th data-sort="Category" class="sort-icon" style="width:400px;">Category</th>
+                <th data-sort="CustomerName" class="sort-icon" style="width:400px;">Name</th>
+                <th data-sort="Btno" class="sort-icon" style="width:400px;">BT No</th>
+                <th data-sort="HouseNo" class="sort-icon" style="width:400px;">House No</th>
+                <th data-sort="Sector" class="sort-icon" style="width:400px;">Sector</th>
+                <th data-sort="BillStatusElect" class="sort-icon" style="width:400px;">Status Elect</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var projectGroup in groupedByProject)
+            {
+                var projectId = "project-" + projectGroup.Project?.Replace(" ", "-");
+
+                <!-- Project Row -->
+                <tr class="project-header" data-project="@projectId">
+                    <td>
+                        <i class="fas fa-chevron-right toggle-icon"></i>
+                    </td>
+                    <td colspan="7">
+                        Project: @projectGroup.Project
+                    </td>
+                </tr>
+
+                <!-- Project Content -->
+                <tr class="project-content" data-parent="@projectId" style="display: none;">
+                    <td colspan="8" style="padding: 0;">
+                        <div class="project-sectors">
+                            @foreach (var sectorGroup in projectGroup.Blocks)
+                            {
+                                var blockId = $"{projectId}-sector-{sectorGroup.Key?.Replace(" ", "-")}";
+
+                                <!-- Block Row -->
+                                <table class="nested-table">
+                                    <tr class="block-header" data-block="@blockId">
+                                        <td style="width:50px;">
+                                            <i class="fas fa-chevron-right toggle-icon"></i>
+                                        </td>
+                                        <td colspan="7">
+                                            @sectorGroup.Key
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Block Content with Category Grouping -->
+                                <div class="block-content" id="@blockId" style="display: none;">
+                                    <table class="nested-table">
+                                        @foreach (var categoryGroup in sectorGroup.GroupBy(x => x.Category).OrderBy(g => g.Key))
+                                        {
+                                            var categoryId = $"{blockId}-category-{categoryGroup.Key?.Replace(" ", "-")}";
+                                            <!-- Category Header Row -->
+                                            <tr class="category-header" data-category="@categoryId">
+                                                <td style="width:50px;">
+                                                    <i class="fas fa-chevron-right toggle-icon"></i>
+                                                </td>
+                                                <td colspan="8">
+                                                    @categoryGroup.Key
+                                                </td>
+                                            </tr>
+                                            <!-- Category Content Rows -->
+                                            <tr class="category-content" data-parent="@categoryId" style="display: none;">
+                                                <td colspan="9" style="padding: 0;">
+                                                    <table class="nested-table">
+                                                        @foreach (var item in categoryGroup)
+                                                        {
+                                                            <tr class="customer-row">
+                                                                <td style="width:50px;"></td>
+                                                                <td style="width:400px;">
+                                                                    <input type="checkbox" class="record-checkbox" value="@item.Uid" />
+                                                                </td>
+                                                                <td style="width:400px;">@item.CustomerName</td>
+                                                                <td style="width:400px;">@item.Btno</td>
+                                                                <td style="width:400px;">@item.PloNo</td>
+                                                                <td style="width:400px;">@item.Sector</td>
+                                                                <td style="width:400px;">@item.BillStatus</td>
+                                                            </tr>
+                                                        }
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+
+
+<!-- Display total records -->
+<div>
+    <p>Total Records: @ViewBag.TotalRecords</p>
+    <p>Total Records by Project: @ViewBag.TotalRecordsByProject</p>
+    <p>Total Records by Sector: @ViewBag.TotalRecordsBySector</p>
+    <p>Total Records by Block: @ViewBag.TotalRecordsByBlock</p>
+</div>
+
+
+
+<!-- Pagination -->
+<div class="text-center">
+    @Html.PagedListPager(Model, page => Url.Action("Index", new
+        {
+            page,
+            project = Context.Request.Query["project"].ToString(),
+            subproject = Context.Request.Query["sector"].ToString(),
+            sector = Context.Request.Query["block"].ToString()
+        }))
+</div>
+
+<!-- Results Container -->
+<div id="resultsContainer" style="display:none; margin-top: 20px;">
+    <h4>Bill Generation Results</h4>
+    <table id="resultsTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Project toggle
+            $('.project-header').click(function() {
+                var projectId = $(this).data('project');
+                var icon = $(this).find('.toggle-icon');
+                var content = $(`tr[data-parent="${projectId}"]`);
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+
+                if (!content.is(':visible')) {
+                    // Collapse all blocks (and their categories) when project is collapsed
+                    content.find('.block-content, .category-content').hide();
+                    content.find('.block-header .toggle-icon, .category-header .toggle-icon').removeClass('rotate-icon');
+                }
+            });
+
+            // Block toggle
+            $('.block-header').click(function(e) {
+                e.stopPropagation();
+                var blockId = $(this).data('block');
+                var icon = $(this).find('.toggle-icon');
+                var content = $(`#${blockId}`);
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+            });
+
+            // Category toggle
+            $('.category-header').click(function(e) {
+                e.stopPropagation();
+                var categoryId = $(this).data('category');
+                var icon = $(this).find('.toggle-icon');
+                var content = $(`tr[data-parent="${categoryId}"]`);
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+            });
+
+            // Select All functionality
+            $('#selectAll').change(function() {
+                $('.record-checkbox:visible').prop('checked', $(this).prop('checked'));
+                updateSelectAllState();
+            });
+
+            $('.record-checkbox').change(function() {
+                updateSelectAllState();
+            });
+
+            function updateSelectAllState() {
+                var totalVisible = $('.record-checkbox:visible').length;
+                var totalChecked = $('.record-checkbox:visible:checked').length;
+                $('#selectAll').prop({
+                    checked: totalVisible === totalChecked && totalVisible > 0,
+                    indeterminate: totalChecked > 0 && totalChecked < totalVisible
+                });
+            }
+
+            // Search functionality
+            $('#searchInput').on('keyup', function() {
+                var searchText = $(this).val().toLowerCase();
+                $('.customer-row').each(function() {
+                    var row = $(this);
+                    var matches = row.text().toLowerCase().includes(searchText);
+                    row.toggle(matches);
+
+                    if (matches) {
+                        // Ensure that the parent category, block, and project are visible and their icons rotated
+                        var categoryContent = row.closest('tr.category-content');
+                        var categoryHeader = $('tr.category-header[data-category="' + categoryContent.data('parent') + '"]');
+                        var blockContent = row.closest('.block-content');
+                        var blockHeader = $('.block-header[data-block="' + blockContent.attr('id') + '"]');
+                        var projectContent = row.closest('tr.project-content');
+                        var projectHeader = $('.project-header[data-project="' + projectContent.data('parent') + '"]');
+
+                        categoryContent.show();
+                        categoryHeader.find('.toggle-icon').addClass('rotate-icon');
+                        blockContent.show();
+                        blockHeader.find('.toggle-icon').addClass('rotate-icon');
+                        projectContent.show();
+                        projectHeader.find('.toggle-icon').addClass('rotate-icon');
+                    }
+                });
+                updateSelectAllState();
+            });
+
+           
+
+            // Cascading dropdown for subproject based on project selection
+            $('#projectDropdown').change(function () {
+                var selectedProject = $(this).val();
+
+                if (!selectedProject) {
+                    $('#subprojectDropdown')
+                        .html('<option value="">-- All Subprojects --</option>')
+                        .prop('disabled', true);
+                    // Submit immediately if no project is selected
+                    $('#filterForm').submit();
+                    return;
+                }
+
+                // Enable and update subproject dropdown
+                $('#subprojectDropdown').prop('disabled', false);
+                $('#subprojectDropdown').html('<option>Loading...</option>');
+
+                $.ajax({
+                    url: '@Url.Action("GetSubprojects", "EBillU")',
+                    type: 'GET',
+                    data: { project: selectedProject },
+                    success: function (data) {
+                        var options = '<option value="">-- All Subprojects --</option>';
+                        $.each(data, function (i, item) {
+                            options += `<option value="${item}">${item}</option>`;
+                        });
+                        $('#subprojectDropdown').html(options);
+                        // Auto submit the form after subprojects are updated
+                        $('#filterForm').submit();
+                    },
+                    error: function () {
+                        $('#subprojectDropdown').html('<option value="">-- All Subprojects --</option>');
+                        alert('Failed to load subprojects');
+                    }
+                });
+            });
+
+            // For subproject and sector dropdowns, auto submit on change.
+            $('#subprojectDropdown, #sectorDropdown').on('change', function () {
+                $('#filterForm').submit();
+            });
+
+            // Initialize table state
+            $('.project-content, .block-content, .category-content').hide();
+            updateSelectAllState();
+
+
+        });
+    </script>
+}
+
+
+
+

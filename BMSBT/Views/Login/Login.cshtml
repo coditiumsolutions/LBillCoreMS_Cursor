@@ -1,0 +1,77 @@
+﻿
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LayoutLogin"; // This removes the layout
+}
+
+
+<script>
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+</script>
+
+<style>
+    .custom-input {
+        max-width: 300px; /* Limit input field width */
+        width: 100%; /* Ensure responsiveness */
+    }
+
+    .custom-button {
+        width: 150px; /* Adjust button width */
+        padding: 10px; /* Adjust padding for button height */
+        font-size: 14px; /* Adjust font size */
+    }
+
+    /* Center image in the right column */
+    .d-flex.align-items-center {
+        height: 100%; /* Full height of the column */
+    }
+
+    /* Control the size of the image */
+    .custom-image {
+        max-width: 300px; /* Set maximum width */
+        max-height: 300px; /* Set maximum height */
+        width: auto; /* Maintain aspect ratio */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    /* Add background color to the right column */
+    .custom-bg {
+        background-color: #f8f9fa; /* Replace with your desired color */
+        padding: 20px; /* Optional: Add padding around the image */
+        border-radius: 8px; /* Optional: Add rounded corners */
+    }
+
+
+</style>
+<div class="container mt-5">
+    <div class="row">
+        <!-- Left Frame: Login Form -->
+        <div class="col-md-6">
+            <h3 class="mb-4">Login Page</h3>
+            <form method="post" asp-action="Index">
+                <div class="mb-3">
+                    <label for="username" class="form-label">User Name::</label>
+                    <input type="text" class="form-control custom-input" id="username" name="username" required />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <input type="password" class="form-control custom-input" id="password" name="password" required />
+                </div>
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger mt-2">@ViewBag.Error</div>
+                }
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary custom-button">Login</button>
+                </div>
+            </form>
+        </div>
+        <!-- Right Frame: Image -->
+        <div class="col-md-6 d-flex justify-content-center align-items-center custom-bg">
+            <img src="../images/Bulb.png" alt="Login Image" class="img-fluid rounded custom-image" />
+        </div>
+    </div>
+</div>

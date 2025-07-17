@@ -1,0 +1,143 @@
+﻿@model List<ReadingSheet>
+@{
+    ViewData["Title"] = "Reading";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+<a asp-action="CreateReading" class="btn btn-primary mb-3">Add New Reading</a>
+
+<!-- Filter Form -->
+<form method="get" asp-action="ShowReading">
+    <div class="row">
+        <!-- Billing Month Dropdown -->
+        <div class="col-md-3">
+            <label>Billing Month:</label>
+            <select name="billingMonth" class="form-control">
+                <option value="">-- Select Month --</option>
+                @foreach (var month in ViewBag.BillingMonths)
+                {
+                    <option value="@month">@month</option>
+                }
+            </select>
+        </div>
+
+        <!-- Billing Year Dropdown -->
+        <div class="col-md-3">
+            <label>Billing Year:</label>
+            <select name="billingYear" class="form-control">
+                <option value="">-- Select Year --</option>
+                @foreach (var year in ViewBag.BillingYears)
+                {
+                    <option value="@year">@year</option>
+                }
+            </select>
+        </div>
+
+        <!-- Search Box -->
+        <div class="col-md-3">
+            <label>Search:</label>
+            <input type="text" name="search" class="form-control" placeholder="Search by BT No." />
+        </div>
+
+        <!-- Filter Button -->
+        <div class="col-md-3 mt-4">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </div>
+</form>
+
+<hr />
+
+<!-- Deletion Form -->
+<form method="post" asp-action="DeleteSelected">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" id="selectAll" />
+                </th>
+                <th>Btno</th>
+                <th>Month</th>
+                <th>Year</th>
+                <th>Detail</th>
+                <th>Present1</th>
+                <th>Previous1</th>
+                <th>Present2</th>
+                <th>Previous2</th>
+                <th>Present3</th>
+                <th>Previous3</th>
+                <th>Actions</th> <!-- New Column for Edit -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <input type="checkbox" name="selectedReadings" class="checkbox-item" value="@item.Uid" />
+                    </td>
+                    <td>@item.Btno</td>
+                    <td>@item.Month</td>
+                    <td>@item.Year</td>
+                    <td>@item.CustomerNo</td>
+                    <td>@item.Present1</td>
+                    <td>@item.Previous1</td>
+                    <td>@item.Present2</td>
+                    <td>@item.Previous2</td>
+                    <td>@item.Present3</td>
+                    <td>@item.Previous3</td>
+                    <td>
+                        <a asp-action="EditReading" asp-route-id="@item.Uid" class="btn btn-warning btn-sm">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-danger">Delete Selected</button>
+</form>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">@TempData["Message"]</div>
+}
+<div class="alert alert-info">
+    <strong>Total Records:</strong> @ViewBag.TotalRecords
+</div>
+
+
+<ul class="pagination">
+    @if (ViewBag.CurrentPage > 1)
+    {
+        <li class="page-item">
+            <a class="page-link" href="?page=1&search=@ViewBag.Search&billingMonth=@ViewBag.BillingMonth&billingYear=@ViewBag.BillingYear">First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&search=@ViewBag.Search&billingMonth=@ViewBag.BillingMonth&billingYear=@ViewBag.BillingYear">Previous</a>
+        </li>
+    }
+
+    @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+    {
+        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+            <a class="page-link" href="?page=@i&search=@ViewBag.Search&billingMonth=@ViewBag.BillingMonth&billingYear=@ViewBag.BillingYear">@i</a>
+        </li>
+    }
+
+    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+    {
+        <li class="page-item">
+            <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&search=@ViewBag.Search&billingMonth=@ViewBag.BillingMonth&billingYear=@ViewBag.BillingYear">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page=@ViewBag.TotalPages&search=@ViewBag.Search&billingMonth=@ViewBag.BillingMonth&billingYear=@ViewBag.BillingYear">Last</a>
+        </li>
+    }
+</ul>
+<script>
+    document.getElementById("selectAll").addEventListener("change", function () {
+        let checkboxes = document.querySelectorAll(".checkbox-item");
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+</script>

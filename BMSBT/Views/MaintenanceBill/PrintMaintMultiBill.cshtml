@@ -1,0 +1,118 @@
+﻿@model IEnumerable<MaintenanceBill>
+@{
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    var months = new string[] {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+}
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+@if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+{
+    <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+}
+
+<form method="post" action="@Url.Action("PrintMaintMultiBill", "Maintenance")">
+    <div class="row">
+       
+        <div class="col-md-2">
+            <label class="form-label" style="visibility: hidden">View Bills</label>
+            <button type="submit" class="btn btn-primary form-control">View Bills</button>
+        </div>
+    </div>
+
+    <!-- Table with checkboxes for selecting UIDs -->
+    @if (Model != null && Model.Any())
+    {
+        <table id="billsTable" class="table table-striped table-bordered table-hover dt-responsive nowrap" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Invoice No</th>
+                    <th>Customer No</th>
+                    <th>Customer Name</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Tax Amount</th>
+                    <th>Amount Due Date</th>
+                    <th>Amount After Due Date</th>
+                    <th>Month</th>
+                    <th>Year</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var bill in Model)
+                {
+                    <tr data-href="@Url.Action("Details", "MaintenanceBill", new { id = bill.InvoiceNo })">
+                        <td>
+                            <input type="checkbox" name="uids" value="@bill.Uid" />
+                        </td>
+                        <td>@bill.InvoiceNo</td>
+                        <td>@bill.CustomerNo</td>
+                        <td>@bill.CustomerName</td>
+                        <td>@bill.IssueDate</td>
+                        <td>@bill.DueDate</td>
+                        <td>@bill.TaxAmount</td>
+                        <td>@bill.BillAmountInDueDate</td>
+                        <td>@bill.BillAmountAfterDueDate</td>
+                        <td>@bill.BillingMonth</td>
+                        <td>@bill.BillingYear</td>
+                        <td>
+                            <form asp-action="DeleteBill" asp-route-id="@bill.InvoiceNo" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No bills found.</p>
+    }
+
+    <!-- Hidden input to collect selected UIDs -->
+    <input type="hidden" id="selectedUids" name="uids" />
+
+    <!-- Submit button for sending selected UIDs -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-success">Submit Selected UIDs</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    var $dt = jQuery.noConflict();
+    $dt(document).ready(function () {
+        console.log("Using noConflict mode...");
+        var table = $dt('#billsTable').DataTable({
+            paging: true,
+            searching: true,
+            lengthChange: true,
+            pageLength: 10
+        });
+
+        // Add double-click event for table rows
+        $dt('#billsTable tbody').on('dblclick', 'tr', function () {
+            var href = $dt(this).data('href');
+            if (href) {
+                window.location.href = href;
+            }
+        });
+
+        // Collect selected UIDs before form submission
+        $dt('form').on('submit', function () {
+            var selectedUids = [];
+            $dt('input[name="uids"]:checked').each(function () {
+                selectedUids.push($dt(this).val());
+            });
+            $dt('#selectedUids').val(selectedUids.join(',')); // Join UIDs into a comma-separated string
+        });
+    });
+</script>

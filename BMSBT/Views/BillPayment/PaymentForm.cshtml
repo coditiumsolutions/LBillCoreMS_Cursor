@@ -1,0 +1,89 @@
+﻿@model BMSBT.DTO.BillViewModel
+
+@{
+    ViewData["Title"] = "Open Bill By Reference Number";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+}
+
+<div class="card shadow-lg">
+    <div style="background-color:#101f63; color:white; height:45px;">
+        <h3 class="mb-0" style="margin-left:15px; margin-top:5px;">Pay Bill</h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="OpenBill" asp-controller="BillPayment" method="post">
+            <div class="row">
+                <div class="col-md-3">
+                    <label asp-for="BillingMonth">Billing Month</label>
+                    <input asp-for="BillingMonth" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="BillingYear">Billing Year</label>
+                    <input asp-for="BillingYear" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="PaidOn">Paid On</label>
+                    <input asp-for="PaidOn" type="date" class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PaymentType">Payment Type</label>
+                    <select asp-for="PaymentType" class="form-control" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Unpaid">Unpaid</option>
+                    </select>
+                </div>
+            </div>
+
+            
+
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label asp-for="BankBranch">Bank Branch</label>
+                    <select asp-for="BankBranch" class="form-control" required>
+                        <option value="Allied Bank">Allied Bank</option>
+                        <option value="XYZ Bank">UBL Bank</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Btno">Enter Tracking No.</label>
+                    <input asp-for="Btno" class="form-control" placeholder="BTO-10790" required/>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="ReferenceNumber">Reference Number</label>
+                    <input asp-for="ReferenceNumber" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="CustomerName">Customer Name</label>
+                    <input asp-for="CustomerName" class="form-control" readonly />
+                </div>
+            </div>
+
+            
+
+            <div class="mt-4">
+                <button type="submit" name="submitAction" value="SearchBill" class="btn btn-success">Search Bill</button>
+                <button type="submit" name="submitAction" value="MarkPaid" class="btn btn-primary">Mark Paid</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var successMessage = '@TempData["SuccessMessage"]';
+        var errorMessage = '@TempData["ErrorMessage"]';
+        if (successMessage && successMessage.trim() !== "") {
+            Swal.fire({ icon: 'success', title: successMessage, showConfirmButton: true, timer: 3000 });
+        } else if (errorMessage && errorMessage.trim() !== "") {
+            Swal.fire({ icon: 'error', title: errorMessage, showConfirmButton: true, timer: 3000 });
+        }
+    });
+
+    document.querySelectorAll("button[name='submitAction']").forEach(button => {
+        button.addEventListener("click", function () {
+            var form = document.querySelector("form");
+            form.action = this.value === "MarkPaid" ? "/BillPayment/MarkPaid" : "/BillPayment/OpenBill";
+        });
+    });
+</script>

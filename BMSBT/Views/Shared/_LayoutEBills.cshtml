@@ -1,0 +1,303 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" />
+  @*   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> *@
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+
+    <title>@ViewData["Title"] - Billing System</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/css/SGStyleSheet.css" />
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+
+    <!-- jQuery -->
+  @*   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> *@
+
+    <!-- DataTables CSS -->
+    @* <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" /> *@
+
+    <!-- DataTables JS -->
+    @* <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> *@
+
+    <style>
+        .sidebar {
+            position: absolute; /* Allow normal scrolling behavior */
+        }
+
+        .navbar2-top {
+            background-color: #f8f9fa; /* Light background color */
+            padding: 0px 0;
+        }
+
+            .navbar2-top .container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .navbar2-top .left-section {
+                font-weight: bold;
+            }
+
+            .navbar2-top .right-section {
+                text-align: right;
+                flex-grow: 1;
+            }
+
+            .navbar2-top .left-section a {
+                color: #0056b3;
+            }
+
+        a {
+            text-decoration: none !important;
+        }
+
+        .user-info {
+            color: #0056b3; /* Dark gray */
+            font-size: 16px; /* Reduce font size */
+            font-weight: normal;
+        }
+    </style>
+
+</head>
+<body>
+
+    <!-- First Top Bar -->
+    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
+            </a>
+            <span class="navbar-text text-white">Bahria Town: Billing System</span>
+        </div>
+    </nav>
+
+    <!-- Second Top Bar -->
+    <nav class="navbar navbar-expand-lg navbar2-top">
+        <div class="container">
+            <!-- Left-aligned text -->
+            <div class="left-section">
+                <a asp-controller="Home" asp-action="Index">Back Main Menu</a>
+            </div>
+            <!-- Right-aligned text -->
+            <div class="right-section">
+                <span class="user-info"> Logged-in as @ViewBag.UserName at @ViewBag.LoginTime</span>
+                <a asp-controller="Login" asp-action="Logout"
+                   class="btn btn-link text-black"
+                   onclick="return confirm('Are you sure you want to log out?');">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Third Top Bar -->
+    <nav class="navbar navbar-expand-lg navbar3-top">
+        <div class="container">
+            <span class="navbar-text text-white"></span>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- Left Sidebar -->
+            <div class="col-md-3 col-lg-2 p-3 sidebar">
+                <h4>Electricity</h4>
+
+
+                <ul class="nav flex-column">
+
+
+                    <li>
+                        <a asp-controller="SGCustomers" asp-action="GenerateBill">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Generate Bill(s)
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a asp-controller="SGEBills" asp-action="SGEBills">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            E-Bills
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="SGEBillingHistory" asp-action="SGEBillHistory">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Bills History
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="SearchBills">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Home
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="SearchBill">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Search
+                        </a>
+                    </li>
+
+
+                    
+
+                    
+
+
+                   
+
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="GenerateEBill">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Generate Bills
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="BillReport">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Generated
+                        </a>
+                    </li>
+
+
+
+                   
+
+
+                   @*  <li>
+                        <a asp-controller="EBillU" asp-action="GeneratedBillsReport">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            2. Generated
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="EBillsGenerated" asp-action="Generated">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            3. Generated
+                        </a>
+                    </li>
+ *@
+                    <li>
+                        <a asp-controller="EBillU" asp-action="SearchPrintBills">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Print New Bill
+                        </a>
+                    </li>
+
+                   
+                    <li>
+                        <a asp-controller="EBillU" asp-action="EBills">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Print  Bill
+                        </a>
+                    </li>
+
+                    
+
+
+                   @*  <li>
+                        <a asp-controller="ElectricityBills" asp-action="Index">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            All E-Bills
+                        </a>
+                    </li> *@
+
+                    <li>
+                        <a asp-controller="BillPayment" asp-action="PaymentForm">
+                            <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
+                           Pay Bill(s)
+                        </a>
+                    </li>
+
+
+
+
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="collapse" href="#billOperationSubMenu" aria-expanded="false" aria-controls="billOperationSubMenu">
+                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                            Bill Operations
+                        </a>
+                        <div class="collapse" id="billOperationSubMenu">
+                            <ul class="nav flex-column ml-3">
+                              
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="ReadingSheet" asp-action="ReadingDetails">Readings</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Tariff" asp-action="Index">Tariff</a>
+                                </li>
+
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Tax" asp-action="Index">Taxes</a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </li>
+
+                </ul>
+
+
+                <!-- Separate Quick Links Block -->
+                <div class="quick-links-block">
+                    <h4>Quick Links</h4>
+                    <ul class="nav flex-column">
+                        <li>
+                            <a asp-controller="ReadingSheet" asp-action="ReadingDetails">
+
+                                <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
+                                Reading Sheet
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="MaintenanceBill" asp-action="Index">
+                                <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
+                                Maintenance Bill
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+
+
+
+
+            </div>
+
+            <!-- Right Content Area -->
+            <div class="col-md-9 col-lg-10 content-area p-3">
+                @RenderBody()
+            </div>
+
+        </div>
+    </div>
+
+    @*   <!-- Footer -->
+    <footer class="footer text-white text-center py-3 footerarea">
+        <p>&copy; 2024 My Application. All rights reserved.</p>
+    </footer> *@
+
+ 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

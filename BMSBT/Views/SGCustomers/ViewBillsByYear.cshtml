@@ -1,0 +1,106 @@
+﻿@model List<BMSBT.ViewModels.BillsViewModel>
+
+@{
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+    var selectedYear = ViewBag.SelectedYear as string;
+    var selectedMonth = ViewBag.SelectedMonth as string;
+    var years = ViewBag.Years as List<string>;
+    var months = ViewBag.Months as List<string>;
+    int count = 0;
+}
+
+<form method="get" asp-action="ViewBillsByYear">
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Select Year:</label>
+            <select name="selectedYear" class="form-select">
+                <option value="">-- Select Year --</option>
+                @foreach (var year in years)
+                {
+                    if (year == selectedYear)
+                    {
+                        <option value="@year" selected>@year</option>
+                    }
+                    else
+                    {
+                        <option value="@year">@year</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Select Month:</label>
+            <select name="selectedMonth" class="form-select">
+                <option value="">-- Select Month --</option>
+                @foreach (var month in months)
+                {
+                    if (month == selectedMonth)
+                    {
+                        <option value="@month" selected>@month</option>
+                    }
+                    else
+                    {
+                        <option value="@month">@month</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+    </div>
+</form>
+
+@if (Model != null && Model.Any())
+{
+    <div class="accordion" id="sectorAccordion">
+        @foreach (var sectorGroup in Model)
+        {
+            var collapseId = $"collapse_{count}";
+            var headingId = $"heading_{count}";
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="@headingId">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                        Sector: @sectorGroup.Sector <span class="ms-3 text-muted">(Total: @sectorGroup.Bills.Count)</span>
+                    </button>
+                </h2>
+                <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#sectorAccordion">
+                    <div class="accordion-body p-0">
+                        <table class="table table-bordered table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice No</th>
+                                    <th>BT No</th>
+                                    <th>Customer Name</th>
+                                    <th>Billing Month</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var bill in sectorGroup.Bills)
+                                {
+                                    <tr ondblclick="window.location.href='@Url.Action("ViewBillDetail", "Bills", new { id = bill.Uid })'" style="cursor:pointer;">
+                                        <td>@bill.InvoiceNo</td>
+                                        <td>@bill.Btno</td>
+                                        <td>@bill.CustomerName</td>
+                                        <td>@bill.BillingMonth</td>
+                                        <td>@bill.DueDate?.ToString("yyyy-MM-dd")</td>
+                                        <td>@bill.BillAmount</td>
+                                        <td>@bill.PaymentStatus</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            count++;
+        }
+    </div>
+}
+else if (!string.IsNullOrEmpty(selectedYear) || !string.IsNullOrEmpty(selectedMonth))
+{
+    <div class="alert alert-warning">No bills found for the selected criteria.</div>
+}

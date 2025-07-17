@@ -1,0 +1,24 @@
+﻿@model BMSBT.Models.OperatorsSetup
+
+@{
+    ViewData["Title"] = "Delete Operator";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<h3>Are you sure you want to delete this Operator Setup?</h3>
+
+<div class="alert alert-danger">This action cannot be undone.</div>
+
+<div class="form-group">
+    <label>Operator ID:</label> @Model.OperatorID <br />
+    <label>Operator Name:</label> @Model.OperatorName <br />
+    <label>Billing Month:</label> @Model.BillingMonth <br />
+    <label>Billing Year:</label> @Model.BillingYear <br />
+    <label>Bank Name:</label> @Model.BankName
+</div>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Uid" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

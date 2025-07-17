@@ -1,0 +1,289 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersDetail>
+
+@{
+    ViewData["Title"] = "AllCustomers";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+<head>
+    <style>
+        .row-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .create-link {
+            text-decoration: none;
+            color: #142141;
+            font-weight: bold;
+        }
+
+            .create-link:hover {
+                color: #0066cc;
+            }
+
+        .filter-form {
+            margin: 0;
+        }
+
+        .dropdown-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .custom-dropdown {
+            width: 200px;
+            height: 40px;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<div class="form-group">
+    <div class="form-group dropdown-container">
+        <select id="projectDropdown" class="form-control custom-dropdown">
+            <option value="">-- Projects --</option>
+        </select>
+        <select id="subprojectDropdown" class="form-control custom-dropdown">
+            <option value="">-- Subprojects --</option>
+        </select>
+        <select id="sectorDropdown" class="form-control custom-dropdown">
+            <option value="">-- Sectors --</option>
+        </select>
+       @*  <select id="tariffDropdown" class="form-control custom-dropdown">
+            <option value="">-- Tariffs --</option>
+        </select>   *@      
+    </div>
+</div>
+
+<div class="gridContainer" id="customerGridContainer">
+    <table id="studentsTable" class="table table-striped table-bordered dt-responsive nowrap" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th>@Html.DisplayNameFor(model => model.CustomerName)</th>
+                <th>@Html.DisplayNameFor(model => model.Btno)</th>
+                <th>@Html.DisplayNameFor(model => model.Project)</th>
+                <th>@Html.DisplayNameFor(model => model.SubProject)</th>
+                <th>@Html.DisplayNameFor(model => model.Sector)</th>
+                <th>@Html.DisplayNameFor(model => model.TariffName)</th>
+            </tr>
+        </thead>
+        <tbody id="customerGridBody">
+            <!-- Data will be dynamically inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize DataTable
+        dataTable = $('#studentsTable').DataTable({
+            paging: true,
+            searching: true,
+            lengthChange: true,
+            pageLength: 10
+        });
+
+        // Load dropdowns
+        loadDropdowns();
+
+        // Add event listeners
+        document.getElementById('projectDropdown').addEventListener('change', updateDropdown);
+        document.getElementById('subprojectDropdown').addEventListener('change', updateGrid);
+        // document.getElementById('tariffDropdown').addEventListener('change', updateGrid);
+        document.getElementById('sectorDropdown').addEventListener('change', updateGrid);
+        // Add event listener for button click (No form required)
+        document.getElementById('processCustomersBtn')?.addEventListener('click', processSelectedCustomers);
+    });
+
+    function loadDropdowns() {
+    axios.get('/Configs/GetProjects')
+            .then(response => populateDropdown('projectDropdown', response.data))
+            .catch(error => console.error('Error loading projects:', error));
+
+
+     // axios.get('/Configs/GetTariffs')
+     //        .then(response => populateDropdown('tariffDropdown', response.data))
+     //        .catch(error => console.error('Error loading Tariff:', error));
+
+
+     axios.get('/Configs/GetSectors')
+             .then(response => populateDropdown('sectorDropdown', response.data))
+             .catch(error => console.error('Error loading Sector:', error));
+
+    // Important code
+    // axios.get('/Configs/GetTariffs')
+    //         .then(response => {
+    //         console.log("API Response:", response.data); // Debugging log
+    //         const dropdown = document.getElementById('tariffDropdown');
+    //         //Important: dropdown.innerHTML = '<option value="">-- Tariffs --</option>';
+
+    // // response.data.forEach(tariff => {
+    // //         console.log("Processing Tariff:", tariff); // Debugging log
+    // //         if (tariff && tariff.tarrifName) { // Ensure case-sensitive match
+    // //             const option = document.createElement('option');
+    // //             option.value = tariff.tarrifName;
+    // //             option.textContent = tariff.tarrifName;
+    // //             dropdown.appendChild(option);
+    // //         } else {
+    // //             console.warn("Skipping invalid tariff:", tariff);
+    // //         }
+    // //     });
+
+    // })
+    // .catch(error => console.error('Error loading tariffs:', error));
+
+       
+}
+
+    function populateDropdown(dropdownId, data) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.innerHTML = `<option value="">-- ${dropdownId.replace('Dropdown', '')} --</option>`;
+        data.forEach(item => {
+            const option = document.createElement('option');
+
+            if (typeof item === 'string') 
+            {
+                itemName = item;
+                itemValue = item;
+            } else if (typeof item === 'object' && item !== null) {
+                itemName =  item.tarrifName ; // Adjust based on actual API response
+                itemValue =  item.uid ;
+            }
+
+            if (itemName && itemValue) 
+            {
+                let option = document.createElement('option');
+                option.value = itemValue;
+                option.textContent = itemName;
+                dropdown.appendChild(option);
+            } else {
+                console.warn("Skipping invalid item:", item);
+            }
+            
+            // option.value = item;
+            // option.textContent = item;
+            //dropdown.appendChild(option);
+        });
+    }
+
+    function updateDropdown() {
+        const selectedProject = document.getElementById('projectDropdown').value;
+        if (selectedProject) {
+            axios.get(`/Configs/GetSubProjects?project=${encodeURIComponent(selectedProject)}`)
+                .then(response => populateDropdown('subprojectDropdown', response.data))
+                .catch(error => console.error('Error loading subprojects:', error));
+        } else {
+            document.getElementById('subprojectDropdown').innerHTML = '<option value="">-- Subprojects --</option>';
+        }
+
+            const selectedSector = document.getElementById('sectorDropdown').value;
+               console.log(selectedSector);
+            if (selectedProject) {
+                    axios.get(`/Configs/GetSectors?project=${encodeURIComponent(selectedProject)}`)
+                    .then(response => populateDropdown('sectorDropdown', response.data))
+                    .catch(error => console.error('Error loading sectors:', error));
+            } else {
+                document.getElementById('sectorDropdown').innerHTML = '<option value="">-- Sectors --</option>';
+            }
+
+    }
+
+
+
+    function updateGrid() {
+        const selectedProject = document.getElementById('projectDropdown').value;
+        const selectedSubProject = document.getElementById('subprojectDropdown').value;
+        const selectedSector = document.getElementById('sectorDropdown').value;
+        //const selectedTariff =   document.getElementsByName('tariffDropdown');   //document.getElementById('tariffDropdown').value;
+        //const selectedTariffDropdown = document.getElementById('tariffDropdown');
+        //const selectedTariff = selectedTariffDropdown.options[selectedTariffDropdown.selectedIndex].text;
+
+
+            if (selectedProject && selectedSubProject) {
+            axios.get(`/Customers/GetCustomersPSPS`, {
+                params: { project: selectedProject, subproject: selectedSubProject, sectorname: selectedSector }
+            })
+            .then(response => {
+                if (dataTable) dataTable.destroy();
+                document.getElementById('customerGridBody').innerHTML = response.data;
+                dataTable = $('#studentsTable').DataTable();
+            })
+            .catch(error => console.error('Error loading customers:', error));
+        }
+    }
+
+
+
+
+    function processSelectedCustomers() {
+        const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Please select at least one customer');
+            return;
+        }
+
+        const selectedCustomersData = Array.from(selectedCheckboxes).map(checkbox => ({
+            Uid: checkbox.value,
+            Btno: checkbox.dataset.btno,
+            CustomerName: checkbox.dataset.customerName,
+            Tariff: checkbox.dataset.tariffName
+        }));
+
+        // Send the data to the server
+        fetch('/ElectricityBills/ProcessCustomers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(selectedCustomersData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Customers processed successfully!');
+                window.location.href = '/ElectricityBills/Index';
+            } else {
+                alert(data.message || 'An error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request');
+        });
+    }
+
+    // Double-click event handler for viewing customer details
+    $('#studentsTable tbody').on('dblclick', 'tr', function () {
+        const operatorId = $(this).data('id');
+        if (operatorId) {
+            window.location.href = '/Customers/Details/' + operatorId;
+        }
+    });
+</script>
+
+<!-- Button to process selected customers -->
+<button id="processCustomersBtn" class="btn btn-primary">Process Selected Customers</button>
+
+

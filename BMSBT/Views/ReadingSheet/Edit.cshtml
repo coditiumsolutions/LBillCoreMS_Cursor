@@ -1,0 +1,104 @@
+﻿@model BMSBT.Models.ReadingSheet
+
+@{
+    ViewData["Title"] = "Edit Reading";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<div class="card shadow-lg">
+    <div style="background-color:#101f63; color:white; height:45px;">
+        <h3 class="mb-0" style="margin-left:15px; margin-top:5px;">Edit Reading</h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Uid" />
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label asp-for="Btno">BT No</label>
+                    <input asp-for="Btno" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Year">Year</label>
+                    <input asp-for="Year" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Month">Month</label>
+                    <input asp-for="Month" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="CustomerNo">Customer No</label>
+                    <input asp-for="CustomerNo" class="form-control" readonly />
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                
+
+                <div class="col-md-3">
+                    <label asp-for="MeterType">Meter Type</label>
+                    <input asp-for="MeterType" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Previous1">Previous 1</label>
+                    <input asp-for="Previous1" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Present1">Present 1</label>
+                    <input asp-for="Present1" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Difference1">Difference 1</label>
+                    <input asp-for="Difference1" class="form-control" readonly />
+                </div>
+
+            </div>
+
+            <div class="row mt-3">
+                
+                <div class="col-md-3">
+                    <label asp-for="Previous2">Previous 2</label>
+                    <input asp-for="Previous2" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Present2">Present 2</label>
+                    <input asp-for="Present2" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Difference2">Difference 2</label>
+                    <input asp-for="Difference2" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Previous3">Previous 3</label>
+                    <input asp-for="Previous3" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                
+
+                <div class="col-md-3">
+                    <label asp-for="Present3">Present 3</label>
+                    <input asp-for="Present3" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Difference3">Difference 3</label>
+                    <input asp-for="Difference3" class="form-control" readonly />
+                </div>
+            </div>
+
+            <div class="form-group mt-3 text-end">
+                <button type="submit" class="btn btn-success">Save</button>
+                <a asp-action="ReadingDetails" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,82 @@
+﻿
+@model BMSBT.Models.Fine
+
+@{
+    ViewData["Title"] = "Fine Details";
+    Layout = "~/Views/Shared/_LayoutFine.cshtml";
+}
+
+<h2>Fine Details</h2>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <th>BT No</th>
+                <td>@Model.BTNo</td>
+                <th>Customer Name</th>
+                <td>@Model.CustomerName</td>
+            </tr>
+            <tr>
+                <th>Project</th>
+                <td>@Model.ProjectName</td>
+                <th>Block</th>
+                <td>@Model.Block</td>
+            </tr>
+            <tr>
+                <th>Sector</th>
+                <td>@Model.Sector</td>
+                <th>Month</th>
+                <td>@Model.FineMonth</td>
+            </tr>
+            <tr>
+                <th>Year</th>
+                <td>@Model.FineYear</td>
+                <th>Fine Date</th>
+                <td>@Model.DateFine.ToString("yyyy-MM-dd")</td>
+            </tr>
+            <tr>
+                <th>Department</th>
+                <td>@Model.Department</td>
+                <th>Fine Type</th>
+                <td>@Model.FineType</td>
+            </tr>
+            <tr>
+                <th>Service</th>
+                <td>@Model.FineService</td>
+                <th>Service</th>
+                <td>@Model.FineService</td>
+            </tr>
+            <tr>
+                <th>Fine Category</th>
+                <td>@Model.FineCategory</td>
+                <th>Amount</th>
+                <td>@Model.FineAmount</td>
+            </tr>
+            <tr>
+                <th>Waived</th>
+                <td>@Model.WaivedAmount</td>
+                <th>Adjustment</th>
+                <td>@Model.AdjustmentAmount</td>
+            </tr>
+            <tr>
+                <th>To Charge</th>
+                <td>@Model.FineToCharge</td>
+                <th>Entered By</th>
+                <td>@Model.FineEnteredBy</td>
+            </tr>
+            <tr>
+                <th>Entered Date</th>
+                <td>@Model.FineEnterDate.ToString("yyyy-MM-dd")</td>
+                <th>Comments</th>
+                <td>@Model.Comments</td>
+            </tr>
+            <tr>
+                <th>History</th>
+                <td colspan="3">@Model.History</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<a asp-action="Index" class="btn btn-secondary">Back to List</a>

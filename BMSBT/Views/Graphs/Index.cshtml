@@ -1,0 +1,102 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutReports.cshtml";
+}
+
+<h3>Total Customers by Project</h3>
+<style>
+    select {
+        width: 200px; /* Adjust width as needed */
+        padding: 8px; /* Increase padding for better appearance */
+        font-size: 16px; /* Make text more readable */
+        border-radius: 5px; /* Rounded corners */
+        border: 1px solid #ccc; /* Light border */
+        background-color: #fff; /* White background */
+    }
+</style>
+<!-- Canvas for the chart -->
+@* <canvas id="myChart" width="400" height="200"></canvas> *@
+
+@* <div style="width: 600px; height: 400px;">
+    <canvas id="projectChart"></canvas>
+</div> *@
+@* 
+<p>Total Customers: <span id="totalCustomers"></span></p> *@
+
+<div style="display: flex; gap: 20px;">
+    <!-- Pie Chart -->
+    <div style="width: 400px; height: 400px;">
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- Bar Chart -->
+    <div style="width: 600px; height: 400px;">
+        <canvas id="barChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartLabels));
+        const data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ChartData));
+
+        // Colors for both charts
+        const backgroundColors = [
+            'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)',
+            'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)'
+        ];
+        const borderColors = backgroundColors.map(color => color.replace("0.6", "1"));
+
+        // Pie Chart
+        new Chart(document.getElementById('pieChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Records per Project',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Bar Chart
+        new Chart(document.getElementById('barChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Records per Project',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+
+    });
+</script>
+
+
+

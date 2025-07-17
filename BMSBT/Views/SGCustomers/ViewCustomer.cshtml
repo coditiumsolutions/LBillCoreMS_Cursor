@@ -1,0 +1,17 @@
+﻿@model BMSBT.Models.CustomersDetail
+
+<h4>Customer Details</h4>
+<table class="table">
+    <tr><th>BT No</th><td>@Model.Btno</td></tr>
+    <tr><th>Name</th><td>@Model.CustomerName</td></tr>
+    <tr><th>CNIC</th><td>@Model.Cnicno</td></tr>
+    <tr><th>Mobile</th><td>@Model.MobileNo</td></tr>
+    <tr><th>Project</th><td>@Model.Project</td></tr>
+    <tr><th>Sector</th><td>@Model.Sector</td></tr>
+    <tr><th>SubProject</th><td>@Model.SubProject</td></tr>
+    <tr><th>Bill Status</th><td>@Model.BillStatus</td></tr>
+</table>
+
+<a href="@Url.Action("GenerateBill", "SGCustomers")" class="btn btn-secondary">Back</a>
+
+

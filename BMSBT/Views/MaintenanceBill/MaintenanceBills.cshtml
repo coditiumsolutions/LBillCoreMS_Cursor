@@ -1,0 +1,545 @@
+﻿@using BMSBT.DTO
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BillDTO>
+
+@{
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    // If Model is null, use an empty list to avoid null reference errors.
+    var bills = Model ?? new StaticPagedList<BillDTO>(new List<BillDTO>(), 1, 10000, 0);
+
+    // Group the bills first by Project, then by Sector, then by Block.
+    var groupedByProject = bills.GroupBy(b => b.Project)
+        .Select(projGroup => new
+        {
+            Project = projGroup.Key,
+            Sectors = projGroup.GroupBy(b => b.Sector)
+                .Select(sectorGroup => new
+                {
+                    Sector = sectorGroup.Key,
+                    Blocks = sectorGroup.GroupBy(b => b.Block).OrderBy(bg => bg.Key)
+                }).OrderBy(s => s.Sector)
+        });
+}
+
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Printing Bills...</div>
+</div>
+
+<style>
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+        color: white;
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    @@keyframes spin {
+        0%
+
+    {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+
+    }
+</style>
+
+<!-- Optional messages -->
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+@if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+{
+    <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+}
+
+<!-- Filter Form (for Month/Year) -->
+<form method="post" action="@Url.Action("MaintenanceBillsPost", "Maintenance")">
+    <div class="row">
+        <div class="col-md-3">
+            <label for="month" class="form-label">Month:</label>
+            <select id="month" name="month" class="form-control" required>
+                <option value="">-- Choose Month --</option>
+                @foreach (var monthName in System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
+                {
+                    <option value="@monthName">@monthName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="year" class="form-label">Year:</label>
+            <select id="year" name="year" class="form-control" required>
+                <option value="">-- Choose Year --</option>
+                @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 10; i--)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-3">
+            <button type="submit" class="btn btn-primary flex-grow-1" style="margin-right:10px">View Bills</button>
+            <button id="PrintRecordsButton" type="button" class="btn btn-primary flex-grow-1" style="margin-right:10px">Print Bill</button>
+            <button id="PayRecordsButton" type="button" class="btn btn-primary flex-grow-1">Pay Bill</button>
+        </div>
+    </div>
+</form>
+
+<!-- Search Panel -->
+<div class="search-panel" style="margin-top:20px;">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:1000px; display:inline-block; margin-right:10px;" />
+</div>
+
+<!-- Main Nested Table -->
+<div class="table-responsive">
+    <table id="maintenanceTable" class="table">
+        <thead>
+            <tr>
+                <th style="width:50px;"></th>
+                <th style="width:400px;">
+                    <input type="checkbox" id="selectAll" title="Select All Records" />
+                </th>
+                <th data-sort="Category" class="sort-icon" style="width:400px;">Category</th>
+                <th data-sort="CustomerName" class="sort-icon" style="width:400px;">Customer Name</th>
+                <th data-sort="Btno" class="sort-icon" style="width:400px;">Bt No</th>
+                <!-- Add other column headers as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var projectGroup in groupedByProject)
+            {
+                var projectId = "project-" + projectGroup.Project?.Replace(" ", "-");
+                <!-- Project Header Row -->
+                <tr class="project-header" data-project="@projectId">
+                    <td>
+                        <i class="fas fa-chevron-right toggle-icon"></i>
+                    </td>
+                    <td colspan="6">
+                        Project: @projectGroup.Project
+                    </td>
+                </tr>
+                <!-- Project Content Row -->
+                <tr class="project-content" data-parent="@projectId" style="display:none;">
+                    <td colspan="7" style="padding:0;">
+                        <div class="project-sectors">
+                            @foreach (var sectorGroup in projectGroup.Sectors)
+                            {
+                                var sectorId = $"{projectId}-sector-{sectorGroup.Sector?.Replace(" ", "-")}";
+                                <!-- Sector Header Row -->
+                                <table class="nested-table" style="width:100%; margin-bottom:0;">
+                                    <tr class="sector-header" data-sector="@sectorId">
+                                        <td style="width:50px;">
+                                            <i class="fas fa-chevron-right toggle-icon"></i>
+                                        </td>
+                                        <td colspan="6">
+                                            Sector: @sectorGroup.Sector
+                                        </td>
+                                    </tr>
+                                </table>
+                                <!-- Sector Content (with Block Grouping) -->
+                                <div class="sector-content" id="@sectorId" style="display:none;">
+                                    @foreach (var blockGroup in sectorGroup.Blocks)
+                                    {
+                                        var blockId = $"{sectorId}-block-{blockGroup.Key?.Replace(" ", "-")}";
+                                        <!-- Block Header Row -->
+                                        <table class="nested-table" style="width:100%; margin-bottom:0;">
+                                            <tr class="block-header" data-block="@blockId">
+                                                <td style="width:50px;">
+                                                    <i class="fas fa-chevron-right toggle-icon"></i>
+                                                </td>
+                                                <td colspan="6">
+                                                    Block: @blockGroup.Key
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <!-- Block Content (with Category Grouping) -->
+                                        <div class="block-content" id="@blockId" style="display:none;">
+                                            <table class="nested-table" style="width:100%; margin-bottom:0;">
+                                                @foreach (var categoryGroup in blockGroup.GroupBy(b => b.Category).OrderBy(g => g.Key))
+                                                {
+                                                    var categoryId = $"{blockId}-category-{categoryGroup.Key?.Replace(" ", "-")}";
+                                                    <!-- Category Header Row -->
+                                                    <tr class="category-header" data-category="@categoryId">
+                                                        <td style="width:50px;">
+                                                            <i class="fas fa-chevron-right toggle-icon"></i>
+                                                        </td>
+                                                        <td colspan="6">
+                                                            Category: @categoryGroup.Key
+                                                        </td>
+                                                    </tr>
+                                                    <!-- Category Content Rows -->
+                                                    <tr class="category-content" data-parent="@categoryId" style="display:none;">
+                                                        <td colspan="7" style="padding:0;">
+                                                            <table class="nested-table" style="width:100%; margin-bottom:0;">
+                                                                @foreach (var bill in categoryGroup)
+                                                                {
+                                                                    <tr class="customer-row">
+                                                                        <td style="width:50px;"></td>
+                                                                        <td style="width:400px;">
+                                                                            <input type="checkbox" class="record-checkbox" value="@bill.Uid" />
+                                                                        </td>
+                                                                        <td style="width:400px;">@bill.Category</td>
+                                                                        <td style="width:400px;">@bill.CustomerName</td>
+                                                                        <td style="width:400px;">@bill.Btno</td>
+                                                                        <td style="width:400px;">@bill.PaymentStatus</td>
+                                                                    </tr>
+                                                                }
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </table>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="text-center">
+    @Html.PagedListPager(bills, page => Url.Action("Index", new { page }))
+</div>
+
+<!-- Results Container -->
+<div id="resultsContainer" style="display:none; margin-top:20px;">
+    <h4>Bill Generation Results</h4>
+    <table id="resultsTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<!-- Styling -->
+<style>
+    .dropdown-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+
+    .custom-dropdown {
+        width: 200px;
+        height: 40px;
+        padding: 5px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .nested-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s;
+    }
+
+    .rotate-icon {
+        transform: rotate(90deg);
+    }
+
+    .search-panel {
+        margin-bottom: 20px;
+    }
+
+    .project-header {
+        background-color: #e3f2fd !important;
+        cursor: pointer;
+    }
+
+    .sector-header {
+        background-color: #fff3e0 !important;
+        cursor: pointer;
+    }
+
+    .block-header {
+        background-color: #f5f5f5 !important;
+        cursor: pointer;
+    }
+
+    .category-header {
+        background-color: #f0f8ff !important;
+        cursor: pointer;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Toggle functionality for Project, Sector, Block, and Category rows
+            $('.project-header').click(function () {
+                var projectId = $(this).data('project');
+                var icon = $(this).find('.toggle-icon');
+                var content = $('tr[data-parent="' + projectId + '"]');
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+                if (!content.is(':visible')) {
+                    content.find('.sector-content, .block-content, .category-content').hide();
+                    content.find('.sector-header .toggle-icon, .block-header .toggle-icon, .category-header .toggle-icon').removeClass('rotate-icon');
+                }
+            });
+
+            $('.sector-header').click(function (e) {
+                e.stopPropagation();
+                var sectorId = $(this).data('sector');
+                var icon = $(this).find('.toggle-icon');
+                var content = $('#' + sectorId);
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+                if (!content.is(':visible')) {
+                    content.find('.block-content, .category-content').hide();
+                    content.find('.block-header .toggle-icon, .category-header .toggle-icon').removeClass('rotate-icon');
+                }
+            });
+
+            $('.block-header').click(function (e) {
+                e.stopPropagation();
+                var blockId = $(this).data('block');
+                var icon = $(this).find('.toggle-icon');
+                var content = $('#' + blockId);
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+                if (!content.is(':visible')) {
+                    content.find('.category-content').hide();
+                    content.find('.category-header .toggle-icon').removeClass('rotate-icon');
+                }
+            });
+
+            $('.category-header').click(function (e) {
+                e.stopPropagation();
+                var categoryId = $(this).data('category');
+                var icon = $(this).find('.toggle-icon');
+                var content = $('tr[data-parent="' + categoryId + '"]');
+                icon.toggleClass('rotate-icon');
+                content.toggle();
+            });
+
+            // Select All functionality for main table checkboxes
+            $('#selectAll').change(function () {
+                $('.record-checkbox:visible').prop('checked', $(this).prop('checked'));
+                updateSelectAllState();
+            });
+
+            $('.record-checkbox').change(function () {
+                updateSelectAllState();
+            });
+
+            function updateSelectAllState() {
+                var totalVisible = $('.record-checkbox:visible').length;
+                var totalChecked = $('.record-checkbox:visible:checked').length;
+                $('#selectAll').prop({
+                    checked: totalVisible === totalChecked && totalVisible > 0,
+                    indeterminate: totalChecked > 0 && totalChecked < totalVisible
+                });
+            }
+
+            // Search functionality
+            $('#searchInput').on('keyup', function() {
+                var searchText = $(this).val().toLowerCase();
+
+                // Hide all rows initially
+                $('.customer-row, .category-content, .block-content, .sector-content, .project-content').hide();
+                $('.category-header, .block-header, .sector-header, .project-header').hide();
+
+                // Track which parents need to be shown
+                var visibleCategories = new Set();
+                var visibleBlocks = new Set();
+                var visibleSectors = new Set();
+                var visibleProjects = new Set();
+
+                // Check each row if it matches the search query
+                $('.customer-row').each(function() {
+                    var row = $(this);
+                    var rowText = row.text().toLowerCase();
+
+                    if (rowText.includes(searchText)) {
+                        row.show();
+
+                        // Get parent identifiers
+                        var categoryContent = row.closest('tr.category-content');
+                        var blockContent = row.closest('.block-content');
+                        var sectorContent = row.closest('.sector-content');
+                        var projectContent = row.closest('tr.project-content');
+
+                        // Mark parents as visible
+                        visibleCategories.add(categoryContent.data('parent'));
+                        visibleBlocks.add(blockContent.attr('id'));
+                        visibleSectors.add(sectorContent.attr('id'));
+                        visibleProjects.add(projectContent.data('parent'));
+                    }
+                });
+
+                // Show only relevant categories, blocks, sectors, and projects
+                visibleCategories.forEach(category => {
+                    $('tr.category-header[data-category="' + category + '"]').show();
+                    $('tr.category-content[data-parent="' + category + '"]').show();
+                    $('tr.category-header[data-category="' + category + '"] .toggle-icon').addClass('rotate-icon');
+                });
+
+                visibleBlocks.forEach(block => {
+                    $('.block-header[data-block="' + block + '"]').show();
+                    $('.block-content[id="' + block + '"]').show();
+                    $('.block-header[data-block="' + block + '"] .toggle-icon').addClass('rotate-icon');
+                });
+
+                visibleSectors.forEach(sector => {
+                    $('.sector-header[data-sector="' + sector + '"]').show();
+                    $('.sector-content[id="' + sector + '"]').show();
+                    $('.sector-header[data-sector="' + sector + '"] .toggle-icon').addClass('rotate-icon');
+                });
+
+                visibleProjects.forEach(project => {
+                    $('.project-header[data-project="' + project + '"]').show();
+                    $('tr.project-content[data-parent="' + project + '"]').show();
+                    $('.project-header[data-project="' + project + '"] .toggle-icon').addClass('rotate-icon');
+                });
+
+                updateSelectAllState();
+            });
+
+            // Print Bills Button Click
+            $("#PrintRecordsButton").on("click", function () {
+                console.log("Print button clicked");
+                $("#loadingOverlay").show();
+                var selectedUIDs = [];
+                $('.record-checkbox:checked').each(function() {
+                    selectedUIDs.push($(this).val());
+                });
+
+                console.log("Selected UIDs:", selectedUIDs);
+
+                if (selectedUIDs.length === 0) {
+                    alert("Please select at least one bill to print.");
+                    $("#loadingOverlay").hide();
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Maintenance/PrintMaintMultiBill',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ uids: selectedUIDs.join(",") }),
+                    xhrFields: {
+                        responseType: 'blob'
+                    },
+                    beforeSend: function() {
+                        console.log("Making AJAX request...");
+                    },
+                    success: function (data, status, xhr) {
+                        console.log("Success response received");
+
+                        var contentType = xhr.getResponseHeader("content-type");
+                        if (contentType && contentType.indexOf("application/pdf") !== -1) {
+                            var blob = new Blob([data], { type: "application/pdf" });
+                            var url = window.URL.createObjectURL(blob);
+                            window.open(url, "_blank");
+                        } else {
+                            alert("Received invalid response format from server");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("AJAX Error:", {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            error: error
+                        });
+                        alert("Failed to generate the bill. Status: " + xhr.status + ", Error: " + error);
+                    },
+                    complete: function () {
+                        $("#loadingOverlay").hide();
+                    }
+                });
+            });
+
+            // Pay Records Button Click Handler
+            $("#PayRecordsButton").on("click", function () {
+                console.log("Pay button clicked");
+
+                var selectedUIDs = [];
+                $('.record-checkbox:checked').each(function() {
+                    selectedUIDs.push($(this).val());
+                });
+
+                console.log("Selected UIDs:", selectedUIDs);
+
+                if (selectedUIDs.length === 0) {
+                    alert("Please select at least one bill to pay.");
+                    return;
+                }
+
+                $("#loadingOverlay").show();
+                $(".loading-text").text("Processing Payments...");
+
+                $.ajax({
+                    url: '/MaintenanceBill/PayMaintMultiBill',
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(selectedUIDs),
+                    beforeSend: function(xhr) {
+                        console.log("Sending request with data:", selectedUIDs);
+                    },
+                    success: function(response) {
+                        console.log("Success response:", response);
+                        alert(response.message || "Payment processed successfully!");
+                        location.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Payment Error Details:", {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            responseText: xhr.responseText,
+                            error: error
+                        });
+                        alert("Failed to process payment. Check console for details.");
+                    },
+                    complete: function() {
+                        $("#loadingOverlay").hide();
+                        $(".loading-text").text("Printing Bills...");
+                    }
+                });
+            });
+        });
+    </script>
+}

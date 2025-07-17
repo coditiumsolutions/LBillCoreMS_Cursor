@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Tax Information";
+    Layout = "~/Views/Shared/_LayoutTax.cshtml";
+}
+
+
+<!-- Create New Button -->
+<a asp-action="Create" class="btn btn-primary mb-3">Create New</a>
+
+
+
+
+
+<!-- Search Bar -->
+<div class="search-panel mb-3">
+    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:980px; display:inline-block; margin-right:10px;" />
+</div>
+
+<!-- Tax Table -->
+<div class="table-responsive">
+    <table id="taxTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tax ID</th>
+                <th>Tax Name</th>
+                <th>Tax Rate</th>
+                <th>Applicable For</th>
+                <th>Is Active</th>
+                <th>Range</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.TaxId">
+                    <td>@item.TaxId</td>
+                    <td>@item.TaxName</td>
+                    <td>@item.TaxRate</td>
+                    <td>@item.ApplicableFor</td>
+                    <td>@item.IsActive</td>
+                    <td>@item.Range</td>
+                    <td>
+                        <!-- Edit Button -->
+                     <a asp-action="Edit" asp-route-id="@item.TaxId" class="btn btn-sm btn-success">Edit</a>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#searchInput').on('keyup', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('#taxTable tbody tr').each(function () {
+                    var row = $(this);
+                    var matches = row.text().toLowerCase().includes(searchText);
+                    row.toggle(matches);
+                });
+            });
+        });
+    </script>
+}

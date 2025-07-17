@@ -1,0 +1,123 @@
+﻿
+@model BMSBT.Models.BillReportViewModel
+
+@{
+    ViewData["Title"] = "Bill Report";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+}
+<style>
+    .form-container {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Adjust spacing between elements */
+    }
+
+        .form-container select {
+            width: 200px; /* Adjust width as per your requirement */
+            height: 40px; /* Adjust height */
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        .form-container button {
+            height: 42px; /* Match the dropdown height */
+            padding: 5px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff; /* Button color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+            .form-container button:hover {
+                background-color: #0056b3; /* Darker shade on hover */
+            }
+
+
+
+    .billing-summary {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #f8f9fa; /* Light gray background */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+        width: 50%;
+    }
+
+        .billing-summary h3 {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .billing-summary .summary-item {
+            font-size: 18px;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+    .total-customers {
+        background-color: #28a745; /* Green */
+        color: white;
+    }
+
+    .total-bills {
+        background-color: #007bff; /* Blue */
+        color: white;
+    }
+
+    .pending-bills {
+        background-color: #dc3545; /* Red */
+        color: white;
+    }
+
+
+</style>
+
+<form asp-action="BillReport" method="post">
+    <div class="form-container">
+        <label for="SelectedMonth">Select Month:</label>
+        <select asp-for="SelectedMonth" asp-items="Model.Months">
+            <option value="">-- Select Month --</option>
+        </select>
+
+        <label for="SelectedYear">Select Year:</label>
+        <select asp-for="SelectedYear" asp-items="Model.Years">
+            <option value="">-- Select Year --</option>
+        </select>
+
+        <button type="submit">Generate Report</button>
+    </div>
+</form>
+
+@* @if (!string.IsNullOrEmpty(Model.SelectedMonth) && !string.IsNullOrEmpty(Model.SelectedYear))
+{
+    <h3>Total Customers = @Model.TotalCustomers</h3>
+    <h3>Total Bills Created for @Model.SelectedMonth @Model.SelectedYear = @Model.TotalBillsCreated</h3>
+    <h3>Pending Bills for @Model.SelectedMonth @Model.SelectedYear = @Model.PendingBills</h3>
+}
+ *@
+
+
+
+@if (Model.TotalCustomers > 0)
+{
+    <div class="billing-summary">
+        <h3>Billing Report</h3>
+
+        <div class="summary-item total-customers">
+            Total Customers: @Model.TotalCustomers
+        </div>
+
+        <div class="summary-item total-bills">
+            Total Bills Created for @Model.SelectedMonth @Model.SelectedYear: @Model.TotalBillsCreated
+        </div>
+
+        <div class="summary-item pending-bills">
+            Pending Bills for @Model.SelectedMonth @Model.SelectedYear: @Model.PendingBills
+        </div>
+    </div>
+}

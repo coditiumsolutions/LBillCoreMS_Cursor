@@ -1,0 +1,41 @@
+﻿@model BMSBT.Models.Configuration
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Configuration</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Uid" />
+            <div class="form-group">
+                <label asp-for="ConfigId" class="control-label"></label>
+                <input asp-for="ConfigId" class="form-control" />
+                <span asp-validation-for="ConfigId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfigKey" class="control-label"></label>
+                <input asp-for="ConfigKey" class="form-control" />
+                <span asp-validation-for="ConfigKey" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfigValue" class="control-label"></label>
+                <input asp-for="ConfigValue" class="form-control" />
+                <span asp-validation-for="ConfigValue" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

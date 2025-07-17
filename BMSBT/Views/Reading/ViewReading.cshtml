@@ -1,0 +1,43 @@
+﻿@model BMSBT.Models.ReadingSheet
+@{
+    ViewData["Title"] = "ViewReading";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+}
+
+<h4>Reading Details</h4>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<form asp-action="UpdateReading" method="post">
+    <input type="hidden" name="id" value="@Model.Uid" />
+
+    <table class="table table-bordered">
+        <tr><th>BT No</th><td>@Model.Btno</td></tr>
+          <tr>
+            <th>Billing Month</th>
+            <td>
+                <input type="text" name="billingMonth" value="@Model.Month" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <th>Previous Reading</th>
+            <td>
+                <input type="number" name="previousReading" value="@Model.Previous1" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <th>Present Reading</th>
+            <td>
+                <input type="number" name="presentReading" value="@Model.Present1" class="form-control" />
+            </td>
+        </tr>
+        <tr><th>Created By</th><td>@Model.CreatedBy, @Model.CreatedOn</td></tr>
+        <tr><th>History</th><td><pre>@Model.History</pre></td></tr>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Update Reading</button>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</form>

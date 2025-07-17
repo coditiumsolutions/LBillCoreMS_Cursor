@@ -1,0 +1,81 @@
+﻿@using X.PagedList
+@using X.PagedList.Mvc.Core
+
+@model IPagedList<BMSBT.Models.Configuration>
+
+@{
+    ViewData["Title"] = "AllConfigs";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+}
+
+<head>
+    <style>
+        .search-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 300px;
+            height: 40px;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<h5>Search Config Keys</h5>
+
+<div class="form-group search-container">
+    <input type="text" id="searchKeyInput" class="form-control search-input" placeholder="Search by Key...">
+</div>
+
+<!-- Table -->
+<div class="gridContainer" id="customerGridContainer">
+    <table id="configTable" class="table table-striped table-bordered dt-responsive nowrap" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.FirstOrDefault().ConfigId)</th>
+                <th>@Html.DisplayNameFor(model => model.FirstOrDefault().ConfigKey)</th>
+                <th>@Html.DisplayNameFor(model => model.FirstOrDefault().ConfigValue)</th>
+            </tr>
+        </thead>
+        <tbody id="configTableBody">
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ConfigId</td>
+                    <td class="config-key">@item.ConfigKey</td>
+                    <td>@item.ConfigValue</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="text-center">
+    @Html.PagedListPager(Model, page => Url.Action("AllConfigs", new { page }))
+</div>
+
+<script>
+    document.getElementById('searchKeyInput').addEventListener('input', function () {
+        const searchValue = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#configTableBody tr");
+
+        rows.forEach(row => {
+            const keyColumn = row.querySelector(".config-key").textContent.toLowerCase();
+            if (keyColumn.includes(searchValue)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+</script>

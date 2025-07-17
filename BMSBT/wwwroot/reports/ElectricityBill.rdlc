@@ -1,0 +1,6 @@
+﻿namespace BMSBT.wwwroot.reports
+{
+    public class ElectricityBill
+    {
+    }
+}

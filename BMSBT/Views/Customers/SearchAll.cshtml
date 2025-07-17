@@ -1,0 +1,124 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersDetail>
+@{
+    ViewData["Title"] = "SearchAll";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+<style>
+    /* Center align search box */
+    .search-container {
+        max-width: 600px;
+        margin: 20px auto;
+        text-align: center;
+    }
+
+    /* Flexbox for alignment */
+    .search-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px; /* Space between input and button */
+    }
+
+    /* Search input styling */
+    .search-input {
+        width: 50%; /* Reduced width */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    /* Button styling */
+    .search-button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+
+        .search-button:hover {
+            background-color: #0056b3;
+        }
+
+    /* Style the table */
+    .table {
+        border-collapse: collapse;
+        width: 100%;
+        background-color: #f8f9fa;
+    }
+
+        .table th {
+            background-color: #142141;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .table td {
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Add hover effect */
+        .table tbody tr:hover {
+            background-color: #e0e0e0;
+            transition: 0.3s;
+        }
+
+    /* No records message */
+    .no-records {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: red;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="search-container">
+    <h3>Search by Customer No. or Customer Name</h3>
+    <form method="get" action="@Url.Action("SearchAll")" class="search-box">
+        <input type="text" name="search" class="form-control search-input" placeholder="Enter BT No or Customer Name" />
+        <button type="submit" class="search-button">Search</button>
+    </form>
+</div>
+
+@if (!Model.Any())
+{
+    <p class="no-records">No records found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>BT No.</th>
+                <th>Customer Name</th>
+                <th>Project Name</th>
+                <th>Block</th>
+                <th>Sector</th>
+                <th>Plot No</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr ondblclick="openRecord(@item.Uid)">
+                    <td>@item.Btno</td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.Project</td>
+                    <td>@item.Block</td>
+                    <td>@item.Sector</td>
+                    <td>@item.PloNo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<script>
+    function openRecord(id) {
+        window.location.href = '/Customers/Details/' + id;
+    }
+</script>

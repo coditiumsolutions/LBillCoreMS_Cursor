@@ -1,0 +1,37 @@
+﻿@model BMSBT.Models.ElectricityBill
+
+<h4>Bill Details – @Model.CustomerName</h4>
+@{
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<form asp-action="SGViewEBill" asp-controller="SGEBills" method="post">
+    <input type="hidden" name="id" value="@Model.Uid" />
+
+    <table class="table table-bordered">
+        <tr><th>Invoice No</th><td>@Model.InvoiceNo</td></tr>
+        <tr><th>BT No</th><td>@Model.Btno</td></tr>
+        <tr><th>Customer Name</th><td>@Model.CustomerName</td></tr>
+        <tr><th>Bill Amount</th><td>@Model.BillAmount</td></tr>
+        <tr><th>Bill History</th><td>@Model.History</td></tr>
+        <tr>
+            <th>Bill Status</th>
+            <td>
+                <select name="billStatus" class="form-select">
+                    <option value="Paid" selected="@(Model.PaymentStatus == "Paid")">Paid</option>
+                    <option value="Unpaid" selected="@(Model.PaymentStatus == "Unpaid")">Unpaid</option>
+                    <option value="Partially Paid" selected="@(Model.PaymentStatus == "Partially Paid")">Partially Paid</option>
+                    <option value="Paid with Surcharge" selected="@(Model.PaymentStatus == "Paid with Surcharge")">Paid with Surcharge</option>
+                </select>
+            </td>
+        </tr>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Update Status</button>
+    <a asp-action="SGEBills" class="btn btn-secondary">Back to List</a>
+</form>
