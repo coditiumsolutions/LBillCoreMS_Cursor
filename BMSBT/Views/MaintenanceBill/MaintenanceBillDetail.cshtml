@@ -1,0 +1,25 @@
+﻿
+@{
+    ViewData["Title"] = "Bill Details";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<h1>Maintenance Bill Detail</h1>
+
+
+<h2>Maintenance Bill Details</h2>
+
+<table class="table table-bordered">
+    <tr><th>Customer Name</th><td>@Model.CustomerName</td></tr>
+    <tr><th>BT No</th><td>@Model.Btno</td></tr>
+    <tr><th>Invoice No</th><td>@Model.InvoiceNo</td></tr>
+    <tr><th>Billing Month</th><td>@Model.BillingMonth</td></tr>
+    <tr><th>Billing Year</th><td>@Model.BillingYear</td></tr>
+    <tr><th>Bill Amount</th><td>@Model.BillAmountInDueDate</td></tr>
+    <tr><th>Due Date</th><td>@Model.DueDate?.ToString("dd-MM-yyyy")</td></tr>
+    <tr><th>Payment Status</th><td>@Model.PaymentStatus</td></tr>
+    <!-- Add more fields as needed -->
+</table>
+
+<a href="@Url.Action("MaintenanceBills", "Maintenance")" class="btn btn-secondary">Back</a>
+

@@ -486,6 +486,16 @@ namespace BMSBT.Controllers
 
 
 
+        // GET: MaintenanceBills
+        public async Task<IActionResult> MaintenanceBillMS()
+        {
+            return View(await _dbContext.MaintenanceBills.ToListAsync());
+        }
+
+
+
+
+
 
 
         [HttpGet]

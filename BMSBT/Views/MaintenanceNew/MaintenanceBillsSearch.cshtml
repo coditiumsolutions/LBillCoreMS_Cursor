@@ -1,0 +1,136 @@
+﻿@model PaginationViewModel<BMSBT.Models.MaintenanceBill>
+@{
+    ViewData["Title"] = "Search Maintenance Bills";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<h2>Search Maintenance Bills</h2>
+
+<form asp-action="MaintenanceBillsSearch" method="get" class="mb-4">
+    <div class="form-row d-flex justify-content-start align-items-end gap-2">
+        <div class="form-group mr-2">
+            <label>Month</label>
+            <select name="billingMonth" class="form-control">
+                <option value="">-- Select Month --</option>
+                @foreach (var month in ViewBag.Months as List<string>)
+                {
+                    <option value="@month" selected="@(month == Context.Request.Query["billingMonth"])">@month</option>
+                }
+            </select>
+        </div>
+        <div class="form-group mr-2">
+            <label>Year</label>
+            <select name="billingYear" class="form-control">
+                <option value="">-- Select Year --</option>
+                @foreach (var year in ViewBag.Years as List<string>)
+                {
+                    <option value="@year" selected="@(year == Context.Request.Query["billingYear"])">@year</option>
+                }
+            </select>
+        </div>
+        <div class="form-group mr-2">
+            <label>Block</label>
+            <input type="text" name="block" class="form-control" placeholder="Enter Block" value="@Context.Request.Query["block"]" />
+        </div>
+        <div class="form-group mr-2">
+            <label>BT No</label>
+            <input type="text" name="btNo" class="form-control" placeholder="Enter BT No" value="@Context.Request.Query["btNo"]" />
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+</form>
+
+@if (ViewBag.ShowGrid == true)
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Invoice No</th>
+                    <th>Customer Name</th>
+                    <th>BT No</th>
+                    <th>Billing Month</th>
+                    <th>Billing Year</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Any())
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.InvoiceNo</td>
+                            <td>@item.CustomerName</td>
+                            <td>@item.Btno</td>
+                            <td>@item.BillingMonth</td>
+                            <td>@item.BillingYear</td>
+                            <td>@item.BillAmountInDueDate?.ToString("C")</td>
+                            <td>@item.PaymentStatus</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center">No records found</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="MaintenanceBillsSearch"
+                       asp-route-page="@(Model.PageNumber - 1)"
+                       asp-route-billingMonth="@Context.Request.Query["billingMonth"]"
+                       asp-route-billingYear="@Context.Request.Query["billingYear"]"
+                       asp-route-block="@Context.Request.Query["block"]"
+                       asp-route-btNo="@Context.Request.Query["btNo"]">
+                        Previous
+                    </a>
+                </li>
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="MaintenanceBillsSearch"
+                           asp-route-page="@i"
+                           asp-route-billingMonth="@Context.Request.Query["billingMonth"]"
+                           asp-route-billingYear="@Context.Request.Query["billingYear"]"
+                           asp-route-block="@Context.Request.Query["block"]"
+                           asp-route-btNo="@Context.Request.Query["btNo"]">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="MaintenanceBillsSearch"
+                       asp-route-page="@(Model.PageNumber + 1)"
+                       asp-route-billingMonth="@Context.Request.Query["billingMonth"]"
+                       asp-route-billingYear="@Context.Request.Query["billingYear"]"
+                       asp-route-block="@Context.Request.Query["block"]"
+                       asp-route-btNo="@Context.Request.Query["btNo"]">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="text-center text-muted">
+            Showing @((Model.PageNumber - 1) * Model.PageSize + 1) to
+            @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalRecords)) of @Model.TotalRecords records
+        </div>
+    }
+}

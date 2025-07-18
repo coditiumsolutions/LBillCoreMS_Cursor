@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BMSBT.Models;
 
@@ -54,6 +55,6 @@ public partial class MaintenanceBill
 
     public decimal? Arrears { get; set; }
     public decimal? MaintCharges { get; set; }
-    
 
+   
 }

@@ -3,6 +3,7 @@ using BMSBT.Models;
 using BMSBT.Requests;
 using BMSBT.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.Entity;
 
 namespace BMSBT.Controllers
 {
@@ -164,6 +165,290 @@ namespace BMSBT.Controllers
 
             return View(customers.ToList());
         }
+
+
+
+
+
+        //// POST
+        //[HttpPost]
+        //public IActionResult MaintenanceBillsSearch(string billingMonth, string billingYear, string block, string btNo)
+        //{
+        //    var query = _dbContext.MaintenanceBills
+        //                .Include(m => m.Customer) // ✅ Corrected navigation property
+        //                .AsQueryable();
+
+        //    // If all fields are empty, return an empty list
+        //    if (string.IsNullOrEmpty(billingMonth) &&
+        //        string.IsNullOrEmpty(billingYear) &&
+        //        string.IsNullOrEmpty(block) &&
+        //        string.IsNullOrEmpty(btNo))
+        //    {
+        //        ViewBag.Months = GetMonths();
+        //        ViewBag.Years = GetYears();
+        //        ViewBag.ShowGrid = false;
+        //        return View(new List<BMSBT.Models.MaintenanceBill>());
+        //    }
+
+        //    if (!string.IsNullOrEmpty(billingMonth))
+        //        query = query.Where(x => x.BillingMonth == billingMonth);
+
+        //    if (!string.IsNullOrEmpty(billingYear))
+        //        query = query.Where(x => x.BillingYear == billingYear);
+
+        //    if (!string.IsNullOrEmpty(block))
+        //        query = query.Where(x => x.Customer.Block == block); // ✅ via Customer navigation property
+
+        //    if (!string.IsNullOrEmpty(btNo))
+        //        query = query.Where(x => x.Btno == btNo);
+
+        //    ViewBag.ShowGrid = true;
+        //    ViewBag.Months = GetMonths();
+        //    ViewBag.Years = GetYears();
+
+        //    var model = query.ToList();
+        //    return View(model);
+        //}
+
+        // Helpers
+
+
+
+        //// GET
+        //public IActionResult MaintenanceBillsSearch()
+        //{
+        //    ViewBag.Months = GetMonths();
+        //    ViewBag.Years = GetYears();
+        //    ViewBag.ShowGrid = false; // Don't show data on first load
+        //    return View(new List<MaintenanceBill>());
+        //}
+
+        // POST
+        //[HttpPost]
+        //public IActionResult MaintenanceBillsSearch(string billingMonth, string billingYear, string block, string btNo)
+        //{
+        //    ViewBag.Months = GetMonths();
+        //    ViewBag.Years = GetYears();
+
+        //    var query = _dbContext.MaintenanceBills.AsQueryable();
+
+        //    bool hasFilter = false;
+
+        //    if (!string.IsNullOrEmpty(billingMonth))
+        //    {
+        //        query = query.Where(x => x.BillingMonth == billingMonth);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(billingYear))
+        //    {
+        //        query = query.Where(x => x.BillingYear == billingYear);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(block))
+        //    {
+        //        query = query.Where(x => x.Btno == block); // adjust if Block field has different name
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(btNo))
+        //    {
+        //        query = query.Where(x => x.Btno == btNo);
+        //        hasFilter = true;
+        //    }
+
+        //    ViewBag.ShowGrid = hasFilter;
+        //    return View(hasFilter ? query.ToList() : new List<MaintenanceBill>());
+        //}
+
+        // GET
+        //public IActionResult MaintenanceBillsSearch(int? page)
+        //{
+        //    ViewBag.Months = GetMonths();
+        //    ViewBag.Years = GetYears();
+        //    ViewBag.ShowGrid = false;
+
+        //    const int pageSize = 50;
+        //    var pageNumber = page ?? 1;
+
+        //    return View(new PaginationViewModel<MaintenanceBill>
+        //    {
+        //        Items = new List<MaintenanceBill>(),
+        //        PageNumber = pageNumber,
+        //        PageSize = pageSize,
+        //        TotalRecords = 0
+        //    });
+        //}
+
+        //[HttpPost]
+        //public IActionResult MaintenanceBillsSearch(string billingMonth, string billingYear, string block, string btNo, int? page)
+        //{
+        //    ViewBag.Months = GetMonths();
+        //    ViewBag.Years = GetYears();
+
+        //    var query = _dbContext.MaintenanceBills.AsQueryable();
+        //    bool hasFilter = false;
+
+        //    if (!string.IsNullOrEmpty(billingMonth))
+        //    {
+        //        query = query.Where(x => x.BillingMonth == billingMonth);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(billingYear))
+        //    {
+        //        query = query.Where(x => x.BillingYear == billingYear);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(block))
+        //    {
+        //        query = query.Where(x => x.Btno == block);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(btNo))
+        //    {
+        //        query = query.Where(x => x.Btno == btNo);
+        //        hasFilter = true;
+        //    }
+
+        //    const int pageSize = 50;
+        //    var pageNumber = page ?? 1;
+
+        //    var totalRecords = query.Count();
+        //    var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+        //    ViewBag.ShowGrid = hasFilter;
+
+        //    return View(new PaginationViewModel<MaintenanceBill>
+        //    {
+        //        Items = hasFilter ? items : new List<MaintenanceBill>(),
+        //        PageNumber = pageNumber,
+        //        PageSize = pageSize,
+        //        TotalRecords = hasFilter ? totalRecords : 0
+        //    });
+        //}
+
+
+        //[HttpGet] // Changed from [HttpPost]
+        //public IActionResult MaintenanceBillsSearch(string billingMonth, string billingYear, string block, string btNo, int? page)
+        //{
+        //    ViewBag.Months = GetMonths();
+        //    ViewBag.Years = GetYears();
+
+        //    var query = _dbContext.MaintenanceBills.AsQueryable();
+        //    bool hasFilter = false;
+
+        //    if (!string.IsNullOrEmpty(billingMonth))
+        //    {
+        //        query = query.Where(x => x.BillingMonth == billingMonth);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(billingYear))
+        //    {
+        //        query = query.Where(x => x.BillingYear == billingYear);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(block))
+        //    {
+        //        query = query.Where(x => x.Btno == block);
+        //        hasFilter = true;
+        //    }
+
+        //    if (!string.IsNullOrEmpty(btNo))
+        //    {
+        //        query = query.Where(x => x.Btno == btNo);
+        //        hasFilter = true;
+        //    }
+
+        //    const int pageSize = 50;
+        //    var pageNumber = page ?? 1;
+
+        //    var totalRecords = query.Count();
+        //    var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+        //    ViewBag.ShowGrid = hasFilter || pageNumber > 1; // Show grid if filtered or paginated
+
+        //    return View(new PaginationViewModel<MaintenanceBill>
+        //    {
+        //        Items = hasFilter || pageNumber > 1 ? items : new List<MaintenanceBill>(),
+        //        PageNumber = pageNumber,
+        //        PageSize = pageSize,
+        //        TotalRecords = hasFilter ? totalRecords : 0
+        //    });
+        //}
+
+
+        [HttpGet] // Changed from [HttpPost]
+        public IActionResult MaintenanceBillsSearch(string billingMonth, string billingYear, string block, string btNo, int? page)
+        {
+            ViewBag.Months = GetMonths();
+            ViewBag.Years = GetYears();
+
+            var query = _dbContext.MaintenanceBills.AsQueryable();
+            bool hasFilter = false;
+
+            if (!string.IsNullOrEmpty(billingMonth))
+            {
+                query = query.Where(x => x.BillingMonth == billingMonth);
+                hasFilter = true;
+            }
+
+            if (!string.IsNullOrEmpty(billingYear))
+            {
+                query = query.Where(x => x.BillingYear == billingYear);
+                hasFilter = true;
+            }
+
+            if (!string.IsNullOrEmpty(block))
+            {
+                query = query.Where(x => x.Btno == block);
+                hasFilter = true;
+            }
+
+            if (!string.IsNullOrEmpty(btNo))
+            {
+                query = query.Where(x => x.Btno == btNo);
+                hasFilter = true;
+            }
+
+            const int pageSize = 50;
+            var pageNumber = page ?? 1;
+
+            var totalRecords = query.Count();
+            var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+            // Always show grid if there are records, regardless of filters
+            ViewBag.ShowGrid = items.Any() || hasFilter || pageNumber > 1;
+
+            return View(new PaginationViewModel<MaintenanceBill>
+            {
+                Items = items,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalRecords = totalRecords
+            });
+        }
+
+        private List<string> GetMonths()
+        {
+            return new List<string> { "January", "February", "March", "April", "May", "June", "July",
+                              "August", "September", "October", "November", "December" };
+        }
+
+        private List<string> GetYears()
+        {
+            return new List<string> { "2024", "2025" };
+        }
+
+
+
+
+
 
     }
 }

@@ -1,0 +1,68 @@
+﻿
+@{
+    ViewData["Title"] = "MaintenanceBillMS";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<h1>Maintenance Bill</h1>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Invoice No</th>
+            <th>Customer No</th>
+            <th>Customer Name</th>
+            <th>Plot Status</th>
+            <th>Meter No</th>
+            <th>BT No</th>
+            <th>Billing Month</th>
+            <th>Billing Year</th>
+            <th>Billing Date</th>
+            <th>Due Date</th>
+            <th>Issue Date</th>
+            <th>Valid Date</th>
+            <th>Payment Status</th>
+            <th>Payment Date</th>
+            <th>Payment Method</th>
+            <th>Bank Detail</th>
+            <th>Last Updated</th>
+            <th>Tax Amount</th>
+            <th>Bill Amount In Due Date</th>
+            <th>Bill Surcharge</th>
+            <th>Bill Amount After Due Date</th>
+            <th>Arrears</th>
+            <th>Maint Charges</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.InvoiceNo</td>
+                <td>@item.CustomerNo</td>
+                <td>@item.CustomerName</td>
+                <td>@item.PlotStatus</td>
+                <td>@item.MeterNo</td>
+                <td>@item.Btno</td>
+                <td>@item.BillingMonth</td>
+                <td>@item.BillingYear</td>
+                <td>@item.BillingDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.DueDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.IssueDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.ValidDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.PaymentStatus</td>
+                <td>@item.PaymentDate?.ToString("yyyy-MM-dd")</td>
+                <td>@item.PaymentMethod</td>
+                <td>@item.BankDetail</td>
+                <td>@item.LastUpdated?.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@item.TaxAmount</td>
+                <td>@item.BillAmountInDueDate</td>
+                <td>@item.BillSurcharge</td>
+                <td>@item.BillAmountAfterDueDate</td>
+                <td>@item.Arrears</td>
+                <td>@item.MaintCharges</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
