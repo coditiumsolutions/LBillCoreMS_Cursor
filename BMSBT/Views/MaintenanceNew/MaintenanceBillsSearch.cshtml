@@ -1,4 +1,4 @@
-﻿@model PaginationViewModel<BMSBT.Models.MaintenanceBill>
+﻿@model PaginationViewModel<BMSBT.ViewModels.MaintenanceBillViewModel>
 @{
     ViewData["Title"] = "Search Maintenance Bills";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
@@ -51,6 +51,7 @@
                     <th>Invoice No</th>
                     <th>Customer Name</th>
                     <th>BT No</th>
+                    <th>Block</th>
                     <th>Billing Month</th>
                     <th>Billing Year</th>
                     <th>Amount</th>
@@ -66,6 +67,7 @@
                             <td>@item.InvoiceNo</td>
                             <td>@item.CustomerName</td>
                             <td>@item.Btno</td>
+                            <td>@item.Block</td>
                             <td>@item.BillingMonth</td>
                             <td>@item.BillingYear</td>
                             <td>@item.BillAmountInDueDate?.ToString("C")</td>
