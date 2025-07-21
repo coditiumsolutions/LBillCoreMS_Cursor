@@ -4,7 +4,14 @@
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
 }
 
-<h2>Search Maintenance Bills</h2>
+@if (!ViewBag.ShowGrid)
+{
+    <div class="alert alert-warning">
+        @ViewBag.Message
+    </div>
+}
+
+
 
 <form asp-action="MaintenanceBillsSearch" method="get" class="mb-4">
     <div class="form-row d-flex justify-content-start align-items-end gap-2">
@@ -56,6 +63,7 @@
                     <th>Billing Year</th>
                     <th>Amount</th>
                     <th>Status</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -72,6 +80,10 @@
                             <td>@item.BillingYear</td>
                             <td>@item.BillAmountInDueDate?.ToString("C")</td>
                             <td>@item.PaymentStatus</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Uid" class="btn btn-info btn-sm">Details</a>
+                                <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-warning btn-sm">Edit</a>
+                            </td>
                         </tr>
                     }
                 }

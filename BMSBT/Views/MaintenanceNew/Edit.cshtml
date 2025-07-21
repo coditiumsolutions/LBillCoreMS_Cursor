@@ -1,0 +1,82 @@
+﻿@model BMSBT.Models.MaintenanceBill
+
+@{
+    ViewBag.Title = "Edit Maintenance Bill";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<style>
+    .form-grid {
+        display: grid;
+        grid-template-columns: 2fr 2fr;
+        gap: 10px 20px;
+        max-width: 800px;
+    }
+
+    .form-grid label {
+        align-self: center;
+        font-weight: bold;
+    }
+
+    .form-grid .form-control,
+    .form-grid .text-danger {
+        width: 100%;
+    }
+
+    .form-actions {
+        margin-top: 20px;
+    }
+</style>
+
+<h3>Edit Maintenance Bill</h3>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Uid" />
+
+    <div class="form-grid">
+        <label asp-for="CustomerName"></label>
+        <div>
+            <input asp-for="CustomerName" class="form-control" />
+            <span asp-validation-for="CustomerName" class="text-danger"></span>
+        </div>
+
+        <label asp-for="Btno"></label>
+        <div>
+            <input asp-for="Btno" class="form-control" />
+            <span asp-validation-for="Btno" class="text-danger"></span>
+        </div>
+
+        <label asp-for="BillingMonth"></label>
+        <div>
+            <input asp-for="BillingMonth" class="form-control" />
+            <span asp-validation-for="BillingMonth" class="text-danger"></span>
+        </div>
+
+        <label asp-for="BillingYear"></label>
+        <div>
+            <input asp-for="BillingYear" class="form-control" />
+            <span asp-validation-for="BillingYear" class="text-danger"></span>
+        </div>
+
+        <label asp-for="BillAmountInDueDate"></label>
+        <div>
+            <input asp-for="BillAmountInDueDate" class="form-control" />
+            <span asp-validation-for="BillAmountInDueDate" class="text-danger"></span>
+        </div>
+
+        <label asp-for="PaymentStatus"></label>
+        <div>
+            <input asp-for="PaymentStatus" class="form-control" />
+            <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a asp-action="MaintenanceBillsSearch" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

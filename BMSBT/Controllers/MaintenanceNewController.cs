@@ -20,15 +20,6 @@ namespace BMSBT.Controllers
         }
 
 
-
-
-
-
-
-
-
-
-
         public IActionResult GenerateBill(string selectedProject, string btNoSearch)
         {
             // Dropdown projects
@@ -318,6 +309,31 @@ namespace BMSBT.Controllers
             ViewBag.Months = GetMonths();
             ViewBag.Years = GetYears();
 
+
+            // Check if all filter parameters are empty
+            bool noFilterSelected = string.IsNullOrEmpty(billingMonth) &&
+                                    string.IsNullOrEmpty(billingYear) &&
+                                    string.IsNullOrEmpty(block) &&
+                                    string.IsNullOrEmpty(btNo);
+
+            // Set ViewBag message and empty grid if no filter is selected
+            if (noFilterSelected)
+            {
+                ViewBag.Message = "Please select bill generation criteria.";
+                ViewBag.ShowGrid = false;
+
+                return View(new PaginationViewModel<MaintenanceBillViewModel>
+                {
+                    Items = new List<MaintenanceBillViewModel>(),
+                    PageNumber = 1,
+                    PageSize = 50,
+                    TotalRecords = 0
+                });
+            }
+
+
+
+
             var baseQuery = from mb in _dbContext.MaintenanceBills
                             join cd in _dbContext.CustomersDetails on mb.Btno equals cd.Btno
                             select new { mb, cd };
@@ -343,9 +359,9 @@ namespace BMSBT.Controllers
                 baseQuery = baseQuery.Where(x => x.mb.Btno == btNo);
             }
 
-            // Project to ViewModel
             var query = baseQuery.Select(x => new MaintenanceBillViewModel
             {
+                Uid = x.mb.Uid, // ✅ Make sure mb.Uid is correctly mapped
                 InvoiceNo = x.mb.InvoiceNo,
                 CustomerName = x.mb.CustomerName,
                 Btno = x.mb.Btno,
@@ -378,6 +394,74 @@ namespace BMSBT.Controllers
                 TotalRecords = totalRecords
             });
         }
+
+
+
+
+
+        public IActionResult Details(int id)
+        {
+            var bill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
+            if (bill == null)
+            {
+                return NotFound();
+            }
+
+            return View(bill);
+        }
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var bill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
+            if (bill == null)
+            {
+                return NotFound();
+            }
+
+            return View(bill);
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, MaintenanceBill updatedBill)
+        {
+            if (id != updatedBill.Uid)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(updatedBill);
+            }
+
+            var existingBill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
+            if (existingBill == null)
+            {
+                return NotFound();
+            }
+
+            // Update properties
+            existingBill.CustomerName = updatedBill.CustomerName;
+            existingBill.Btno = updatedBill.Btno;
+            existingBill.BillingMonth = updatedBill.BillingMonth;
+            existingBill.BillingYear = updatedBill.BillingYear;
+            existingBill.BillAmountInDueDate = updatedBill.BillAmountInDueDate;
+            existingBill.PaymentStatus = updatedBill.PaymentStatus;
+            existingBill.LastUpdated = DateTime.Now;
+
+            _dbContext.SaveChanges();
+
+            return RedirectToAction(nameof(MaintenanceBillsSearch));
+        }
+
+
+
+
+
 
     }
 }
