@@ -455,6 +455,7 @@ namespace BMSBT.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, MaintenanceBill updatedBill)
         {
+
             if (id != updatedBill.Uid)
             {
                 return BadRequest();
