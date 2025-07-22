@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BMSBT.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace BMSBT.Models;
@@ -15,10 +16,14 @@ public partial class BmsbtContext : DbContext
     {
     }
 
+    public DbSet<TwoMonthOutstandingBill> TwoMonthOutstandingBills { get; set; }
+    public DbSet<SpecialDiscountBill> SpecialDiscountBills { get; set; }
+    public DbSet<DashboardStatisticsResult> DashboardStatistics { get; set; }
+    public DbSet<BillingReportData> BillingReportData { get; set; }
 
+   
 
-
-     public virtual DbSet<CustomersMaintenance> CustomersMaintenance { get; set; }
+    public virtual DbSet<CustomersMaintenance> CustomersMaintenance { get; set; }
     public virtual DbSet<Configuration> Configurations { get; set; }
 
     public virtual DbSet<Customer> Customers { get; set; }
@@ -67,6 +72,13 @@ public partial class BmsbtContext : DbContext
                 .IsUnicode(false);
         });
 
+
+
+        // Configure BillingReportData as keyless entity
+        modelBuilder.Entity<BillingReportData>().HasNoKey();
+
+        modelBuilder.Entity<DashboardStatisticsResult>().HasNoKey();
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Customer>(entity =>
         {
             entity.HasIndex(e => e.MeterNumber, "UQ__Customer__999CDEB3036F9F25").IsUnique();

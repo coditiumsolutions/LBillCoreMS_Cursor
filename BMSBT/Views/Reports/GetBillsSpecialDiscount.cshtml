@@ -1,0 +1,491 @@
+﻿@model List<BMSBT.Models.SpecialDiscountBill>
+
+@{
+    ViewData["Title"] = "Special Discount Bills";
+}
+
+<style>
+    /* Professional DevExpress-inspired styles */
+    .dx-container {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8f9fa;
+        padding: 20px;
+        min-height: 100vh;
+    }
+
+    .dx-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .dx-header h2 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 24px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .dx-toolbar {
+        background: white;
+        padding: 20px 25px;
+        border: 1px solid #e9ecef;
+        border-top: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .dx-filters {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+
+    .dx-filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+    }
+
+    .dx-filter-group label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 5px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .dx-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 13px;
+        background: white;
+        transition: all 0.2s ease;
+        min-width: 150px;
+    }
+
+    .dx-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    .dx-btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .dx-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .dx-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .dx-btn-success {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        color: white;
+    }
+
+    .dx-btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(86, 171, 47, 0.3);
+    }
+
+    .dx-table-container {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .dx-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        background: white;
+    }
+
+    .dx-table thead {
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .dx-table th {
+        padding: 12px 8px;
+        border-bottom: 2px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+    }
+
+    .dx-table th:last-child {
+        border-right: none;
+    }
+
+    .dx-table th::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 20%;
+        bottom: 20%;
+        width: 1px;
+        background: linear-gradient(to bottom, transparent, #dee2e6, transparent);
+    }
+
+    .dx-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .dx-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .dx-table tbody tr:hover {
+        background: linear-gradient(90deg, #e3f2fd 0%, #f3e5f5 100%);
+        transform: scale(1.001);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .dx-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e9ecef;
+        border-right: 1px solid #f1f3f4;
+        vertical-align: middle;
+        color: #495057;
+        font-size: 12px;
+    }
+
+    .dx-table td:last-child {
+        border-right: none;
+    }
+
+    .dx-table .text-right {
+        text-align: right;
+        font-weight: 500;
+        font-family: 'Courier New', monospace;
+    }
+
+    .dx-table .amount {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .dx-table .date {
+        color: #6c757d;
+        font-size: 11px;
+    }
+
+    .dx-table .status {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .dx-no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .dx-no-data-icon {
+        font-size: 48px;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+
+    .dx-scrollable {
+        max-height: 600px;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .dx-container {
+            padding: 10px;
+        }
+
+        .dx-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .dx-filters {
+            justify-content: center;
+        }
+
+        .dx-filter-group {
+            min-width: 120px;
+        }
+
+        .dx-table {
+            font-size: 11px;
+        }
+
+        .dx-table th,
+        .dx-table td {
+            padding: 8px 6px;
+        }
+    }
+
+    /* Loading animation */
+    .dx-loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="dx-container">
+    <div class="dx-header">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <div class="dx-toolbar">
+        <form method="post" style="flex: 1;">
+            <div class="dx-filters">
+                <div class="dx-filter-group">
+                    <label for="billingMonth">Billing Month</label>
+                    <select id="billingMonth" name="billingMonth" class="dx-select" required>
+                        <option value="">Select Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+
+                <div class="dx-filter-group">
+                    <label for="billingYear">Billing Year</label>
+                    <select id="billingYear" name="billingYear" class="dx-select" required>
+                        <option value="">Select Year</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+
+                <div class="dx-filter-group">
+                    <label for="project">Project</label>
+                    <select id="project" name="project" class="dx-select">
+                        <option value="">All Projects</option>
+                        <option value="Mohlanwal">Mohlanwal</option>
+                        <option value="Orchard">Orchard</option>
+                    </select>
+                </div>
+
+                <div class="dx-filter-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="dx-btn dx-btn-primary">
+                        <span class="dx-loading" id="loadingSpinner" style="display: none;"></span>
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <button id="exportToExcel" class="dx-btn dx-btn-success">
+            📊 Export to Excel
+        </button>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="dx-table-container">
+            <div class="dx-scrollable">
+                <table class="dx-table">
+                    <thead>
+                        <tr>
+                            <th>BT No</th>
+                            <th>Customer Name</th>
+                            <th>Project</th>
+                            <th>Block</th>
+                            <th>Sector</th>
+                            <th>Plot No</th>
+                            <th>Bill Amount</th>
+                            <th>Invoice No</th>
+                            <th>Billing Period</th>
+                            <th>Billing Date</th>
+                            <th>Due Date</th>
+                            <th>Reading Date</th>
+                            <th>Issue Date</th>
+                            <th>Valid Date</th>
+                            <th>Meter Info</th>
+                            <th>Payment Status</th>
+                            <th>Amount Paid</th>
+                            <th>Payment Date</th>
+                            <th>Payment Method</th>
+                            <th>Bank Detail</th>
+                            <th>Energy Cost</th>
+                            <th>Last Updated</th>
+                            <th>Due Amount</th>
+                            <th>Surcharge</th>
+                            <th>After Due</th>
+                            <th>Prev Reading 1</th>
+                            <th>Curr Reading 1</th>
+                            <th>Diff 1</th>
+                            <th>Prev Reading 2</th>
+                            <th>Curr Reading 2</th>
+                            <th>Diff 2</th>
+                            <th>Prev Solar</th>
+                            <th>Curr Solar</th>
+                            <th>Solar Diff</th>
+                            <th>Total Units</th>
+                            <th>OPC</th>
+                            <th>GST</th>
+                            <th>PTV Fee</th>
+                            <th>Further Tax</th>
+                            <th>Arrears</th>
+                            <th>History</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bill in Model)
+                        {
+                            <tr>
+                                <td><strong>@bill.BTNo</strong></td>
+                                <td>@bill.CustomerName</td>
+                                <td><span class="badge badge-info">@bill.Project</span></td>
+                                <td>@bill.Block</td>
+                                <td>@bill.Sector</td>
+                                <td>@bill.PloNo</td>
+                                <td class="text-right amount">@bill.BillAmount?.ToString("N2")</td>
+                                <td>@bill.InvoiceNo</td>
+                                <td><small>@bill.BillingMonth @bill.BillingYear</small></td>
+                                <td class="date">@bill.BillingDate?.ToString("dd/MM/yyyy")</td>
+                                <td class="date">@bill.DueDate?.ToString("dd/MM/yyyy")</td>
+                                <td class="date">@bill.ReadingDate?.ToString("dd/MM/yyyy")</td>
+                                <td class="date">@bill.IssueDate?.ToString("dd/MM/yyyy")</td>
+                                <td class="date">@bill.ValidDate?.ToString("dd/MM/yyyy")</td>
+                                <td><small>@bill.MeterType<br />@bill.MeterNo</small></td>
+                                <td>
+                                    <span class="status" style="background: @(bill.PaymentStatus == "Paid" ? "#d4edda; color: #155724" : "#f8d7da; color: #721c24")">
+                                        @bill.PaymentStatus
+                                    </span>
+                                </td>
+                                <td class="text-right amount">@bill.AmountPaid?.ToString("N2")</td>
+                                <td class="date">@bill.PaymentDate?.ToString("dd/MM/yyyy")</td>
+                                <td><small>@bill.PaymentMethod</small></td>
+                                <td><small>@bill.BankDetail</small></td>
+                                <td class="text-right">@bill.EnergyCoast?.ToString("N2")</td>
+                                <td class="date"><small>@bill.LastUpdated?.ToString("dd/MM/yy HH:mm")</small></td>
+                                <td class="text-right">@bill.BillAmountInDueDate?.ToString("N2")</td>
+                                <td class="text-right">@bill.BillSurcharge?.ToString("N2")</td>
+                                <td class="text-right">@bill.BillAmountAfterDueDate?.ToString("N2")</td>
+                                <td class="text-right">@bill.PreviousReading1</td>
+                                <td class="text-right">@bill.CurrentReading1</td>
+                                <td class="text-right">@bill.Difference1</td>
+                                <td class="text-right">@bill.PreviousReading2</td>
+                                <td class="text-right">@bill.CurrentReading2</td>
+                                <td class="text-right">@bill.Difference2</td>
+                                <td class="text-right">@bill.PreviousSolarReading</td>
+                                <td class="text-right">@bill.CurrentSolarReading</td>
+                                <td class="text-right">@bill.DifferenceSolar</td>
+                                <td class="text-right"><strong>@bill.TotalUnit</strong></td>
+                                <td class="text-right">@bill.Opc?.ToString("N2")</td>
+                                <td class="text-right">@bill.Gst?.ToString("N2")</td>
+                                <td class="text-right">@bill.Ptvfee?.ToString("N2")</td>
+                                <td class="text-right">@bill.Furthertax?.ToString("N2")</td>
+                                <td class="text-right">@bill.Arrears?.ToString("N2")</td>
+                                <td><small>@bill.History</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="dx-no-data">
+            <div class="dx-no-data-icon">📊</div>
+            <h4>No Records Found</h4>
+            <p>Try adjusting your search criteria to find relevant data.</p>
+        </div>
+    }
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+<script>
+    // Excel export functionality
+    document.getElementById('exportToExcel').addEventListener('click', function() {
+        const table = document.querySelector('.dx-table');
+        if (table) {
+            const wb = XLSX.utils.table_to_book(table, { sheet: 'Special Discount Bills' });
+            XLSX.writeFile(wb, `SpecialDiscountBills_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+    });
+
+    // Loading animation for form submission
+    document.querySelector('form').addEventListener('submit', function() {
+        const spinner = document.getElementById('loadingSpinner');
+        const submitBtn = document.querySelector('.dx-btn-primary');
+        spinner.style.display = 'inline-block';
+        submitBtn.style.opacity = '0.7';
+        submitBtn.disabled = true;
+    });
+
+    // Enhanced hover effects and interactions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth scrolling to table
+        const scrollableContainer = document.querySelector('.dx-scrollable');
+        if (scrollableContainer) {
+            scrollableContainer.style.scrollBehavior = 'smooth';
+        }
+    });
+</script>
