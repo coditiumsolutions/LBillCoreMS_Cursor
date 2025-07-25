@@ -1,7 +1,8 @@
 ﻿@model List<BMSBT.Models.SpecialDiscountBill>
 
 @{
-    ViewData["Title"] = "Special Discount Bills";
+    ViewData["Title"] = "Special Discount Bills by Sector";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
 }
 
 <style>
@@ -22,12 +23,12 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    .dx-header h2 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 24px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
+        .dx-header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 24px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
 
     .dx-toolbar {
         background: white;
@@ -54,14 +55,14 @@
         min-width: 150px;
     }
 
-    .dx-filter-group label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 5px;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+        .dx-filter-group label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
     .dx-select {
         border: 1px solid #ced4da;
@@ -73,11 +74,11 @@
         min-width: 150px;
     }
 
-    .dx-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        outline: none;
-    }
+        .dx-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
 
     .dx-btn {
         padding: 8px 20px;
@@ -96,20 +97,20 @@
         color: white;
     }
 
-    .dx-btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
+        .dx-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
 
     .dx-btn-success {
         background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
         color: white;
     }
 
-    .dx-btn-success:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(86, 171, 47, 0.3);
-    }
+        .dx-btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(86, 171, 47, 0.3);
+        }
 
     .dx-table-container {
         background: white;
@@ -127,92 +128,92 @@
         background: white;
     }
 
-    .dx-table thead {
-        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
+        .dx-table thead {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-    .dx-table th {
-        padding: 12px 8px;
-        border-bottom: 2px solid #dee2e6;
-        border-right: 1px solid #dee2e6;
-        font-weight: 600;
-        color: #495057;
-        text-align: left;
-        white-space: nowrap;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        position: relative;
-    }
+        .dx-table th {
+            padding: 12px 8px;
+            border-bottom: 2px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
 
-    .dx-table th:last-child {
-        border-right: none;
-    }
+            .dx-table th:last-child {
+                border-right: none;
+            }
 
-    .dx-table th::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 20%;
-        bottom: 20%;
-        width: 1px;
-        background: linear-gradient(to bottom, transparent, #dee2e6, transparent);
-    }
+            .dx-table th::after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 20%;
+                bottom: 20%;
+                width: 1px;
+                background: linear-gradient(to bottom, transparent, #dee2e6, transparent);
+            }
 
-    .dx-table tbody tr {
-        transition: all 0.2s ease;
-    }
+        .dx-table tbody tr {
+            transition: all 0.2s ease;
+        }
 
-    .dx-table tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
+            .dx-table tbody tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
 
-    .dx-table tbody tr:hover {
-        background: linear-gradient(90deg, #e3f2fd 0%, #f3e5f5 100%);
-        transform: scale(1.001);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+            .dx-table tbody tr:hover {
+                background: linear-gradient(90deg, #e3f2fd 0%, #f3e5f5 100%);
+                transform: scale(1.001);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
 
-    .dx-table td {
-        padding: 10px 8px;
-        border-bottom: 1px solid #e9ecef;
-        border-right: 1px solid #f1f3f4;
-        vertical-align: middle;
-        color: #495057;
-        font-size: 12px;
-    }
+        .dx-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e9ecef;
+            border-right: 1px solid #f1f3f4;
+            vertical-align: middle;
+            color: #495057;
+            font-size: 12px;
+        }
 
-    .dx-table td:last-child {
-        border-right: none;
-    }
+            .dx-table td:last-child {
+                border-right: none;
+            }
 
-    .dx-table .text-right {
-        text-align: right;
-        font-weight: 500;
-        font-family: 'Courier New', monospace;
-    }
+        .dx-table .text-right {
+            text-align: right;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
 
-    .dx-table .amount {
-        color: #28a745;
-        font-weight: 600;
-    }
+        .dx-table .amount {
+            color: #28a745;
+            font-weight: 600;
+        }
 
-    .dx-table .date {
-        color: #6c757d;
-        font-size: 11px;
-    }
+        .dx-table .date {
+            color: #6c757d;
+            font-size: 11px;
+        }
 
-    .dx-table .status {
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+        .dx-table .status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
     .dx-no-data {
         text-align: center;
@@ -234,6 +235,51 @@
         max-height: 600px;
         overflow-y: auto;
         overflow-x: auto;
+    }
+
+    /* Sector grouping styles */
+    .sector-group {
+        margin-bottom: 30px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .sector-header {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        padding: 12px 20px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sector-summary {
+        background: #f8f9fa;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        font-weight: 500;
+    }
+
+    .sector-summary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 100px;
+    }
+
+    .sector-summary-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        color: #6c757d;
+    }
+
+    .sector-summary-value {
+        font-weight: 600;
+        color: #495057;
     }
 
     /* Responsive design */
@@ -259,9 +305,14 @@
             font-size: 11px;
         }
 
-        .dx-table th,
-        .dx-table td {
-            padding: 8px 6px;
+            .dx-table th,
+            .dx-table td {
+                padding: 8px 6px;
+            }
+
+        .sector-summary {
+            flex-wrap: wrap;
+            gap: 10px;
         }
     }
 
@@ -278,8 +329,13 @@
     }
 
     @@keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 </style>
 
@@ -330,6 +386,17 @@
                 </div>
 
                 <div class="dx-filter-group">
+                    <label for="sector">Sector</label>
+                    <select id="sector" name="sector" class="dx-select">
+                        <option value="">All Sectors</option>
+                        @foreach (var sector in Model?.Select(b => b.Sector).Distinct().OrderBy(s => s).ToList() ?? new List<string>())
+                        {
+                            <option value="@sector">@sector</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="dx-filter-group">
                     <label>&nbsp;</label>
                     <button type="submit" class="dx-btn dx-btn-primary">
                         <span class="dx-loading" id="loadingSpinner" style="display: none;"></span>
@@ -346,109 +413,88 @@
 
     @if (Model != null && Model.Any())
     {
-        <div class="dx-table-container">
-            <div class="dx-scrollable">
-                <table class="dx-table">
-                    <thead>
-                        <tr>
-                            <th>BT No</th>
-                            <th>Customer Name</th>
-                            <th>Project</th>
-                            <th>Block</th>
-                            <th>Sector</th>
-                            <th>Plot No</th>
-                            <th>Bill Amount</th>
-                            <th>Invoice No</th>
-                            <th>Billing Period</th>
-                            <th>Billing Date</th>
-                            <th>Due Date</th>
-                            <th>Reading Date</th>
-                            <th>Issue Date</th>
-                            <th>Valid Date</th>
-                            <th>Meter Info</th>
-                            <th>Payment Status</th>
-                            <th>Amount Paid</th>
-                            <th>Payment Date</th>
-                            <th>Payment Method</th>
-                            <th>Bank Detail</th>
-                            <th>Energy Cost</th>
-                            <th>Last Updated</th>
-                            <th>Due Amount</th>
-                            <th>Surcharge</th>
-                            <th>After Due</th>
-                            <th>Prev Reading 1</th>
-                            <th>Curr Reading 1</th>
-                            <th>Diff 1</th>
-                            <th>Prev Reading 2</th>
-                            <th>Curr Reading 2</th>
-                            <th>Diff 2</th>
-                            <th>Prev Solar</th>
-                            <th>Curr Solar</th>
-                            <th>Solar Diff</th>
-                            <th>Total Units</th>
-                            <th>OPC</th>
-                            <th>GST</th>
-                            <th>PTV Fee</th>
-                            <th>Further Tax</th>
-                            <th>Arrears</th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var bill in Model)
-                        {
-                            <tr>
-                                <td><strong>@bill.BTNo</strong></td>
-                                <td>@bill.CustomerName</td>
-                                <td><span class="badge badge-info">@bill.Project</span></td>
-                                <td>@bill.Block</td>
-                                <td>@bill.Sector</td>
-                                <td>@bill.PloNo</td>
-                                <td class="text-right amount">@bill.BillAmount?.ToString("N2")</td>
-                                <td>@bill.InvoiceNo</td>
-                                <td><small>@bill.BillingMonth @bill.BillingYear</small></td>
-                                <td class="date">@bill.BillingDate?.ToString("dd/MM/yyyy")</td>
-                                <td class="date">@bill.DueDate?.ToString("dd/MM/yyyy")</td>
-                                <td class="date">@bill.ReadingDate?.ToString("dd/MM/yyyy")</td>
-                                <td class="date">@bill.IssueDate?.ToString("dd/MM/yyyy")</td>
-                                <td class="date">@bill.ValidDate?.ToString("dd/MM/yyyy")</td>
-                                <td><small>@bill.MeterType<br />@bill.MeterNo</small></td>
-                                <td>
-                                    <span class="status" style="background: @(bill.PaymentStatus == "Paid" ? "#d4edda; color: #155724" : "#f8d7da; color: #721c24")">
-                                        @bill.PaymentStatus
-                                    </span>
-                                </td>
-                                <td class="text-right amount">@bill.AmountPaid?.ToString("N2")</td>
-                                <td class="date">@bill.PaymentDate?.ToString("dd/MM/yyyy")</td>
-                                <td><small>@bill.PaymentMethod</small></td>
-                                <td><small>@bill.BankDetail</small></td>
-                                <td class="text-right">@bill.EnergyCoast?.ToString("N2")</td>
-                                <td class="date"><small>@bill.LastUpdated?.ToString("dd/MM/yy HH:mm")</small></td>
-                                <td class="text-right">@bill.BillAmountInDueDate?.ToString("N2")</td>
-                                <td class="text-right">@bill.BillSurcharge?.ToString("N2")</td>
-                                <td class="text-right">@bill.BillAmountAfterDueDate?.ToString("N2")</td>
-                                <td class="text-right">@bill.PreviousReading1</td>
-                                <td class="text-right">@bill.CurrentReading1</td>
-                                <td class="text-right">@bill.Difference1</td>
-                                <td class="text-right">@bill.PreviousReading2</td>
-                                <td class="text-right">@bill.CurrentReading2</td>
-                                <td class="text-right">@bill.Difference2</td>
-                                <td class="text-right">@bill.PreviousSolarReading</td>
-                                <td class="text-right">@bill.CurrentSolarReading</td>
-                                <td class="text-right">@bill.DifferenceSolar</td>
-                                <td class="text-right"><strong>@bill.TotalUnit</strong></td>
-                                <td class="text-right">@bill.Opc?.ToString("N2")</td>
-                                <td class="text-right">@bill.Gst?.ToString("N2")</td>
-                                <td class="text-right">@bill.Ptvfee?.ToString("N2")</td>
-                                <td class="text-right">@bill.Furthertax?.ToString("N2")</td>
-                                <td class="text-right">@bill.Arrears?.ToString("N2")</td>
-                               
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+        // Group bills by sector
+        var billsBySector = Model.GroupBy(b => b.Sector)
+        .OrderBy(g => g.Key);
+
+        foreach (var sectorGroup in billsBySector)
+        {
+            <div class="sector-group">
+                <div class="sector-header">
+                    <span>Sector: @sectorGroup.Key</span>
+                    <span>Total Bills: @sectorGroup.Count()</span>
+                </div>
+
+                <div class="sector-summary">
+                    <div class="sector-summary-item">
+                        <span class="sector-summary-label">Total Amount</span>
+                        <span class="sector-summary-value">@sectorGroup.Sum(b => b.BillAmount)?.ToString("N2")</span>
+                    </div>
+                    <div class="sector-summary-item">
+                        <span class="sector-summary-label">Total Paid</span>
+                        <span class="sector-summary-value">@sectorGroup.Sum(b => b.AmountPaid)?.ToString("N2")</span>
+                    </div>
+                    <div class="sector-summary-item">
+                        <span class="sector-summary-label">Total Outstanding</span>
+                        <span class="sector-summary-value">@(sectorGroup.Sum(b => b.BillAmount) - @sectorGroup.Sum(b => b.AmountPaid))</span>
+                    </div>
+                    <div class="sector-summary-item">
+                        <span class="sector-summary-label">Paid Bills</span>
+                        <span class="sector-summary-value">@sectorGroup.Count(b => b.PaymentStatus == "Paid")</span>
+                    </div>
+                    <div class="sector-summary-item">
+                        <span class="sector-summary-label">Unpaid Bills</span>
+                        <span class="sector-summary-value">@sectorGroup.Count(b => b.PaymentStatus != "Paid")</span>
+                    </div>
+                </div>
+
+                <div class="dx-table-container">
+                    <div class="dx-scrollable">
+                        <table class="dx-table">
+                            <thead>
+                                <tr>
+                                    <th>BT No</th>
+                                    <th>Customer Name</th>
+                                    <th>Plot No</th>
+                                    <th>Bill Amount</th>
+                                    <th>Invoice No</th>
+                                    <th>Billing Period</th>
+                                    <th>Payment Status</th>
+                                    <th>Amount Paid</th>
+                                    <th>Payment Date</th>
+                                    <th>Due Amount</th>
+                                    <th>Surcharge</th>
+                                    <th>After Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var bill in sectorGroup.OrderBy(b => b.PloNo))
+                                {
+                                    <tr>
+                                        <td><strong>@bill.BTNo</strong></td>
+                                        <td>@bill.CustomerName</td>
+                                        <td>@bill.PloNo</td>
+                                        <td class="text-right amount">@bill.BillAmount?.ToString("N2")</td>
+                                        <td>@bill.InvoiceNo</td>
+                                        <td><small>@bill.BillingMonth @bill.BillingYear</small></td>
+                                        <td>
+                                            <span class="status" style="background: @(bill.PaymentStatus == "Paid" ? "#d4edda; color: #155724" : "#f8d7da; color: #721c24")">
+                                                @bill.PaymentStatus
+                                            </span>
+                                        </td>
+                                        <td class="text-right amount">@bill.AmountPaid?.ToString("N2")</td>
+                                        <td class="date">@bill.PaymentDate?.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-right">@bill.BillAmountInDueDate?.ToString("N2")</td>
+                                        <td class="text-right">@bill.BillSurcharge?.ToString("N2")</td>
+                                        <td class="text-right">@bill.BillAmountAfterDueDate?.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
+        }
     }
     else
     {
@@ -464,11 +510,25 @@
 <script>
     // Excel export functionality
     document.getElementById('exportToExcel').addEventListener('click', function() {
-        const table = document.querySelector('.dx-table');
-        if (table) {
-            const wb = XLSX.utils.table_to_book(table, { sheet: 'Special Discount Bills' });
-            XLSX.writeFile(wb, `SpecialDiscountBills_${new Date().toISOString().split('T')[0]}.xlsx`);
-        }
+        // Create a new workbook
+        const wb = XLSX.utils.book_new();
+
+        // Group bills by sector
+        const sectorGroups = {};
+        document.querySelectorAll('.sector-group').forEach(group => {
+            const sector = group.querySelector('.sector-header span:first-child').textContent.replace('Sector: ', '');
+            const table = group.querySelector('.dx-table');
+            sectorGroups[sector] = table;
+        });
+
+        // Add each sector as a separate worksheet
+        Object.keys(sectorGroups).forEach(sector => {
+            const worksheet = XLSX.utils.table_to_sheet(sectorGroups[sector]);
+            XLSX.utils.book_append_sheet(wb, worksheet, sector.substring(0, 31)); // Sheet name max 31 chars
+        });
+
+        // Export the workbook
+        XLSX.writeFile(wb, `SpecialDiscountBills_BySector_${new Date().toISOString().split('T')[0]}.xlsx`);
     });
 
     // Loading animation for form submission

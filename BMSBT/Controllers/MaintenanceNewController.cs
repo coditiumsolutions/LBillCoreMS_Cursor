@@ -4,6 +4,9 @@ using BMSBT.Requests;
 using BMSBT.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System.Data.Entity;
+using static BMSBT.Controllers.MaintenanceBillController;
+using System.Net.Http.Headers;
+using System.Net.Http;
 
 namespace BMSBT.Controllers
 {
@@ -12,11 +15,16 @@ namespace BMSBT.Controllers
         private readonly BmsbtContext _dbContext;
         private readonly MaintenanceFunctions MaintenanceFunctions;
         private readonly ICurrentOperatorService _operatorService;
-        public MaintenanceNewController(BmsbtContext context, ICurrentOperatorService operatorService)
+        private readonly IHttpClientFactory _httpClientFactory;
+
+       
+        public MaintenanceNewController(IHttpClientFactory httpClientFactory, BmsbtContext context, ICurrentOperatorService operatorService)
         {
             _dbContext = context;
             MaintenanceFunctions = new MaintenanceFunctions(_dbContext);
             _operatorService = operatorService;
+            _httpClientFactory = httpClientFactory;
+        
         }
 
 
@@ -488,6 +496,65 @@ namespace BMSBT.Controllers
 
 
 
+
+
+
+
+
+        [Route("PrintMMultiBills")]
+        [HttpPost]
+        public async Task<IActionResult> PrintMMultiBills([FromBody] PrintBillRequest request)
+        {
+            try
+            {
+
+                // Optional: Validate other fields
+                if (string.IsNullOrEmpty(request.project) ||
+                    string.IsNullOrEmpty(request.sector) ||
+                    string.IsNullOrEmpty(request.block) ||
+                    string.IsNullOrEmpty(request.month) ||
+                    string.IsNullOrEmpty(request.year))
+                {
+                    return BadRequest("All fields must be provided.");
+                }
+
+                // Optional: Log or process request info
+                Console.WriteLine($"Generating bills for Project: {request.project}, Sector: {request.sector}, Block: {request.block}, Month: {request.month}, Year: {request.year}");
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
+
+                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?project={request.project}&sector={request.sector}&block={request.block}&month={request.month}&year={request.year}";
+
+
+                // If needed, you can append filters to the URL or send them in headers/body to the API.
+                // For now, we just log them.
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var pdfData = await response.Content.ReadAsByteArrayAsync();
+
+                    if (pdfData == null || pdfData.Length == 0)
+                    {
+                        return BadRequest("Received empty PDF data");
+                    }
+
+                    Response.Headers.Add("Content-Disposition", "attachment; filename=MaintenanceBill.pdf");
+                    return File(pdfData, "application/pdf");
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
 
     }

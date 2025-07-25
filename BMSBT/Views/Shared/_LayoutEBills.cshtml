@@ -111,9 +111,15 @@
 
 
                 <ul class="nav flex-column">
-                   
+
                     <li>
-                        <a asp-controller="REPORTS" asp-action="GetBillsSpecialDiscount">
+                        <a asp-controller="Dashboard" asp-action="EDashboard">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Summary
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-controller="REPORTS" asp-action="GetBillsRecoverable">
                             <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
                            Recoverable 
                         </a>
