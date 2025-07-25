@@ -10,7 +10,9 @@ public class MaintenanceBillViewModel
     public string BillingMonth { get; set; }
     public string BillingYear { get; set; }
     public int? BillAmountInDueDate { get; set; }
+    public int? BillAmountAfterDueDate { get; set; }
     public string PaymentStatus { get; set; }
     public string Block { get; set; } // From CustomersDetail
     public DateOnly? DueDate { get; set; }
+    public string? History { get; set; }
 }

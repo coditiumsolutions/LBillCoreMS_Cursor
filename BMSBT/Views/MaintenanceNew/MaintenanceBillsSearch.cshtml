@@ -12,10 +12,10 @@
 }
 
 
-
 <style>
     .form-label {
         font-weight: 500;
+        white-space: nowrap;
     }
 
     .form-control {
@@ -28,12 +28,17 @@
         border-radius: 6px;
         margin-bottom: 20px;
     }
+
+    .btn-space-bottom {
+        margin-bottom: 30px; /* or any value you prefer */
+    }
 </style>
 
 <form asp-action="MaintenanceBillsSearch" method="get" class="filter-section">
-    <div class="form-row row">
-        <div class="form-group col-md-3">
-            <label class="form-label">Month</label>
+    <div class="form-row row align-items-end g-2">
+
+        <div class="form-group col-auto">
+            <label class="form-label">Month:</label>
             <select name="billingMonth" class="form-control">
                 <option value="">-- Select Month --</option>
                 @foreach (var month in ViewBag.Months as List<string>)
@@ -43,8 +48,8 @@
             </select>
         </div>
 
-        <div class="form-group col-md-3">
-            <label class="form-label">Year</label>
+        <div class="form-group col-auto">
+            <label class="form-label">Year:</label>
             <select name="billingYear" class="form-control">
                 <option value="">-- Select Year --</option>
                 @foreach (var year in ViewBag.Years as List<string>)
@@ -54,8 +59,8 @@
             </select>
         </div>
 
-        <div class="form-group col-md-3">
-            <label class="form-label">Block</label>
+        <div class="form-group col-auto">
+            <label class="form-label">Block:</label>
             <select class="form-control" name="block">
                 <option value="">-- Select Block --</option>
                 @foreach (var blockItem in ViewBag.Blocks)
@@ -67,31 +72,38 @@
             </select>
         </div>
 
-        <div class="form-group col-md-3">
-            <label class="form-label">BT No</label>
+        <div class="form-group col-auto">
+            <label class="form-label">BT No:</label>
             <input type="text" name="btNo" class="form-control" placeholder="Enter BT No" value="@Context.Request.Query["btNo"]" />
         </div>
 
-        <div class="form-group col-md-2 mt-4">
-            <button type="submit" class="btn btn-primary w-100">Search</button>
+        <div class="form-group col-auto">
+            <button type="submit" class="btn btn-primary mt-2">Search</button>
         </div>
+
     </div>
 </form>
 
 
+
 @if (ViewBag.ShowGrid == true)
 {
+    <form method="post" asp-action="GenerateBills">
+        <div class="text-end mt-2 mb-4">
+            <button type="submit" class="btn btn-success">Generate Bills</button>
+        </div>
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
-            
+                    <th><input type="checkbox" id="selectAll" /></th>
                     <th>Customer Name</th>
                     <th>BT No</th>
                     <th>Block</th>
                     <th>Billing Month</th>
                     <th>Billing Year</th>
-                    <th>Amount</th>
+                    <th>Amount Due Date</th>
+                    <th>Amount After Due Date</th>
                     <th>Due Date</th>
                     <th>Status</th>
                     <th></th>
@@ -104,13 +116,16 @@
                     @foreach (var item in Model.Items)
                     {
                         <tr>
-                       
+                                <td>
+                                    <input type="checkbox" name="selectedBtno" value="@item.Btno" />
+                                </td>
                             <td>@item.CustomerName</td>
                             <td>@item.Btno</td>
                             <td>@item.Block</td>
                             <td>@item.BillingMonth</td>
                             <td>@item.BillingYear</td>
-                            <td>@item.BillAmountInDueDate?.ToString("C")</td>
+                            <td>@item.BillAmountInDueDate?.ToString()</td>
+                            <td>@item.BillAmountAfterDueDate?.ToString()</td>
                             <td>@item.DueDate?.ToString("dd-MMMM-yyyy")</td>
                             <td>@item.PaymentStatus</td>
                             <td> <a asp-action="Details" asp-route-id="@item.Uid" class="btn btn-info btn-sm">Details</a></td>
@@ -120,13 +135,16 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center">No records found</td>
+                        <td colspan="9" class="text-center">No records found</td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
-
+          
+        </div>
+    </form>
+   
+   
     @if (Model.TotalPages > 1)
     {
         <nav aria-label="Page navigation">
@@ -176,5 +194,12 @@
             Showing @((Model.PageNumber - 1) * Model.PageSize + 1) to
             @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalRecords)) of @Model.TotalRecords records
         </div>
+       
     }
 }
+<script>
+    document.getElementById('selectAll').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll('input[name="selectedBtno"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>

@@ -56,5 +56,6 @@ public partial class MaintenanceBill
     public decimal? Arrears { get; set; }
     public decimal? MaintCharges { get; set; }
 
-   
+    public string? History { get; set; }
+
 }

@@ -8,73 +8,112 @@
 <style>
     .form-grid {
         display: grid;
-        grid-template-columns: 2fr 2fr;
+        grid-template-columns: 1fr 2fr 1fr 2fr;
         gap: 10px 20px;
-        max-width: 800px;
+        max-width: 1000px;
     }
 
-    .form-grid label {
-        align-self: center;
-        font-weight: bold;
-    }
+        .form-grid label {
+            align-self: center;
+            font-weight: bold;
+        }
 
-    .form-grid .form-control,
-    .form-grid .text-danger {
-        width: 100%;
-    }
+        .form-grid .form-control,
+        .form-grid .text-danger {
+            width: 100%;
+        }
 
     .form-actions {
         margin-top: 20px;
     }
 </style>
 
-<h3>Edit Maintenance Bill</h3>
+<h3>Modify Bill</h3>
 
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Uid" />
 
     <div class="form-grid">
-        <label asp-for="CustomerName"></label>
+        <label asp-for="CustomerName">Customer Name</label>
         <div>
-            <input asp-for="CustomerName" class="form-control" />
+            <input asp-for="CustomerName" class="form-control" readonly />
             <span asp-validation-for="CustomerName" class="text-danger"></span>
         </div>
 
-        <label asp-for="Btno"></label>
+        <label asp-for="Btno">BT No</label>
         <div>
-            <input asp-for="Btno" class="form-control" />
+            <input asp-for="Btno" class="form-control" readonly />
             <span asp-validation-for="Btno" class="text-danger"></span>
         </div>
 
-        <label asp-for="BillingMonth"></label>
+        <label asp-for="BillingMonth">Billing Month</label>
         <div>
-            <input asp-for="BillingMonth" class="form-control" />
+            <input asp-for="BillingMonth" class="form-control" readonly />
             <span asp-validation-for="BillingMonth" class="text-danger"></span>
         </div>
 
-        <label asp-for="BillingYear"></label>
+        <label asp-for="BillingYear">Billing Year</label>
         <div>
-            <input asp-for="BillingYear" class="form-control" />
+            <input asp-for="BillingYear" class="form-control" readonly />
             <span asp-validation-for="BillingYear" class="text-danger"></span>
         </div>
 
-        <label asp-for="BillAmountInDueDate"></label>
+        <label asp-for="BillAmountInDueDate">Amount in Due Date</label>
         <div>
-            <input asp-for="BillAmountInDueDate" class="form-control" />
+            <input asp-for="BillAmountInDueDate" class="form-control" readonly />
             <span asp-validation-for="BillAmountInDueDate" class="text-danger"></span>
         </div>
 
-        <label asp-for="PaymentStatus"></label>
+        <label asp-for="BillAmountAfterDueDate">Amount after Due Date</label>
         <div>
-            <input asp-for="PaymentStatus" class="form-control" />
+            <input asp-for="BillAmountAfterDueDate" class="form-control" readonly />
+            <span asp-validation-for="BillAmountAfterDueDate" class="text-danger"></span>
+        </div>
+
+        <label for="DueDate">Due Date</label>
+        <div>
+            <input type="text"
+                   name="DueDate"
+                   id="DueDate"
+                   class="form-control"
+                   value="@Model.DueDate?.ToString("dd-MMM-yyyy")" />
+            <span asp-validation-for="DueDate" class="text-danger"></span>
+        </div>
+
+        <label asp-for="PaymentStatus">Payment Status</label>
+        <div>
+            <input asp-for="PaymentStatus" class="form-control" readonly />
             <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+        </div>
+
+        <label asp-for="History">History</label>
+        <div style="grid-column: span 3;">
+            <textarea asp-for="History" class="form-control" rows="6" readonly></textarea>
+            <span asp-validation-for="History" class="text-danger"></span>
         </div>
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Update</button>
-        <a asp-action="MaintenanceBillsSearch" class="btn btn-secondary">Cancel</a>
+    @* <div class="form-actions"> *@
+    @*     <button type="submit" class="btn btn-primary">Update</button> *@
+    @*     <a asp-action="MaintenanceBillsSearch" class="btn btn-secondary">Cancel</a> *@
+    @* </div> *@
+
+
+    <div class="form-actions d-flex justify-content-between mt-3">
+        <div>
+            <button type="submit" name="action" value="update" class="btn btn-primary">Update</button>
+            <a asp-action="MaintenanceBillsSearch" class="btn btn-secondary">Cancel</a>
+        </div>
+        <div>
+            <button type="submit" name="action" value="delete" class="btn btn-danger"
+                    onclick="return confirm('Are you sure you want to delete this bill?');">
+                Delete Bill
+            </button>
+        </div>
     </div>
+
+
+
 </form>
 
 @section Scripts {

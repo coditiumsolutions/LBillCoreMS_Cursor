@@ -883,6 +883,7 @@ namespace BMSBT.Controllers
 
         public class PrintBillRequest
         {
+            public string category { get; set; }
             public string uids { get; set; }
             public string project { get; set; }
             public string sector { get; set; }

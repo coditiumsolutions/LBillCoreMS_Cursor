@@ -49,13 +49,11 @@
         margin-top: 20px;
         font-weight: bold;
     }
+
     @@keyframes spin {
-        to
-
-    {
-        transform: rotate(360deg);
-    }
-
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .project-header {
@@ -93,14 +91,14 @@
 
 @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
 {
-     <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
 }
 @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
 {
-     <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+    <div class="alert alert-success">@ViewBag.SuccessMessage</div>
 }
 
-<form id="filterForm" method="post" asp-action="EBill" asp-controller="EBillU">
+<form id="filterForm" method="post" asp-action="PrintMMultiBills" asp-controller="MaintenanceNew">
     <div class="row g-3">
         <div class="col-md-3">
             <select id="ProjectDropdown" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
@@ -111,8 +109,8 @@
                 }
             </select>
         </div>
-      
-        
+
+
         <div class="col-md-3">
             <select id="month" name="month" class="form-control" required>
                 <option value="">-- Month --</option>
@@ -126,8 +124,8 @@
 
 
     </div>
-        <div class="row" style="margin-top:20px">      
-            <div class="col-md-3" >
+    <div class="row" style="margin-top:20px">
+        <div class="col-md-3">
             <select id="year" name="year" class="form-control" required>
                 <option value="">-- Year --</option>
                 @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
@@ -147,17 +145,13 @@
             </select>
         </div>
 
-
-
-
-
         <div class="col-md-2 d-flex align-items-end gap-2">
             <button id="PrintButton" type="button" class="btn btn-primary flex-fill">Print</button>
             @* <button id="PayRecordsButton" type="button" class="btn btn-success flex-fill">Pay</button> *@
         </div>
-        </div>
+    </div>
 
-   
+
 </form>
 
 <div class="search-panel">
@@ -237,38 +231,38 @@
 
 @section Scripts {
     <script>
-        $(function(){
-          function toggleSection(selector, headerSel, contentSel) {
-            headerSel.click(function(){
-              var id = $(this).data('id');
-              $(this).find('.toggle-icon').toggleClass('rotate-icon');
-              contentSel.filter(`[data-parent='${id}']`).toggle();
-            });
-          }
-          toggleSection('project', $('.project-header'), $('.project-content'));
-          toggleSection('block', $('.block-header'), $('.block-content'));
-          toggleSection('category', $('.category-header'), $('.category-content'));
+            $(function(){
+              function toggleSection(selector, headerSel, contentSel) {
+                headerSel.click(function(){
+                  var id = $(this).data('id');
+                  $(this).find('.toggle-icon').toggleClass('rotate-icon');
+                  contentSel.filter(`[data-parent='${id}']`).toggle();
+                });
+              }
+              toggleSection('project', $('.project-header'), $('.project-content'));
+              toggleSection('block', $('.block-header'), $('.block-content'));
+              toggleSection('category', $('.category-header'), $('.category-content'));
 
-          $('#selectAll').change(function(){ $('.record-checkbox:visible').prop('checked',this.checked); });
+              $('#selectAll').change(function(){ $('.record-checkbox:visible').prop('checked',this.checked); });
 
-          $('#searchInput').on('input', function(){
-            var text = this.value.toLowerCase();
-            $('.project-header, .project-content, .block-header, .block-content, .category-header, .category-content').hide();
-            $('.record-checkbox').closest('tr').filter(function(){ return $(this).text().toLowerCase().includes(text); }).each(function(){
-              $(this).show();
-              $(this).parents('tr,div').filter('[data-id]').show();
-            });
-          });
+              $('#searchInput').on('input', function(){
+                var text = this.value.toLowerCase();
+                $('.project-header, .project-content, .block-header, .block-content, .category-header, .category-content').hide();
+                $('.record-checkbox').closest('tr').filter(function(){ return $(this).text().toLowerCase().includes(text); }).each(function(){
+                  $(this).show();
+                  $(this).parents('tr,div').filter('[data-id]').show();
+                });
+              });
 
-          function ajaxAction(url, payload, onSuccess) {
-            $('#loadingOverlay').show();
-            $.ajax({ url, method:'POST', contentType:'application/json', data: JSON.stringify(payload) })
-              .done(onSuccess)
-              .fail(err => alert('Error: '+err.statusText))
-              .always(()=>$('#loadingOverlay').hide());
-          }
+              function ajaxAction(url, payload, onSuccess) {
+                $('#loadingOverlay').show();
+                $.ajax({ url, method:'POST', contentType:'application/json', data: JSON.stringify(payload) })
+                  .done(onSuccess)
+                  .fail(err => alert('Error: '+err.statusText))
+                  .always(()=>$('#loadingOverlay').hide());
+              }
 
-            $('#PrintButton').click(function(){
+                 $('#PrintButton').click(function(){
         var uids = $('.record-checkbox:checked').map((i, el) => el.value).get();
         var data = {
             uids: uids.join(','),
@@ -278,39 +272,39 @@
             year: $('#year').val()
         };
 
-        $('#loadingOverlay').show(); // Show loading
+            $('#loadingOverlay').show(); // Show loading
 
-        $.ajax({
-            url: '/PrintEMultiBills',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            xhrFields: { responseType: 'blob' }
-        }).done((data, status, xhr) => {
-            var blob = new Blob([data], { type: 'application/pdf' });
-            window.open(URL.createObjectURL(blob));
-        }).fail(err => {
-            alert('Print failed');
-        }).always(() => {
-            $('#loadingOverlay').hide(); // Hide loading
+            $.ajax({
+                url: '/PrintMMultiBills',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                xhrFields: { responseType: 'blob' }
+            }).done((data, status, xhr) => {
+                var blob = new Blob([data], { type: 'application/pdf' });
+                window.open(URL.createObjectURL(blob));
+            }).fail(err => {
+                alert('Print failed');
+            }).always(() => {
+                $('#loadingOverlay').hide(); // Hide loading
+            });
         });
-    });
-    ;
+        ;
 
-          $('#PayRecordsButton').click(function(){
-            var uids = $('.record-checkbox:checked').map((i,el)=>el.value).get();
-            // if(!uids.length){ return alert('Select bills to pay'); }
-            ajaxAction('/EBillU/PayEMultiBill', uids, res=>{ alert(res.message || 'Paid'); location.reload(); });
-          });
-        });
+              $('#PayRecordsButton').click(function(){
+                var uids = $('.record-checkbox:checked').map((i,el)=>el.value).get();
+                // if(!uids.length){ return alert('Select bills to pay'); }
+                ajaxAction('/EBillU/PayEMultiBill', uids, res=>{ alert(res.message || 'Paid'); location.reload(); });
+              });
+            });
 
-        function loadSectorsAndBlocks(){
-          var project = $('#ProjectDropdown').val();
-          if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
-          $.getJSON('/GetSectorsAndBlocks',{project},data=>{
-            var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));
-            var blk=$('#BlockDropdown').empty().append('<option>Select Block</option>'); data.blocks.forEach(b=>blk.append(`<option>${b}</option>`));
-          });
-        }
+            function loadSectorsAndBlocks(){
+              var project = $('#ProjectDropdown').val();
+              if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
+              $.getJSON('/GetSectorsAndBlocks',{project},data=>{
+                var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));
+                var blk=$('#BlockDropdown').empty().append('<option>Select Block</option>'); data.blocks.forEach(b=>blk.append(`<option>${b}</option>`));
+              });
+            }
     </script>
 }

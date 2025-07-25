@@ -300,10 +300,10 @@ namespace BMSBT.Controllers
 
 
 
-        public IActionResult EBill(string? month, string? year, string Sector, string Block)
+        public IActionResult EBill(string? month, string? year, string Category, string Block)
         {
 
-            if (string.IsNullOrEmpty(month) || string.IsNullOrEmpty(year) && string.IsNullOrEmpty(Sector) && string.IsNullOrEmpty(Block))
+            if (string.IsNullOrEmpty(month) || string.IsNullOrEmpty(year) && string.IsNullOrEmpty(Category) && string.IsNullOrEmpty(Block))
             {
                 ViewBag.ErrorMessage = "Both month and year must be selected.";
                 return View("MaintenanceBills"); // Return the view with an error message
@@ -764,8 +764,8 @@ namespace BMSBT.Controllers
             {
 
                 // Optional: Validate other fields
-                if (string.IsNullOrEmpty(request.project) ||
-                    string.IsNullOrEmpty(request.sector) ||
+                if (
+                    string.IsNullOrEmpty(request.category) ||
                     string.IsNullOrEmpty(request.block) ||
                     string.IsNullOrEmpty(request.month) ||
                     string.IsNullOrEmpty(request.year))
@@ -781,7 +781,7 @@ namespace BMSBT.Controllers
 
                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
 
-                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?project={request.project}&sector={request.sector}&block={request.block}&month={request.month}&year={request.year}";
+                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.

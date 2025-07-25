@@ -2,7 +2,7 @@
 
 <style>
     .invoice-container {
-        max-width: 800px;
+        max-width: 1000px;
         margin: 0 auto;
         background-color: #f8f9fa;
         border: 1px solid #ddd;
@@ -25,26 +25,20 @@
             color: #007bff;
         }
 
-    .invoice-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 15px 20px;
+        margin-top: 20px;
     }
 
-        .invoice-table th, .invoice-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        .invoice-table th {
-            background-color: #007bff;
-            color: white;
+        .details-grid .label {
             font-weight: bold;
+            color: #333;
         }
 
     .invoice-footer {
-        margin-top: 20px;
+        margin-top: 30px;
         text-align: center;
     }
 
@@ -70,25 +64,20 @@
         <h2>Maintenance Bill</h2>
         <p><strong>Invoice No:</strong> @Model.InvoiceNo</p>
     </div>
-    <table class="invoice-table">
-        <thead>
-            <tr>
-                <th>Field</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td>Customer No</td><td>@Model.CustomerNo</td></tr>
-            <tr><td>Customer Name</td><td>@Model.CustomerName</td></tr>
-            <tr><td>Issue Date</td><td>@Model.IssueDate?.ToString("dd-MM-yyyy")</td></tr>
-            <tr><td>Due Date</td><td>@Model.DueDate?.ToString("dd-MM-yyyy")</td></tr>
-            <tr><td>Tax Amount</td><td>@Model.TaxAmount?.ToString("C")</td></tr>
-            <tr><td>Bill Amount (Due Date)</td><td>@Model.BillAmountInDueDate?.ToString("C")</td></tr>
-            <tr><td>Bill Amount (After Due Date)</td><td>@Model.BillAmountAfterDueDate?.ToString("C")</td></tr>
-            <tr><td>Month</td><td>@Model.BillingMonth</td></tr>
-            <tr><td>Year</td><td>@Model.BillingYear</td></tr>
-        </tbody>
-    </table>
+
+    <div class="details-grid">
+        <div class="label">Customer No</div><div>@Model.CustomerNo</div>
+        <div class="label">Customer Name</div><div>@Model.CustomerName</div>
+        <div class="label">Issue Date</div><div>@Model.IssueDate?.ToString("dd-MM-yyyy")</div>
+        <div class="label">Due Date</div><div>@Model.DueDate?.ToString("dd-MM-yyyy")</div>
+        <div class="label">Tax Amount</div><div>@Model.TaxAmount?.ToString("C")</div>
+        <div class="label">Bill (Due Date)</div><div>@Model.BillAmountInDueDate?.ToString("C")</div>
+        <div class="label">Bill (After Due)</div><div>@Model.BillAmountAfterDueDate?.ToString("C")</div>
+        <div class="label">Month</div><div>@Model.BillingMonth</div>
+        <div class="label">Year</div><div>@Model.BillingYear</div>
+        <div class="label">History</div><div style="grid-column: span 3;">@Model.History</div>
+    </div>
+
     <div class="invoice-footer">
         <a href="@Url.Action("MaintenanceBillsSearch", "MaintenanceNew")" class="btn-secondary">Back to List</a>
     </div>
