@@ -86,10 +86,7 @@ public partial class ElectricityBill
     public string? CreatedBy { get; set; }
 
     public string? CreateOn { get; set; }
-
-    public string? UpdateBy { get; set; }
-
-    public string? UpdateOn { get; set; }
+    public string? Block { get; set; }
 
     public string? Sector { get;set; }
     public decimal? FPACHARGES { get; set; }

@@ -131,7 +131,7 @@ namespace BMSBT.Controllers
 
 
             bill.PaymentStatus = billStatus;
-            bill.LastUpdated = DateTime.Now;
+           
 
             _dbContext.SaveChanges();
 

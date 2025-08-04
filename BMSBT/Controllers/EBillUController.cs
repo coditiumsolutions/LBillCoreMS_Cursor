@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using X.PagedList.Extensions;
 using static BMSBT.Controllers.MaintenanceBillController;
 
@@ -353,7 +354,7 @@ namespace BMSBT.Controllers
                     PaymentDate = bill.PaymentDate,
                     PaymentMethod = bill.PaymentMethod,
                     BankDetail = bill.BankDetail,
-                    LastUpdated = bill.LastUpdated,
+                    
 
                     BillAmountInDueDate = bill.BillAmountInDueDate,
                     BillSurcharge = bill.BillSurcharge,
@@ -397,7 +398,7 @@ namespace BMSBT.Controllers
                 from bill in _dbContext.ElectricityBills
                 join customer in _dbContext.CustomersDetails
                      on bill.Btno equals customer.Btno
-                where bill.BillingMonth == month && bill.BillingYear == year
+                where bill.BillingMonth == month && bill.BillingYear == year && bill.Block.Contains("COM")
                 select new BillDTO
                 {
                     Uid = bill.Uid,
@@ -435,14 +436,14 @@ namespace BMSBT.Controllers
                     PaymentDate = bill.PaymentDate,
                     PaymentMethod = bill.PaymentMethod,
                     BankDetail = bill.BankDetail,
-                    LastUpdated = bill.LastUpdated,
+               
 
                     BillAmountInDueDate = bill.BillAmountInDueDate,
                     BillSurcharge = bill.BillSurcharge,
                     BillAmountAfterDueDate = bill.BillAmountAfterDueDate
                 }
             ).ToList();
-
+            bills = bills.OrderBy(x => NaturalSortKey(x.PloNo)).ToList();
             if (!bills.Any())
             {
                 ViewBag.ErrorMessage = "No bills found for the selected month and year.";
@@ -454,6 +455,8 @@ namespace BMSBT.Controllers
             return View("EBills", pagedBills); // Pass the view model to the view
         }
 
+
+       
         //[HttpGet]
         //[Route("PrintBills")]
         // GET: Reading/SearchPrintBills
@@ -781,7 +784,7 @@ namespace BMSBT.Controllers
 
                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
 
-                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}";
+                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.
@@ -1077,7 +1080,7 @@ namespace BMSBT.Controllers
                             PaymentDate = bill.PaymentDate,
                             PaymentMethod = bill.PaymentMethod,
                             BankDetail = bill.BankDetail,
-                            LastUpdated = bill.LastUpdated,
+                           
                             BillAmountInDueDate = bill.BillAmountInDueDate,
                             BillSurcharge = bill.BillSurcharge,
                             BillAmountAfterDueDate = bill.BillAmountAfterDueDate
@@ -1111,7 +1114,11 @@ namespace BMSBT.Controllers
         }
 
 
-
+        private string NaturalSortKey(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            return Regex.Replace(input, @"\d+", match => match.Value.PadLeft(10, '0'));
+        }
 
 
 

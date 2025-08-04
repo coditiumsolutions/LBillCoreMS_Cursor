@@ -103,7 +103,7 @@
 <form id="filterForm" method="post" asp-action="EBill" asp-controller="EBillU">
     <div class="row g-3">
         <div class="col-md-3">
-            <select id="ProjectDropdown" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
+            <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
                 <option value="">Select Project</option>
                 @foreach (var project in (List<string>)ViewBag.Projects)
                 {
@@ -144,6 +144,7 @@
                 <option value="">Select Category</option>
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
+                <option value="Bahria Self Consumption">Bahria Self Consumption</option>>
             </select>
         </div>
 
@@ -275,7 +276,8 @@
                     Category: $('#Category').val(),
             block: $('#BlockDropdown').val(),
             month: $('#month').val(),
-            year: $('#year').val()
+            year: $('#year').val(),
+                      Project: $('#Project').val()
         };
 
         $('#loadingOverlay').show(); // Show loading
@@ -305,7 +307,7 @@
         });
 
         function loadSectorsAndBlocks(){
-          var project = $('#ProjectDropdown').val();
+          var project = $('#Project').val();
           if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
           $.getJSON('/GetSectorsAndBlocks',{project},data=>{
             var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));

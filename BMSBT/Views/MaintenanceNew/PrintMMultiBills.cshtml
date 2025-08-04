@@ -101,7 +101,7 @@
 <form id="filterForm" method="post" asp-action="PrintMMultiBills" asp-controller="MaintenanceNew">
     <div class="row g-3">
         <div class="col-md-3">
-            <select id="ProjectDropdown" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
+            <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
                 <option value="">Select Project</option>
                 @foreach (var project in (List<string>)ViewBag.Projects)
                 {
@@ -269,7 +269,8 @@
                     Category: $('#Category').val(),
             block: $('#BlockDropdown').val(),
             month: $('#month').val(),
-            year: $('#year').val()
+            year: $('#year').val(),
+            project: $('#Project').val()
         };
 
             $('#loadingOverlay').show(); // Show loading
@@ -299,7 +300,7 @@
             });
 
             function loadSectorsAndBlocks(){
-              var project = $('#ProjectDropdown').val();
+              var project = $('#Project').val();
               if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
               $.getJSON('/GetSectorsAndBlocks',{project},data=>{
                 var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));

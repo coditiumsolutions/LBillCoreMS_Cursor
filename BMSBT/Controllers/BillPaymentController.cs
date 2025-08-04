@@ -42,31 +42,33 @@ namespace BMSBT.Controllers
         [HttpPost]
         public IActionResult OpenBill(BillViewModel model)
         {
-            if (string.IsNullOrEmpty(model.BillingMonth) ||
-                string.IsNullOrEmpty(model.BillingYear) ||
-                string.IsNullOrEmpty(model.Btno))
+            if (string.IsNullOrEmpty(model.Btno) ||
+                string.IsNullOrEmpty(model.BillingMonth) ||
+                string.IsNullOrEmpty(model.BillingYear))
             {
-                ModelState.AddModelError("", "Please provide Billing Month, Billing Year, and Btno.");
+                ModelState.AddModelError("", "Please provide complete Btno, Billing Month, and Billing Year.");
                 return View("PaymentForm", model);
             }
 
-            // Query the database for a matching bill
+            // Search unpaid bill
             var bill = _dbContext.ElectricityBills
                 .FirstOrDefault(e =>
                     e.BillingMonth == model.BillingMonth &&
                     e.BillingYear == model.BillingYear &&
-                     e.PaymentStatus == "Unpaid" &&
-                    e.Btno == model.Btno);
+                    e.Btno == model.Btno &&
+                    e.PaymentStatus == "Unpaid");
 
             if (bill == null)
             {
-                TempData["ErrorMessage"] = "No unpaid bill found for selected month.";
+                TempData["ErrorMessage"] = "No unpaid bill found for the selected reference.";
                 return View("PaymentForm", model);
             }
-            // Update the model with values from the database
+
+            // Populate result
             model.ReferenceNumber = bill.CustomerNo;
             model.CustomerName = bill.CustomerName;
 
+            TempData["SuccessMessage"] = "Bill found successfully.";
             ModelState.Clear();
             return View("PaymentForm", model);
         }

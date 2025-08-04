@@ -81,7 +81,7 @@
 
         public string? BankDetail { get; set; }
 
-        public DateTime? LastUpdated { get; set; }
+    
 
         public int? TaxAmount { get; set; }
 

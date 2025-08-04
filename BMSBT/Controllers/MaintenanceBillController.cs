@@ -466,7 +466,7 @@ namespace BMSBT.Controllers
                     PaymentDate = bill.PaymentDate,
                     PaymentMethod = bill.PaymentMethod,
                     BankDetail = bill.BankDetail,
-                    LastUpdated = bill.LastUpdated,
+               
                     TaxAmount = bill.TaxAmount,
                     BillAmountInDueDate = bill.BillAmountInDueDate,
                     BillSurcharge = bill.BillSurcharge,

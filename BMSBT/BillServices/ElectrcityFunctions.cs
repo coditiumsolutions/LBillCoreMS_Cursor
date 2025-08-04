@@ -285,8 +285,8 @@ namespace BMSBT.BillServices
                 TotalUnit = TotalUNits,
                 BillAmount= BillAmountt,
                 Arrears = Convert.ToDecimal(arrears),
-                UpdateBy= UserName,
-                UpdateOn=DateTime.Now.ToString("dd MMM yyyy"),
+               
+                
                 FPACHARGES=Convert.ToDecimal(TotalFPACHAR),
                 AmountPaid=0,
             };

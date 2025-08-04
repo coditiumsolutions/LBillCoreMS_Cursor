@@ -264,12 +264,7 @@ public partial class BmsbtContext : DbContext
                 .IsUnicode(false)
                 .HasDefaultValue("Unpaid");
             entity.Property(e => e.Ptvfee).HasColumnName("PTVFEE");
-            entity.Property(e => e.UpdateBy)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.UpdateOn)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            
         });
 
        

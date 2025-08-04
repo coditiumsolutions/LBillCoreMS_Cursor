@@ -14,13 +14,12 @@
             <div class="row">
                 <div class="col-md-3">
                     <label asp-for="BillingMonth">Billing Month</label>
-                    <input asp-for="BillingMonth" class="form-control" readonly />
+                    <input asp-for="BillingMonth" class="form-control" readonly id="BillingMonth" />
                 </div>
                 <div class="col-md-3">
                     <label asp-for="BillingYear">Billing Year</label>
-                    <input asp-for="BillingYear" class="form-control" readonly />
+                    <input asp-for="BillingYear" class="form-control" readonly id="BillingYear" />
                 </div>
-
                 <div class="col-md-3">
                     <label asp-for="PaidOn">Paid On</label>
                     <input asp-for="PaidOn" type="date" class="form-control" required />
@@ -34,19 +33,17 @@
                 </div>
             </div>
 
-            
-
             <div class="row mt-3">
                 <div class="col-md-3">
                     <label asp-for="BankBranch">Bank Branch</label>
                     <select asp-for="BankBranch" class="form-control" required>
                         <option value="Allied Bank">Allied Bank</option>
-                        <option value="XYZ Bank">UBL Bank</option>
+                        <option value="UBL Bank">UBL Bank</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label asp-for="Btno">Enter Tracking No.</label>
-                    <input asp-for="Btno" class="form-control" placeholder="BTO-10790" required/>
+                    <label asp-for="Btno">Scan Tracking No.</label>
+                    <input asp-for="Btno" id="Btno" class="form-control" placeholder="Scan barcode like: BTL-12676 July 2025" required />
                 </div>
                 <div class="col-md-3">
                     <label asp-for="ReferenceNumber">Reference Number</label>
@@ -57,8 +54,6 @@
                     <input asp-for="CustomerName" class="form-control" readonly />
                 </div>
             </div>
-
-            
 
             <div class="mt-4">
                 <button type="submit" name="submitAction" value="SearchBill" class="btn btn-success">Search Bill</button>
@@ -71,6 +66,11 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const btnoInput = document.getElementById("Btno");
+        const billingMonthInput = document.getElementById("BillingMonth");
+        const billingYearInput = document.getElementById("BillingYear");
+
+        // SweetAlert from TempData
         var successMessage = '@TempData["SuccessMessage"]';
         var errorMessage = '@TempData["ErrorMessage"]';
         if (successMessage && successMessage.trim() !== "") {
@@ -78,12 +78,45 @@
         } else if (errorMessage && errorMessage.trim() !== "") {
             Swal.fire({ icon: 'error', title: errorMessage, showConfirmButton: true, timer: 3000 });
         }
-    });
 
-    document.querySelectorAll("button[name='submitAction']").forEach(button => {
-        button.addEventListener("click", function () {
-            var form = document.querySelector("form");
-            form.action = this.value === "MarkPaid" ? "/BillPayment/MarkPaid" : "/BillPayment/OpenBill";
+       btnoInput.addEventListener("change", function () {
+                let fullValue = this.value.trim();
+
+                // Remove starting and ending asterisk if present
+                if (fullValue.startsWith("*") && fullValue.endsWith("*")) {
+                    fullValue = fullValue.slice(1, -1).trim();
+                }
+
+                // Match: BTL-32565 July 2025
+                const match = fullValue.match(/^([A-Z0-9\-]+)\s+([A-Za-z]+)\s+(\d{4})$/);
+
+                if (match) {
+                    const btno = match[1];
+                    const month = match[2];
+                    const year = match[3];
+
+                    btnoInput.value = btno;
+                    billingMonthInput.value = month;
+                    billingYearInput.value = year;
+
+                    const form = document.getElementById("barcodeForm");
+                    form.submit();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Barcode Format',
+                        text: 'Expected format: *BTL-XXXXX Month Year*'
+                    });
+                }
+            });
+
+        // Manual button click routing
+        document.querySelectorAll("button[name='submitAction']").forEach(button => {
+            button.addEventListener("click", function () {
+                const form = document.querySelector("form");
+                form.action = this.value === "MarkPaid" ? "/BillPayment/MarkPaid" : "/BillPayment/OpenBill";
+            });
         });
     });
 </script>
+
