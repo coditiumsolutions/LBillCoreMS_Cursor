@@ -245,8 +245,9 @@ public partial class BmsbtContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.LastUpdated)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasMaxLength(100)             // match varchar(100)
+                .HasColumnType("varchar(100)") // explicitly set varchar type
+                .HasDefaultValueSql("CONVERT(varchar(10), GETDATE(), 120)");  // default to current date as string yyyy-MM-dd
             entity.Property(e => e.MeterNo)
                 .HasMaxLength(50)
                 .IsUnicode(false);

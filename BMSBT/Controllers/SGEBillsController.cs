@@ -47,49 +47,46 @@ namespace BMSBT.Controllers
         [HttpPost]
         public IActionResult SGEBills(string btNoSearch, string billingYear, string billingMonth)
         {
-            // fallback
-            billingYear = billingYear ?? DateTime.Now.Year.ToString();
-            billingMonth = billingMonth ?? DateTime.Now.ToString("MMMM");
-
-            // base query
-            var billsQuery = _dbContext.ElectricityBills
-                .Where(b =>
-                    b.BillingYear.Trim() == billingYear.Trim() &&
-                    b.BillingMonth.Trim() == billingMonth.Trim()
-                    // only filter BT No if provided:
-                    && (string.IsNullOrEmpty(btNoSearch)
-                        || b.Btno.Trim().ToLower().Contains(btNoSearch.Trim().ToLower()))
-                );
-
-            // group by sector
-            var groupedData = billsQuery
-                .AsEnumerable()   // switch to in-memory so ToList inside projection works
-                .GroupBy(b => b.Sector)
-                .Select(g => new BillsViewModel
-                {
-                    Sector = g.Key,
-                    Bills = g.ToList()
-                })
-                .ToList();
-
-            // re-populate dropdowns + selections
-            ViewBag.MonthList = System.Globalization.CultureInfo
-                                       .CurrentCulture
-                                       .DateTimeFormat
-                                       .MonthNames
-                                       .Where(m => !string.IsNullOrEmpty(m))
-                                       .ToList();
-            ViewBag.YearList = Enumerable
-                                       .Range(DateTime.Now.Year - 2, 5)
-                                       .Select(y => y.ToString())
-                                       .ToList();
+            // Save selected filters to ViewBag for form persistence
             ViewBag.SelectedMonth = billingMonth;
             ViewBag.SelectedYear = billingYear;
             ViewBag.BTNoSearch = btNoSearch;
 
-            // return the grouped view-model
-            return View(groupedData);
+            // Prepare month & year dropdowns
+            ViewBag.MonthList = Enumerable.Range(1, 12)
+                                          .Select(m => new DateTime(2000, m, 1).ToString("MMMM"))
+                                          .ToList();
+            ViewBag.YearList = Enumerable.Range(DateTime.Now.Year - 10, 11)
+                                         .Select(y => y.ToString())
+                                         .ToList();
+
+            // Base query
+            var query = _dbContext.ElectricityBills.AsQueryable();
+
+            // Filtering by month & year
+            if (!string.IsNullOrEmpty(billingMonth))
+                query = query.Where(b => b.BillingMonth == billingMonth);
+
+            if (!string.IsNullOrEmpty(billingYear))
+                query = query.Where(b => b.BillingYear == billingYear);
+
+            // Filtering by BT No if provided
+            if (!string.IsNullOrEmpty(btNoSearch))
+                query = query.Where(b => b.Btno.Contains(btNoSearch));
+
+            var groupedBills = query
+             .GroupBy(x => x.Sector)
+             .Select(g => new BillsViewModel
+             {
+                 Sector = g.Key ?? "No Sector",
+                 Bills = g.ToList()
+             })
+             .ToList();
+
+
+            return View(groupedBills);
         }
+        
 
 
 

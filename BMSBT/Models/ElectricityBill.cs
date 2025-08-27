@@ -45,7 +45,7 @@ public partial class ElectricityBill
 
     public int? EnergyCoast { get; set; }
 
-    public DateTime? LastUpdated { get; set; }
+    public string? LastUpdated { get; set; }
 
     public int? BillAmountInDueDate { get; set; }
 

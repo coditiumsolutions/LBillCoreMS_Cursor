@@ -43,7 +43,7 @@ public partial class MaintenanceBill
 
     public string? BankDetail { get; set; }
 
-    public DateTime? LastUpdated { get; set; }
+    public string? LastUpdated { get; set; }
 
     public int? TaxAmount { get; set; }
 

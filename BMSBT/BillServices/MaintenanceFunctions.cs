@@ -237,7 +237,7 @@ namespace BMSBT.BillServices
                 DueDate = DueDate,
 
                 PaymentStatus = "Unpaid",
-                LastUpdated = DateTime.Now,
+                LastUpdated = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 BillingDate = DateOnly.FromDateTime(DateTime.Now),
                 MeterNo = customer.MeterNo,
                 PaymentMethod = "N/A",
