@@ -782,9 +782,21 @@ namespace BMSBT.Controllers
                 var client = _httpClientFactory.CreateClient();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
-               // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
+                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
 
-                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.228.2/api/EBill01/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+                //var url = $"http://172.20.228.2/api/EBill/PrintEBills";
+
+                var url = $"http://172.20.228.2/api/EBill01/GetEBill" +
+                $"?block={Uri.EscapeDataString(request.block)}" +
+                $"&Category={Uri.EscapeDataString(request.category)}" +
+                $"&month={Uri.EscapeDataString(request.month)}" +
+                $"&year={Uri.EscapeDataString(request.year)}" +
+                $"&Project={Uri.EscapeDataString(request.project)}";
+
+
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.
