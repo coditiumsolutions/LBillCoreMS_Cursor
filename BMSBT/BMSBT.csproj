@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.Reporting" Version="2.1.0" />
     <PackageReference Include="BCrypt.Net-Core" Version="1.6.0" />
-    <PackageReference Include="DevExpress.Reporting.Core" Version="22.2.5" />
+    <PackageReference Include="DevExpress.Reporting.Core" Version="22.2.3" />
     <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="FastReport.OpenSource" Version="2025.1.0" />
     <PackageReference Include="FastReport.OpenSource.Web" Version="2025.1.0" />
