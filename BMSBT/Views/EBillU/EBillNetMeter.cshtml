@@ -5,7 +5,7 @@
 @model IPagedList<BillDTO>
 
 @{
-    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
     var bills = Model ?? new StaticPagedList<BillDTO>(Enumerable.Empty<BillDTO>(), 1, 1, 0);
     var groupedByProject = bills
         .GroupBy(b => b.Project)
@@ -98,7 +98,7 @@
     <div class="alert alert-success">@ViewBag.SuccessMessage</div>
 }
 
-<form id="filterForm" method="post" asp-action="PrintMMultiBills" asp-controller="MaintenanceNew">
+<form id="filterForm" method="post" asp-action="EBill" asp-controller="EBillU">
     <div class="row g-3">
         <div class="col-md-3">
             <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
@@ -142,8 +142,13 @@
                 <option value="">Select Category</option>
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
+                <option value="Bahria Self Consumption">Bahria Self Consumption</option>>
             </select>
         </div>
+
+
+
+
 
         <div class="col-md-2 d-flex align-items-end gap-2">
             <button id="PrintButton" type="button" class="btn btn-primary flex-fill">Print</button>
@@ -262,21 +267,21 @@
                   .always(()=>$('#loadingOverlay').hide());
               }
 
-                 $('#PrintButton').click(function(){
-        var uids = $('.record-checkbox:checked').map((i, el) => el.value).get();
-        var data = {
-            uids: uids.join(','),
-                    Category: $('#Category').val(),
-            block: $('#BlockDropdown').val(),
-            month: $('#month').val(),
-            year: $('#year').val(),
-            project: $('#Project').val()
-        };
+                $('#PrintButton').click(function(){
+            var uids = $('.record-checkbox:checked').map((i, el) => el.value).get();
+            var data = {
+                uids: uids.join(','),
+                        Category: $('#Category').val(),
+                block: $('#BlockDropdown').val(),
+                month: $('#month').val(),
+                year: $('#year').val(),
+                          Project: $('#Project').val()
+            };
 
             $('#loadingOverlay').show(); // Show loading
 
             $.ajax({
-                url: '/PrintMMultiBills',
+                url: '/PrintEMultiBillsNM',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),

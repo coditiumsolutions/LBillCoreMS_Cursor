@@ -639,7 +639,7 @@ namespace BMSBT.Controllers
 
                 // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
 
-                var url = $"http://172.20.229.3:84/api/MaintenanceBill/GetMaintenanceBillS?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                var url = $"http://172.20.228.2:81/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.

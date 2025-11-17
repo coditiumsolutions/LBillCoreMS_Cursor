@@ -377,6 +377,110 @@ namespace BMSBT.Controllers
 
 
 
+
+
+
+
+
+        [HttpGet]
+        public IActionResult EBillNetMeter()
+        {
+            var projects = _dbContext.Configurations
+                           .Where(c => c.ConfigKey == "Project")
+                           .Select(c => c.ConfigValue)
+                           .ToList();
+
+            ViewBag.Projects = projects;
+            // Return an empty view (or you could pass an empty IPagedList<BillDTO> if needed)
+            return View();
+        }
+
+
+
+        public IActionResult EBillNetMeter(string? month, string? year, string Category, string Block)
+        {
+
+            if (string.IsNullOrEmpty(month) || string.IsNullOrEmpty(year) && string.IsNullOrEmpty(Category) && string.IsNullOrEmpty(Block))
+            {
+                ViewBag.ErrorMessage = "Both month and year must be selected.";
+                return View("MaintenanceBills"); // Return the view with an error message
+            }
+
+
+            // Query electricity bills joining ElectricityBills and CustomersDetails
+            var bills = (
+                from bill in _dbContext.ElectricityBills
+                join customer in _dbContext.CustomersDetails
+                     on bill.Btno equals customer.Btno
+                where bill.BillingMonth == month && bill.BillingYear == year
+                select new BillDTO
+                {
+                    Uid = bill.Uid,
+                    CustomerNo = customer.CustomerNo,
+                    Btno = bill.Btno,
+                    CustomerName = customer.CustomerName,
+                    Cnicno = customer.Cnicno,
+                    FatherName = customer.FatherName,
+                    InstalledOn = customer.InstalledOn,
+                    MobileNo = customer.MobileNo,
+                    TelephoneNo = customer.TelephoneNo,
+                    Ntnnumber = customer.Ntnnumber,
+                    City = customer.City,
+                    Project = customer.Project,
+                    SubProject = customer.SubProject,
+                    TariffName = customer.TariffName,
+                    BankNo = customer.BankNo,
+                    BtnoMaintenance = customer.BtnoMaintenance,
+                    Category = customer.Category,
+                    Block = customer.Block,
+                    PlotType = customer.PlotType,
+                    Size = customer.Size,
+                    Sector = customer.Sector,
+                    PloNo = customer.PloNo,
+                    BillStatusMaint = customer.BillStatusMaint,
+                    BillStatus = customer.BillStatus,
+                    InvoiceNo = bill.InvoiceNo,
+                    BillingMonth = bill.BillingMonth,
+                    BillingYear = bill.BillingYear,
+                    BillingDate = bill.BillingDate,
+                    DueDate = bill.DueDate,
+                    IssueDate = bill.IssueDate,
+                    ValidDate = bill.ValidDate,
+                    PaymentStatus = bill.PaymentStatus,
+                    PaymentDate = bill.PaymentDate,
+                    PaymentMethod = bill.PaymentMethod,
+                    BankDetail = bill.BankDetail,
+
+
+                    BillAmountInDueDate = bill.BillAmountInDueDate,
+                    BillSurcharge = bill.BillSurcharge,
+                    BillAmountAfterDueDate = bill.BillAmountAfterDueDate
+                }
+            ).ToList();
+
+            if (!bills.Any())
+            {
+                ViewBag.ErrorMessage = "No bills found for the selected month and year.";
+            }
+
+            // Optionally, convert to a paged list (adjust page number and page size as needed)
+            var pagedBills = bills.ToPagedList(1, 5000);
+
+            return View("EBills", pagedBills); // Pass the view model to the view
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
         [HttpGet]
         public IActionResult EBills()
         {
@@ -782,6 +886,14 @@ namespace BMSBT.Controllers
                 var client = _httpClientFactory.CreateClient();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
+                // Working URLs
+                var url = $"http://172.20.228.2:81/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+
+
+
+
                 // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
 
                 //var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
@@ -798,8 +910,8 @@ namespace BMSBT.Controllers
 
 
 
-                var url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-              
+
+
                 //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Commercial&month=October&year=2025&Project=Mohlanwal";
 
                 //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Residential&month=October&year=2025&Project=Mohlanwal";
@@ -831,6 +943,105 @@ namespace BMSBT.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+        [Route("PrintEMultiBillsNM")]
+        [HttpPost]
+        public async Task<IActionResult> PrintEMultiBillsNM([FromBody] PrintBillRequest request)
+        {
+            try
+            {
+
+                // Optional: Validate other fields
+                if (
+                    string.IsNullOrEmpty(request.category) ||
+                    string.IsNullOrEmpty(request.block) ||
+                    string.IsNullOrEmpty(request.month) ||
+                    string.IsNullOrEmpty(request.year))
+                {
+                    return BadRequest("All fields must be provided.");
+                }
+
+                // Optional: Log or process request info
+                Console.WriteLine($"Generating bills for Project: {request.project}, Sector: {request.sector}, Block: {request.block}, Month: {request.month}, Year: {request.year}");
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                // Working URLs
+                var url = $"http://172.20.228.2:81/api/ElectricityBillsNetMeter/GetNetMeterBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+
+
+
+
+                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
+
+                //var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.228.2/api/EBill01/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+                //var url = $"http://172.20.228.2/api/EBill/PrintEBills";
+
+                //var url = $"http://172.20.228.2/api/EBill01/GetEBill" +
+                //$"?block={Uri.EscapeDataString(request.block)}" +
+                //$"&Category={Uri.EscapeDataString(request.category)}" +
+                //$"&month={Uri.EscapeDataString(request.month)}" +
+                //$"&year={Uri.EscapeDataString(request.year)}" +
+                //$"&Project={Uri.EscapeDataString(request.project)}";
+
+
+
+
+
+                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Commercial&month=October&year=2025&Project=Mohlanwal";
+
+                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Residential&month=October&year=2025&Project=Mohlanwal";
+
+
+                // If needed, you can append filters to the URL or send them in headers/body to the API.
+                // For now, we just log them.
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var pdfData = await response.Content.ReadAsByteArrayAsync();
+
+                    if (pdfData == null || pdfData.Length == 0)
+                    {
+                        return BadRequest("Received empty PDF data");
+                    }
+
+                    Response.Headers.Add("Content-Disposition", "attachment; filename=MaintenanceBill.pdf");
+                    return File(pdfData, "application/pdf");
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+
+
+
+
+
 
 
 
