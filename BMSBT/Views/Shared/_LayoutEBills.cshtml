@@ -112,6 +112,16 @@
 
                 <ul class="nav flex-column">
 
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="Index">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Dashboard
+                        </a>
+                    </li>
+
+
+
                     <li>
                         <a asp-controller="SGCustomers" asp-action="GenerateBill">
                             <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
@@ -120,6 +130,12 @@
                     </li>
 
 
+                    <li>
+                        <a asp-controller="EBillU" asp-action="GenerateBillMain">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Generated Bills
+                        </a>
+                    </li>
 
 
                     <li>
@@ -132,13 +148,9 @@
                     <li>
                         <a asp-controller="EBillU" asp-action="EBillNetMeter">
                             <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print Bills NM
+                            Print Bills NetM
                         </a>
                     </li>
-
-
-
-
 
                     <li>
                         <a asp-controller="Dashboard" asp-action="EDashboard">
@@ -146,134 +158,137 @@
                             Summary
                         </a>
                     </li>
-                    <li>
-                        <a asp-controller="REPORTS" asp-action="GetBillsRecoverable">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                           Recoverable 
+
+
+
+
+                    <!-- Twistee with collapsible internal links -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#twisteeSubMenu"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="twisteeSubMenu">
+                            <span>
+                                <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Other Links
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
+
+                        <div class="collapse" id="twisteeSubMenu">
+                            <ul class="nav flex-column ml-3">
+                               
+                              
+                                <li>
+                                    <a asp-controller="REPORTS" asp-action="GetBillsRecoverable">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Recoverable
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="REPORTS" asp-action="GetBillsSpecialDiscount">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        BSC
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="REPORTS" asp-action="Gettwomonthoutstandingbills">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        OUTSTANDING
+                                    </a>
+                                </li>
+
+
+
+
+                                <li>
+                                    <a asp-controller="SGEBills" asp-action="SGEBills">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        E-Bills
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="SGEBillingHistory" asp-action="SGEBillHistory">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Bills History
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="SearchBills">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Home
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="SearchBill">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Search
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="GenerateEBill">
+                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Generate Bills
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="BillReport">
+                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Generated
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="SearchPrintBills">
+                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Print New Bill
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="EBills">
+                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Print  Bill
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="BillPayment" asp-action="PaymentForm">
+                                        <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Pay Bill(s)
+                                    </a>
+                                </li>
+
+
+                            </ul>
+                        </div>
                     </li>
 
 
-                    <li>
-                        <a asp-controller="REPORTS" asp-action="GetBillsSpecialDiscount">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            BSC
-                        </a>
-                    </li>
 
-                    <li>
-                        <a asp-controller="REPORTS" asp-action="Gettwomonthoutstandingbills">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            OUTSTANDING
-                        </a>
-                    </li>
+
+
 
                     
-                   
 
+                  
 
-                    <li>
-                        <a asp-controller="SGEBills" asp-action="SGEBills">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            E-Bills
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="SGEBillingHistory" asp-action="SGEBillHistory">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Bills History
-                        </a>
-                    </li>
-
-
-                    <li>
-                        <a asp-controller="EBillU" asp-action="SearchBills">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Home
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="EBillU" asp-action="SearchBill">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Search
-                        </a>
-                    </li>
-
-
-                    
-
-                    
-
-
-                   
-
-
-                    <li>
-                        <a asp-controller="EBillU" asp-action="GenerateEBill">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Generate Bills
-                        </a>
-                    </li>
-
-
-                    <li>
-                        <a asp-controller="EBillU" asp-action="BillReport">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Generated
-                        </a>
-                    </li>
-
-
-
-                   
-
-
-                   @*  <li>
-                        <a asp-controller="EBillU" asp-action="GeneratedBillsReport">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            2. Generated
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="EBillsGenerated" asp-action="Generated">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            3. Generated
-                        </a>
-                    </li>
- *@
-                    <li>
-                        <a asp-controller="EBillU" asp-action="SearchPrintBills">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print New Bill
-                        </a>
-                    </li>
-
-                   
-                    <li>
-                        <a asp-controller="EBillU" asp-action="EBills">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print  Bill
-                        </a>
-                    </li>
-
-                   
-
-                   @*  <li>
-                        <a asp-controller="ElectricityBills" asp-action="Index">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            All E-Bills
-                        </a>
-                    </li> *@
-
-                    <li>
-                        <a asp-controller="BillPayment" asp-action="PaymentForm">
-                            <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
-                           Pay Bill(s)
-                        </a>
-                    </li>
+                  
 
 
 
@@ -301,6 +316,11 @@
                             </ul>
                         </div>
                     </li>
+
+
+
+
+
 
                 </ul>
 

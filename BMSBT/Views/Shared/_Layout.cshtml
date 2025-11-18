@@ -92,10 +92,21 @@
 
             <!-- Left Sidebar -->
             <div class="col-md-3 col-lg-2 p-3 sidebar">
-                <h4>BMS Home</h4>
+                <h4>Home</h4>
 
 
                 <ul class="nav flex-column">
+
+
+
+                    <li>
+                        <a asp-controller="Customers" asp-action="Index">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Dashboard
+                        </a>
+                    </li>
+
+
 
                     <li>
                         <a asp-controller="Customers" asp-action="Index">
@@ -114,51 +125,87 @@
 
 
                     <li>
-                        <a asp-controller="MaintenanceNew" asp-action="GenerateBill">
+                        <a asp-controller="MaintenanceNew" asp-action="Index">
                             <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
                             Maint Bills
                         </a>
                     </li>
 
 
-                    <li>
-                        <a asp-controller="Reading" asp-action="Index">
-                            <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                            Reading Sheet
+
+
+
+                    <!-- Twistee with collapsible internal links (BMS Home) -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#twisteeSubMenuBMS"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="twisteeSubMenuBMS">
+                            <span>
+                                <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Modules
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
+
+                        <div class="collapse" id="twisteeSubMenuBMS">
+                            <ul class="nav flex-column ml-3">
+                                
+                                <!-- Add more Twistee internal links here -->
+                                <li>
+                                    <a asp-controller="Reading" asp-action="Index">
+                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Reading Sheet
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a asp-controller="Fine" asp-action="Index">
+                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Fine
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="Setup" asp-action="Index">
+                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Setups
+                                    </a>
+                                </li>
+
+
+
+                                <li>
+                                    <a asp-controller="Reports" asp-action="Index">
+                                        <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Reports
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="Audit" asp-action="Index">
+                                        <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Audit
+                                    </a>
+                                </li>
+
+
+                            </ul>
+                        </div>
                     </li>
 
 
-                    <li>
-                        <a asp-controller="Fine" asp-action="Index">
-                            <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                            Fine
-                        </a>
-                    </li>
+
+                 
 
 
-                    <li>
-                        <a asp-controller="Setup" asp-action="Index">
-                            <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                            Setups
-                        </a>
-                    </li>
+                  
 
 
 
-                    <li>
-                        <a asp-controller="Reports" asp-action="Index">
-                            <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
-                            Reports
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="Audit" asp-action="Index">
-                            <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
-                            Audit
-                        </a>
-                    </li>
                                       
                 </ul>
             </div>
@@ -173,3 +220,19 @@
 
   </body>
 </html>
+<!-- jQuery (required for Bootstrap 4 JS) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap 4 JS (requires Popper which you already include) -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- caret toggle for Twistee submenu -->
+<script>
+    $(document).on('show.bs.collapse', '#twisteeSubMenuBMS', function () {
+      $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+    });
+
+    $(document).on('hide.bs.collapse', '#twisteeSubMenuBMS', function () {
+      $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+    });
+</script>

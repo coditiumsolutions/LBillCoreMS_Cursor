@@ -3,10 +3,11 @@ using BMSBT.Models;
 using BMSBT.Requests;
 using BMSBT.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data.Entity;
-using static BMSBT.Controllers.MaintenanceBillController;
-using System.Net.Http.Headers;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using static BMSBT.Controllers.MaintenanceBillController;
 
 namespace BMSBT.Controllers
 {
@@ -26,6 +27,109 @@ namespace BMSBT.Controllers
             _httpClientFactory = httpClientFactory;
         
         }
+
+
+
+
+
+
+        public IActionResult Index(string selectedYear, string selectedMonth)
+        {
+
+            ViewBag.Years = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "2024", Text = "2024" },
+        new SelectListItem { Value = "2025", Text = "2025" }
+    };
+
+            ViewBag.Months = new List<SelectListItem>
+    {
+                 new SelectListItem { Value = "Janurary", Text = "Janurary" },
+                 new SelectListItem { Value = "February", Text = "February" },
+                 new SelectListItem { Value = "March", Text = "March" },
+                 new SelectListItem { Value = "April", Text = "April" },
+                 new SelectListItem { Value = "May", Text = "May" },
+                 new SelectListItem { Value = "June", Text = "June" },
+                 new SelectListItem { Value = "July", Text = "July" },
+                 new SelectListItem { Value = "August", Text = "August" },
+                 new SelectListItem { Value = "September", Text = "September" },
+                 new SelectListItem { Value = "October", Text = "October" },
+                 new SelectListItem { Value = "November", Text = "November" },
+                 new SelectListItem { Value = "December", Text = "December" }
+
+
+
+    };
+
+            // Retain the selected values
+            ViewBag.SelectedYear = selectedYear;
+            ViewBag.SelectedMonth = selectedMonth;
+
+
+            // Check if both filters are provided
+            if (string.IsNullOrEmpty(selectedYear) || string.IsNullOrEmpty(selectedMonth))
+            {
+                // Return empty data for the graph
+                ViewBag.ChartLabels = new List<string>();
+                ViewBag.ChartData = new List<int>();
+                return View();
+            }
+
+
+            // ViewBag.Years = _context.ReadingSheets
+            //.Select(r => r.Year)
+            //.Distinct()
+            //.OrderBy(y => y) // Ensure they are sorted
+            //.ToList();
+
+            //     ViewBag.Months = _context.ReadingSheets
+            //         .Select(r => r.Month)
+            //         .Distinct()
+            //         .ToList();
+
+            // Filter data based on selected year and month
+            var filteredData = _dbContext.ReadingSheets.AsQueryable();
+
+            if (!string.IsNullOrEmpty(selectedYear))
+            {
+                filteredData = filteredData.Where(r => r.Year == selectedYear);
+            }
+
+            if (!string.IsNullOrEmpty(selectedMonth))
+            {
+                filteredData = filteredData.Where(r => r.Month == selectedMonth && r.Year == selectedYear);
+            }
+
+            // Generate the data for the graph
+            var totalMeters = filteredData.Count();
+
+            var readingSheetData = filteredData
+                .GroupBy(c => c.MeterType)
+                .Select(group => new
+                {
+                    meters = group.Key,
+                    Total = group.Count()
+                })
+                .ToList();
+
+            var totalAllSubProjects = readingSheetData.Sum(x => x.Total);
+
+            // Prepare data for the chart
+            ViewBag.ChartLabels = readingSheetData.Select(x => x.meters).ToList();
+            ViewBag.ChartLabels.Add("All SubProjects"); // Add a label for the total
+            ViewBag.ChartData = readingSheetData.Select(x => x.Total).ToList();
+            ViewBag.ChartData.Add(totalMeters); // Add the total as a separate data point
+
+            //// Pass selected filters back to the view
+            //ViewBag.SelectedYear = selectedYear;
+            //ViewBag.SelectedMonth = selectedMonth;
+
+            return View();
+        }
+
+
+
+
 
 
         public IActionResult GenerateBill(string selectedProject, string btNoSearch)
