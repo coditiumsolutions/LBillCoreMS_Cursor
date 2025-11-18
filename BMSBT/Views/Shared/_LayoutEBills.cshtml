@@ -113,6 +113,34 @@
                 <ul class="nav flex-column">
 
                     <li>
+                        <a asp-controller="SGCustomers" asp-action="GenerateBill">
+                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
+                            Generate Bills
+                        </a>
+                    </li>
+
+
+
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="EBill">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Print Bills
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="EBillNetMeter">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Print Bills NM
+                        </a>
+                    </li>
+
+
+
+
+
+                    <li>
                         <a asp-controller="Dashboard" asp-action="EDashboard">
                             <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
                             Summary
@@ -141,12 +169,7 @@
                     </li>
 
                     
-                    <li>
-                        <a asp-controller="SGCustomers" asp-action="GenerateBill">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Generate Bill(s)
-                        </a>
-                    </li>
+                   
 
 
                     <li>
@@ -236,19 +259,7 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="EBillU" asp-action="EBill">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print Bill By Block
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="EBillU" asp-action="EBillNetMeter">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print  Netmeter Bill
-                        </a>
-                    </li>
+                   
 
                    @*  <li>
                         <a asp-controller="ElectricityBills" asp-action="Index">
