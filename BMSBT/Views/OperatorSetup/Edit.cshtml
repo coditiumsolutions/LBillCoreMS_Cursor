@@ -1,76 +1,209 @@
-﻿@model BMSBT.Models.OperatorsSetup
+@model BMSBT.Models.OperatorsSetup
 
 @{
     ViewData["Title"] = "Edit Operator";
     Layout = "~/Views/Shared/_LayoutSetup.cshtml";
 }
 
-<h3>Edit Operator</h3>
+<style>
+    .form-group {
+        margin-bottom: 0.5rem;
+    }
+    .form-label {
+        margin-bottom: 0.25rem;
+    }
+</style>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Uid" />
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label asp-for="OperatorID" class="form-label"></label>
-            <input asp-for="OperatorID" class="form-control" readonly />
-            <span asp-validation-for="OperatorID" class="text-danger"></span>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4>Edit Operator</h4>
         </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Uid" />
 
-        <div class="col-md-6">
-            <label asp-for="OperatorName" class="form-label"></label>
-            <input asp-for="OperatorName" class="form-control" />
-            <span asp-validation-for="OperatorName" class="text-danger"></span>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="OperatorID" class="form-label"></label>
+                            <input asp-for="OperatorID" class="form-control" readonly />
+                            <span asp-validation-for="OperatorID" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="OperatorName" class="form-label"></label>
+                            <input asp-for="OperatorName" class="form-control" />
+                            <span asp-validation-for="OperatorName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="BillingMonth" class="form-label"></label>
+                            <select asp-for="BillingMonth" class="form-control" asp-items="ViewBag.MonthList">
+                                <option value="">-- Select Month --</option>
+                            </select>
+                            <span asp-validation-for="BillingMonth" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="BillingYear" class="form-label"></label>
+                            <select asp-for="BillingYear" class="form-control" asp-items="ViewBag.YearList">
+                                <option value="">-- Select Year --</option>
+                            </select>
+                            <span asp-validation-for="BillingYear" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="BankName" class="form-label"></label>
+                            <select asp-for="BankName" class="form-control" asp-items="ViewBag.BankList">
+                                <option value="">-- Select Bank --</option>
+                            </select>
+                            <span asp-validation-for="BankName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="IssueDate" class="form-label"></label>
+                            <input asp-for="IssueDate" class="form-control" type="date" />
+                            <span asp-validation-for="IssueDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="DueDate" class="form-label"></label>
+                            <input asp-for="DueDate" class="form-control" type="date" />
+                            <span asp-validation-for="DueDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FPARate1" class="form-label"></label>
+                            <input asp-for="FPARate1" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="FPARate1" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FPAMonth1" class="form-label"></label>
+                            <select asp-for="FPAMonth1" class="form-control" asp-items="ViewBag.MonthList">
+                                <option value="">-- Select Month --</option>
+                            </select>
+                            <span asp-validation-for="FPAMonth1" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FPAYEAR1" class="form-label"></label>
+                            <select asp-for="FPAYEAR1" class="form-control" asp-items="ViewBag.YearList">
+                                <option value="">-- Select Year --</option>
+                            </select>
+                            <span asp-validation-for="FPAYEAR1" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FPARate2" class="form-label"></label>
+                            <input asp-for="FPARate2" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="FPARate2" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FPAMonth2" class="form-label"></label>
+                            <select asp-for="FPAMonth2" class="form-control" asp-items="ViewBag.MonthList">
+                                <option value="">-- Select Month --</option>
+                            </select>
+                            <span asp-validation-for="FPAMonth2" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FPAYEAR2" class="form-label"></label>
+                            <select asp-for="FPAYEAR2" class="form-control" asp-items="ViewBag.YearList">
+                                <option value="">-- Select Year --</option>
+                            </select>
+                            <span asp-validation-for="FPAYEAR2" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ReadingDate" class="form-label"></label>
+                            <input asp-for="ReadingDate" class="form-control" type="date" />
+                            <span asp-validation-for="ReadingDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="PaidDate" class="form-label"></label>
+                            <input asp-for="PaidDate" class="form-control" type="date" />
+                            <span asp-validation-for="PaidDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ValidDate" class="form-label"></label>
+                            <input asp-for="ValidDate" class="form-control" type="date" />
+                            <span asp-validation-for="ValidDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label asp-for="History" class="form-label"></label>
+                            <textarea asp-for="History" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="History" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label asp-for="BillingMonth" class="form-label">Billing Month</label>
-            <select asp-for="BillingMonth" class="form-select" asp-items="ViewBag.MonthList"></select>
-            <span asp-validation-for="BillingMonth" class="text-danger"></span>
-        </div>
-
-        <div class="col-md-6">
-            <label asp-for="BillingYear" class="form-label">Billing Year</label>
-            <select asp-for="BillingYear" class="form-select" asp-items="ViewBag.YearList"></select>
-            <span asp-validation-for="BillingYear" class="text-danger"></span>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label asp-for="BankName" class="form-label"></label>
-            <input asp-for="BankName" class="form-control" />
-            <span asp-validation-for="BankName" class="text-danger"></span>
-        </div>
-
-        <div class="col-md-6">
-            <label asp-for="IssueDate" class="form-label"></label>
-            <input asp-for="IssueDate" class="form-control" type="date" />
-            <span asp-validation-for="IssueDate" class="text-danger"></span>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label asp-for="DueDate" class="form-label"></label>
-            <input asp-for="DueDate" class="form-control" type="date" />
-            <span asp-validation-for="DueDate" class="text-danger"></span>
-        </div>
-
-        <div class="col-md-6">
-            <label asp-for="FPARate1" class="form-label">FPA Rate 1</label>
-            <input asp-for="FPARate1" class="form-control" />
-            <span asp-validation-for="FPARate1" class="text-danger"></span>
-        </div>
-    </div>
-
-    <div class="text-end">
-        <button type="submit" class="btn btn-success">Save</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+</div>
 
 @section Scripts {
     @{

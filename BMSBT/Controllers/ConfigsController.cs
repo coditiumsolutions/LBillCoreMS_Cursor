@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Mvc;
 using BMSBT.Models;
 using Microsoft.EntityFrameworkCore;
-using X.PagedList.Extensions;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
 namespace BMSBT.Controllers
 {
     public class ConfigsController : Controller
@@ -16,21 +18,40 @@ namespace BMSBT.Controllers
         {
             return View();
         }
-        public IActionResult AllConfigs(int? page, string key = null)
-        {
-            int pageSize = 10;
-            int pageNumber = page ?? 1;
 
+        // GET: Configs/AllConfigs
+        public async Task<IActionResult> AllConfigs(string searchTerm = "", int page = 1, int pageSize = 10)
+        {
             var query = _context.Configurations.AsQueryable();
 
-            if (!string.IsNullOrEmpty(key))
+            // Apply search filter (for server-side search if needed)
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(c => c.ConfigKey == key);
+                query = query.Where(c => 
+                    (c.ConfigKey != null && c.ConfigKey.Contains(searchTerm)) ||
+                    (c.ConfigValue != null && c.ConfigValue.Contains(searchTerm))
+                );
             }
 
-            var configs = query.OrderBy(c => c.ConfigId).ToPagedList(pageNumber, pageSize);
+            // Get all configurations for DataTables grid (client-side pagination)
+            var allConfigurations = await query
+                .OrderBy(c => c.Uid)
+                .ToListAsync();
 
-            return View(configs);
+            var totalRecords = allConfigurations.Count;
+            var totalPages = totalRecords > 0 ? (int)Math.Ceiling(totalRecords / (double)pageSize) : 0;
+
+            var viewModel = new ConfigurationListViewModel
+            {
+                Configurations = allConfigurations, // Return all records for DataTables
+                CurrentPage = totalPages > 0 ? page : 1,
+                TotalPages = totalPages,
+                SearchTerm = searchTerm,
+                TotalRecords = totalRecords,
+                PageSize = pageSize
+            };
+
+            return View(viewModel);
         }
 
 
@@ -39,12 +60,6 @@ namespace BMSBT.Controllers
 
 
 
-
-
-        public IActionResult Create()
-        {
-            return View();
-        }
 
 
         // Get the city-related ConfigValues from Configuration
@@ -139,10 +154,16 @@ namespace BMSBT.Controllers
 
 
 
-        // POST: Employee/Create
+        // GET: Configs/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Configs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ConfigId,ConfigKey, ConfigValue")] Configuration configuration)
+        public async Task<IActionResult> Create([Bind("ConfigId,ConfigKey,ConfigValue")] Configuration configuration)
         {
             if (ModelState.IsValid)
             {
@@ -154,7 +175,7 @@ namespace BMSBT.Controllers
         }
 
 
-        // GET: Employee/Edit/5
+        // GET: Configs/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -162,20 +183,20 @@ namespace BMSBT.Controllers
                 return NotFound();
             }
 
-            var configs = await _context.Configurations.FindAsync(id);
-            if (configs == null)
+            var configuration = await _context.Configurations.FindAsync(id);
+            if (configuration == null)
             {
                 return NotFound();
             }
-            return View(configs);
+            return View(configuration);
         }
 
 
 
-        // POST: Employee/Edit/5
+        // POST: Configs/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Uid, ConfigId,ConfigKey,ConfigValue")] Configuration configuration)
+        public async Task<IActionResult> Edit(int id, [Bind("Uid,ConfigId,ConfigKey,ConfigValue")] Configuration configuration)
         {
             if (id != configuration.Uid)
             {
@@ -205,15 +226,7 @@ namespace BMSBT.Controllers
             return View(configuration);
         }
 
-        private bool ConfigurationExists(int id)
-        {
-            return _context.Configurations.Any(e => e.Uid == id);
-        }
-
-
-
-
-        // GET: Employee/Details/5
+        // GET: Configs/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -221,19 +234,19 @@ namespace BMSBT.Controllers
                 return NotFound();
             }
 
-            var config = await _context.Configurations.FirstOrDefaultAsync(m => m.Uid == id);
-            if (config == null)
+            var configuration = await _context.Configurations.FirstOrDefaultAsync(m => m.Uid == id);
+            if (configuration == null)
             {
                 return NotFound();
             }
 
-            return View(config);
+            return View(configuration);
         }
 
 
 
 
-        // GET: Employee/Delete/5
+        // GET: Configs/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -241,32 +254,31 @@ namespace BMSBT.Controllers
                 return NotFound();
             }
 
-            var config = await _context.Configurations.FirstOrDefaultAsync(m => m.Uid == id);
-            if (config == null)
+            var configuration = await _context.Configurations.FirstOrDefaultAsync(m => m.Uid == id);
+            if (configuration == null)
             {
                 return NotFound();
             }
 
-            return View(config);
+            return View(configuration);
         }
 
-        // POST: Employee/Delete/5
+        // POST: Configs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var config = await _context.Configurations.FindAsync(id);
-            if (config == null)
+            var configuration = await _context.Configurations.FindAsync(id);
+            if (configuration == null)
             {
-                // Optionally, return a custom error view or message
                 return NotFound();
             }
-            _context.Configurations.Remove(config);
+            _context.Configurations.Remove(configuration);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(AllConfigs));
         }
 
-        private bool EmployeeExists(int id)
+        private bool ConfigurationExists(int id)
         {
             return _context.Configurations.Any(e => e.Uid == id);
         }

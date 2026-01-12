@@ -1,4 +1,4 @@
-﻿using BMSBT.Models;
+using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -24,27 +24,46 @@ namespace BMSBT.Controllers
         private void PopulateDropdowns()
         {
             var months = new List<SelectListItem>
-    {
-        new("January", "January"),
-        new("February", "February"),
-        new("March", "March"),
-        new("April", "April"),
-        new("May", "May"),
-        new("June", "June"),
-        new("July", "July"),
-        new("August", "August"),
-        new("September", "September"),
-        new("October", "October"),
-        new("November", "November"),
-        new("December", "December")
-    };
+            {
+                new("January", "January"),
+                new("February", "February"),
+                new("March", "March"),
+                new("April", "April"),
+                new("May", "May"),
+                new("June", "June"),
+                new("July", "July"),
+                new("August", "August"),
+                new("September", "September"),
+                new("October", "October"),
+                new("November", "November"),
+                new("December", "December")
+            };
 
-            var years = Enumerable.Range(DateTime.Now.Year, 10) // current year to +9
-                .Select(y => new SelectListItem { Text = y.ToString(), Value = y.ToString() })
+            var years = new List<SelectListItem>
+            {
+                new("2025", "2025"),
+                new("2026", "2026")
+            };
+
+            // Get banks from Configuration table where ConfigKey = "Bank"
+            var banks = _context.Configurations
+                .Where(c => c.ConfigKey == "Bank")
+                .Select(c => new SelectListItem
+                {
+                    Text = c.ConfigValue ?? "",
+                    Value = c.ConfigValue ?? ""
+                })
+                .Distinct()
+                .OrderBy(b => b.Text)
                 .ToList();
 
+            ViewBag.MonthList = months;
+            ViewBag.YearList = years;
+            ViewBag.BankList = banks;
+            // Also set for Create view compatibility
             ViewBag.Months = months;
             ViewBag.Years = years;
+            ViewBag.Banks = banks;
         }
 
 

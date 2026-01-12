@@ -1,40 +1,46 @@
-﻿@model BMSBT.Models.Configuration
+@model BMSBT.Models.Configuration
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Configuration";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
 }
 
-<h1>Create</h1>
-
-<h4>Configuration</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="ConfigId" class="control-label"></label>
-                <input asp-for="ConfigId" class="form-control" />
-                <span asp-validation-for="ConfigId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ConfigKey" class="control-label"></label>
-                <input asp-for="ConfigKey" class="form-control" />
-                <span asp-validation-for="ConfigKey" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ConfigValue" class="control-label"></label>
-                <input asp-for="ConfigValue" class="form-control" />
-                <span asp-validation-for="ConfigValue" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4>Create New Configuration</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="form-group">
+                    <label asp-for="ConfigId" class="control-label"></label>
+                    <input asp-for="ConfigId" class="form-control" />
+                    <span asp-validation-for="ConfigId" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="ConfigKey" class="control-label"></label>
+                    <input asp-for="ConfigKey" class="form-control" maxlength="50" />
+                    <span asp-validation-for="ConfigKey" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="ConfigValue" class="control-label"></label>
+                    <input asp-for="ConfigValue" class="form-control" maxlength="100" />
+                    <span asp-validation-for="ConfigValue" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <input type="submit" value="Create" class="btn btn-primary" />
+                    <a asp-action="AllConfigs" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

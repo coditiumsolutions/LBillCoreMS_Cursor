@@ -1,4 +1,8 @@
-﻿@{
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BMSBT.Models.User>
+
+@{
     ViewData["Title"] = "User Management";
     Layout = "~/Views/Shared/_LayoutSetup.cshtml";
 }
@@ -38,6 +42,21 @@
             }
         </tbody>
     </table>
+</div>
+
+<!-- Pagination -->
+<div class="d-flex justify-content-center mt-3">
+    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), 
+        new PagedListRenderOptions
+        {
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" },
+            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+            DisplayLinkToLastPage = PagedListDisplayMode.Always,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+            DisplayLinkToNextPage = PagedListDisplayMode.Always,
+            MaximumPageNumbersToDisplay = 5
+        })
 </div>
 
 @section Scripts {

@@ -1,36 +1,54 @@
-﻿@model BMSBT.Models.Configuration
+@model BMSBT.Models.Configuration
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Configuration Details";
+    Layout = "~/Views/Shared/_LayoutSetup.cshtml";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Configuration</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ConfigId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ConfigId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ConfigKey)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ConfigKey)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ConfigValue)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ConfigValue)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Uid">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4>Configuration Details</h4>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">
+                    @Html.DisplayNameFor(model => model.Uid)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Uid)
+                </dd>
+                
+                <dt class="col-sm-3">
+                    @Html.DisplayNameFor(model => model.ConfigId)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.ConfigId)
+                </dd>
+                
+                <dt class="col-sm-3">
+                    @Html.DisplayNameFor(model => model.ConfigKey)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.ConfigKey)
+                </dd>
+                
+                <dt class="col-sm-3">
+                    @Html.DisplayNameFor(model => model.ConfigValue)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.ConfigValue)
+                </dd>
+            </dl>
+            
+            <div class="form-group">
+                <a asp-action="Edit" asp-route-id="@Model.Uid" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a asp-action="AllConfigs" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
