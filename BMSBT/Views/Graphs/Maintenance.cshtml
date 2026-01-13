@@ -1,12 +1,12 @@
 @model BMSBT.Models.ViewModels.BillStatusDashboardViewModel
 
 @{
-    ViewData["Title"] = "Dashboard - Electricity Bill";
+    ViewData["Title"] = "Dashboard - Maintenance Bill";
     Layout = "~/Views/Shared/_LayoutReports.cshtml";
 }
 
 <div class="container-fluid">
-    <h3>Dashboard - Electricity Bill</h3>
+    <h3>Dashboard - Maintenance Bill</h3>
 
     <!-- Filter Dropdowns -->
     <div class="row mt-3 mb-3">
@@ -195,8 +195,8 @@
             return;
         }
 
-        console.log('Fetching bill data for:', month, year);
-        const url = '@Url.Action("GetBillStatusData", "Graphs")';
+        console.log('Fetching maintenance bill data for:', month, year);
+        const url = '@Url.Action("GetMaintenanceBillStatusData", "Graphs")';
         console.log('AJAX URL:', url);
 
         $.ajax({
@@ -301,4 +301,3 @@
         });
     });
 </script>
-

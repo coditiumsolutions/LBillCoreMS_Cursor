@@ -1,115 +1,339 @@
-﻿
+@model BMSBT.Models.ViewModels.BillStatusDashboardViewModel
+
 @{
-    ViewData["Title"] = "GraphSelection";
+    ViewData["Title"] = "Selections";
     Layout = "~/Views/Shared/_LayoutReports.cshtml";
 }
 
+<div class="container-fluid">
+    <h3>Bill Status Selections</h3>
 
-<style>
-    select {
-        width: 200px; /* Adjust width as needed */
-        padding: 8px; /* Increase padding for better appearance */
-        font-size: 16px; /* Make text more readable */
-        border-radius: 5px; /* Rounded corners */
-        border: 1px solid #ccc; /* Light border */
-        background-color: #fff; /* White background */
-    }
-</style>
-<!-- Canvas for the chart -->
-@* <canvas id="myChart" width="400" height="200"></canvas> *@
-
-@* <div style="width: 600px; height: 400px;">
-    <canvas id="projectChart"></canvas>
-</div> *@
-@* 
-<p>Total Customers: <span id="totalCustomers"></span></p> *@
-<p>Select Graph(s)</p>
-<select id="chartTypePie">
-    <option value="pie">Pie</option>
-    <option value="doughnut">Doughnut</option>
-    <option value="radar">Radar</option>
-    <option value="polarArea">PolarArea</option>
-</select>
-
-<select id="chartTypeBar">
-    <option value="bar">Bar</option>
-    <option value="line">Line</option>    
-    
-</select>
-
-<div style="display: flex; gap: 20px;">
-    <!-- Pie Chart -->
-    <div style="width: 400px; height: 400px;">
-        <canvas id="pieChart"></canvas>
+    <!-- Filter Dropdowns -->
+    <div class="row mt-3 mb-3">
+        <div class="col-md-3">
+            <label for="billType" class="form-label">Bill Type</label>
+            <select id="billType" class="form-control">
+                <option value="">-- Select Bill Type --</option>
+                <option value="Electricity Bills">Electricity Bills</option>
+                <option value="Maintenance Bills">Maintenance Bills</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="billingMonth" class="form-label">Billing Month</label>
+            <select id="billingMonth" class="form-control">
+                <option value="">-- Select Month --</option>
+                @foreach (var month in Model.MonthList)
+                {
+                    <option value="@month.Value">@month.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="billingYear" class="form-label">Billing Year</label>
+            <select id="billingYear" class="form-control">
+                <option value="">-- Select Year --</option>
+                @foreach (var year in Model.YearList)
+                {
+                    <option value="@year.Value">@year.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="button" id="btnFilter" class="btn btn-primary">Filter</button>
+        </div>
     </div>
 
-    <!-- Bar Chart -->
-    <div style="width: 600px; height: 400px;">
-        <canvas id="barChart"></canvas>
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Bills</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="totalBillsCard">0</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Paid</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="paidCountCard">0</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-header">Paid with Surcharge</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="paidWithSurchargeCountCard">0</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-header">Unpaid</div>
+                <div class="card-body">
+                    <h4 class="card-title" id="unpaidCountCard">0</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h5>Customer Statistics (Bar Chart)</h5>
+            <div style="position: relative; height: 400px;">
+                <canvas id="customerBarChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5>Amount Statistics (Bar Chart)</h5>
+            <div style="position: relative; height: 400px;">
+                <canvas id="amountBarChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Get both canvases
-        const pieCanvas = document.getElementById('pieChart');
-        const barCanvas = document.getElementById('barChart');
+    let customerBarChart = null;
+    let amountBarChart = null;
 
-        if (!pieCanvas || !barCanvas) {
-            console.error("Canvas elements not found!");
+    function updateCharts(customerLabels, customerData, totalCustomersCount, paidCustomersCount, unpaidCustomersCount, amountLabels, amountData, generatedAmount, receivedAmount, remainingAmount, totalBills, paidCount, paidWithSurchargeCount, unpaidCount) {
+        console.log('Updating charts with data:', { customerLabels, customerData, totalCustomersCount, paidCustomersCount, unpaidCustomersCount, amountLabels, amountData, generatedAmount, receivedAmount, remainingAmount });
+
+        // Update summary cards using IDs
+        $('#totalBillsCard').text(totalBills);
+        $('#paidCountCard').text(paidCount);
+        $('#paidWithSurchargeCountCard').text(paidWithSurchargeCount);
+        $('#unpaidCountCard').text(unpaidCount);
+
+        // Destroy existing charts
+        if (customerBarChart) {
+            customerBarChart.destroy();
+        }
+        if (amountBarChart) {
+            amountBarChart.destroy();
+        }
+
+        // Update Customer Bar Chart
+        const customerCanvas = document.getElementById('customerBarChart');
+        if (!customerCanvas) {
+            console.error('Customer bar chart canvas not found');
             return;
         }
 
-        const pieCtx = pieCanvas.getContext('2d');
-        const barCtx = barCanvas.getContext('2d');
-
-        // Data from server
-        const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels));
-        const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData));
-
-        // Default chart types
-        let pieChartType = 'pie';
-        let barChartType = 'bar';
-
-        function createChart(ctx, type) {
-            return new Chart(ctx, {
-                type: type,
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Total Customers per Project',
-                        data: data,
-                        backgroundColor: [
-                            'rgba(245, 183, 39, 0.8)',
-                            'rgba(39, 54, 245, 0.8)',
-                            'rgba(255, 206, 86, 0.6)',
-                            'rgba(75, 192, 192, 0.6)'
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 1
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        // Initialize charts
-        let pieChart = createChart(pieCtx, pieChartType);
-        let barChart = createChart(barCtx, barChartType);
-
-        // Change pie chart type
-        document.getElementById("chartTypePie").addEventListener("change", function () {
-            pieChartType = this.value;
-            pieChart.destroy();
-            pieChart = createChart(pieCtx, pieChartType);
+        customerBarChart = new Chart(customerCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: customerLabels || [],
+                datasets: [{
+                    label: 'Number of Customers',
+                    data: customerData || [],
+                    backgroundColor: [
+                        'rgba(23, 162, 184, 0.6)',
+                        'rgba(40, 167, 69, 0.6)',
+                        'rgba(220, 53, 69, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(23, 162, 184, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        }
+                    }
+                }
+            }
         });
 
-        // Change bar chart type
-        document.getElementById("chartTypeBar").addEventListener("change", function () {
-            barChartType = this.value;
-            barChart.destroy();
-            barChart = createChart(barCtx, barChartType);
+        // Update Amount Bar Chart
+        const amountCanvas = document.getElementById('amountBarChart');
+        if (!amountCanvas) {
+            console.error('Amount bar chart canvas not found');
+            return;
+        }
+
+        amountBarChart = new Chart(amountCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: amountLabels || [],
+                datasets: [{
+                    label: 'Amount (PKR)',
+                    data: amountData || [],
+                    backgroundColor: [
+                        'rgba(23, 162, 184, 0.6)',
+                        'rgba(40, 167, 69, 0.6)',
+                        'rgba(220, 53, 69, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(23, 162, 184, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('en-PK');
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Amount (PKR)'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('en-PK') + ' PKR';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function fetchBillData(billType, month, year) {
+        if (!billType || !month || !year) {
+            alert('Please select Bill Type, Month, and Year');
+            return;
+        }
+
+        console.log('Fetching bill data for:', { billType, month, year });
+        const url = '@Url.Action("GetSelectionBillStatusData", "Graphs")';
+        console.log('AJAX URL:', url);
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            data: { billType: billType, month: month, year: year },
+            dataType: 'json',
+            success: function (response) {
+                console.log('AJAX Success - Full Response:', JSON.stringify(response));
+                
+                if (!response) {
+                    console.error('No response received');
+                    alert('No data received from server');
+                    return;
+                }
+
+                // Handle both camelCase (default) and PascalCase (if configured)
+                const totalBills = parseInt(response.totalBills || response.TotalBills || 0);
+                const paidCount = parseInt(response.paidCount || response.PaidCount || 0);
+                const paidWithSurchargeCount = parseInt(response.paidWithSurchargeCount || response.PaidWithSurchargeCount || 0);
+                const unpaidCount = parseInt(response.unpaidCount || response.UnpaidCount || 0);
+                
+                const customerLabels = response.customerLabels || response.CustomerLabels || ["Total Customers", "Paid Customers", "Unpaid Customers"];
+                const customerDataRaw = response.customerData || response.CustomerData || [0, 0, 0];
+                // Convert to integers
+                const customerData = customerDataRaw.map(val => parseInt(val) || 0);
+                const totalCustomersCount = parseInt(response.totalCustomersCount || response.TotalCustomersCount || 0);
+                const paidCustomersCount = parseInt(response.paidCustomersCount || response.PaidCustomersCount || 0);
+                const unpaidCustomersCount = parseInt(response.unpaidCustomersCount || response.UnpaidCustomersCount || 0);
+                
+                const amountLabels = response.amountLabels || response.AmountLabels || ["Generated Amount", "Received Amount", "Remaining Amount"];
+                const amountDataRaw = response.amountData || response.AmountData || [0, 0, 0];
+                // Convert to numbers to handle decimal values
+                const amountData = amountDataRaw.map(val => parseFloat(val) || 0);
+                const generatedAmount = parseFloat(response.generatedAmount || response.GeneratedAmount || 0);
+                const receivedAmount = parseFloat(response.receivedAmount || response.ReceivedAmount || 0);
+                const remainingAmount = parseFloat(response.remainingAmount || response.RemainingAmount || 0);
+
+                console.log('Parsed values:', { customerLabels, customerData, totalCustomersCount, paidCustomersCount, unpaidCustomersCount, amountLabels, amountData, generatedAmount, receivedAmount, remainingAmount });
+
+                if (customerLabels.length === 0 || customerData.length === 0 || amountLabels.length === 0 || amountData.length === 0) {
+                    console.warn('Empty labels or data arrays');
+                }
+
+                updateCharts(customerLabels, customerData, totalCustomersCount, paidCustomersCount, unpaidCustomersCount, amountLabels, amountData, generatedAmount, receivedAmount, remainingAmount, totalBills, paidCount, paidWithSurchargeCount, unpaidCount);
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error Details:', {
+                    status: status,
+                    error: error,
+                    statusCode: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText
+                });
+                alert('Error fetching bill data. Status: ' + xhr.status + ' - ' + error + '\nCheck browser console for details.');
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        console.log('Document ready - initializing chart');
+        console.log('jQuery version:', $.fn.jquery);
+        console.log('Chart.js available:', typeof Chart !== 'undefined');
+
+        // Ensure Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded!');
+            alert('Chart.js library failed to load. Please refresh the page.');
+            return;
+        }
+
+        // Initialize charts with empty data
+        const initialCustomerLabels = ["Total Customers", "Paid Customers", "Unpaid Customers"];
+        const initialCustomerData = [0, 0, 0];
+        const initialAmountLabels = ["Generated Amount", "Received Amount", "Remaining Amount"];
+        const initialAmountData = [0, 0, 0];
+
+        updateCharts(initialCustomerLabels, initialCustomerData, 0, 0, 0, initialAmountLabels, initialAmountData, 0, 0, 0, 0, 0, 0, 0);
+
+        // Filter button click
+        $('#btnFilter').on('click', function (e) {
+            e.preventDefault();
+            console.log('Filter button clicked');
+            const billType = $('#billType').val();
+            const month = $('#billingMonth').val();
+            const year = $('#billingYear').val();
+            console.log('Selected values:', { billType, month, year });
+            
+            if (!billType || !month || !year) {
+                alert('Please select Bill Type, Month, and Year');
+                return;
+            }
+            
+            fetchBillData(billType, month, year);
+        });
+
+        // Auto-filter on dropdown change
+        $('#billType, #billingMonth, #billingYear').on('change', function () {
+            const billType = $('#billType').val();
+            const month = $('#billingMonth').val();
+            const year = $('#billingYear').val();
+            console.log('Dropdown changed:', { billType, month, year });
+            if (billType && month && year) {
+                fetchBillData(billType, month, year);
+            }
         });
     });
 </script>

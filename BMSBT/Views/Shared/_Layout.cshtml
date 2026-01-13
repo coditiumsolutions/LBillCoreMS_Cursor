@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -97,16 +97,12 @@
 
                 <ul class="nav flex-column">
 
-
-
                     <li>
-                        <a asp-controller="Customers" asp-action="Index">
+                        <a asp-controller="Graphs" asp-action="Index">
                             <i class="fas fa-chart-pie" style="color: yellowgreen; font-size: 14px;"></i>
-                            Dashboard
+                            Graphs
                         </a>
                     </li>
-
-
 
                     <li>
                         <a asp-controller="SSQCustomers" asp-action="Dashboard">
@@ -186,6 +182,13 @@
                                 </li>
 
                                 <li>
+                                    <a asp-controller="Graphs" asp-action="Index">
+                                        <i class='fas fa-chart-pie' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Graphs
+                                    </a>
+                                </li>
+
+                                <li>
                                     <a asp-controller="Audit" asp-action="Index">
                                         <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
                                         Audit
@@ -255,6 +258,30 @@
 
 
                   
+
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="collapse" href="#billOperationSubMenu" aria-expanded="false" aria-controls="billOperationSubMenu">
+                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                            Bill Operations
+                        </a>
+                        <div class="collapse" id="billOperationSubMenu">
+                            <ul class="nav flex-column ml-3">
+                              
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="ReadingSheet" asp-action="ReadingDetails">Readings</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Tariff" asp-action="Index">Tariff</a>
+                                </li>
+
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Tax" asp-action="Index">Taxes</a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </li>
 
 
 
