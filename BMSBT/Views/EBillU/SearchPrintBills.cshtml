@@ -1,4 +1,4 @@
-﻿@model BMSBT.ViewModels.BillSearchViewModel
+@model BMSBT.ViewModels.BillSearchViewModel
 @{
     ViewData["Title"] = "Search Print Bills";
     Layout = "~/Views/Shared/_LayoutEBills.cshtml";
@@ -79,6 +79,12 @@
 
         <div class="col-md-2">
             <button type="submit" class="btn btn-primary btn-search">Search</button>
+        </div>
+        <div class="col-md-2">
+            <a href="@Url.Action("EBills", "EBillU")" class="btn btn-success btn-search">Print Bills</a>
+        </div>
+        <div class="col-md-2">
+            <a href="@Url.Action("PaymentForm", "BillPayment")" class="btn btn-info btn-search">Pay Bills</a>
         </div>
     </div>
 </form>

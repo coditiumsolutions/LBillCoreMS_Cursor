@@ -108,28 +108,29 @@
 
             <!-- Left Sidebar -->
             <div class="col-md-3 col-lg-2 p-3 sidebar">
-                <h4>Graphs</h4>
+                <h4>Reports</h4>
 
 
                 <ul class="nav flex-column">
-                    <li>
-                        <a asp-controller="Graphs" asp-action="Index">
-                            <i class='fas fa-bolt' style="color: yellowgreen; font-size: 14px;"></i>
-                            Electricity
-                        </a>
-                    </li>
 
                     <li>
-                        <a asp-controller="Graphs" asp-action="Maintenance">
-                            <i class='fas fa-wrench' style="color: yellowgreen; font-size: 14px;"></i>
-                            Maintenance
+                        <a asp-controller="Graphs" asp-action="Index">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Customers
                         </a>
                     </li>
 
                     <li>
                         <a asp-controller="Graphs" asp-action="GraphSelection">
                             <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Selections
+                            Graph Selection
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Graphs" asp-action="BillReport">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Month Generate
                         </a>
                     </li>
 
@@ -140,7 +141,53 @@
                         </a>
                     </li>
 
+                   
+
+                    <li>
+                        <a asp-controller="Customers" asp-action="Index">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Defaulters
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a asp-controller="EBillU" asp-action="Index">
+                            <i class='fas fa-bolt' style="color: yellowgreen; font-size: 14px;"></i>
+                            Payments
+                        </a>
+                    </li>
+
+
+                    <li>
+                        <a asp-controller="MaintenanceBill" asp-action="Index">
+                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                            Collections
+                        </a>
+                    </li>
+
                 </ul>
+
+                <!-- Separate Quick Links Block -->
+                <div class="quick-links-block">
+                    <h4>Quick Links</h4>
+                    <ul class="nav flex-column">
+                        <li>
+                            <a asp-controller="EBillU" asp-action="Index">
+
+                                <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
+                                Click To: E-Bills
+                            </a>
+                        </li>
+
+                        <li>
+                            <a asp-controller="MaintenanceBill" asp-action="Index">
+                                <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
+                                Click To: M-Bills
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
 
             </div>

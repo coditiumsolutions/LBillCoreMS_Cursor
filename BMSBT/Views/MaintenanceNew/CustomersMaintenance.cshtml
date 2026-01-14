@@ -1,36 +1,107 @@
-﻿@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+@model BMSBT.ViewModels.MaintenanceCustomerFilterViewModel
 
-<h3>Customers Maintenance</h3>
+@{
+    ViewData["Title"] = "Maintenance Customers";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
 
-<table id="tbl" class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Customer No</th>
-            <th>BT No</th>
-            <th>Name</th>
-            <th>Project</th>
-            <th>SubProject</th>
-            <th>Category</th>
-        </tr>
-    </thead>
+<h3>Maintenance Customers</h3>
 
-    <tbody>
-        @foreach (var c in Model)
-        {
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="projectFilter">Project</label>
+                <select id="projectFilter" class="form-control">
+                    <option value="">-- All Projects --</option>
+                    @foreach (var project in Model.Projects)
+                    {
+                        <option value="@project">@project</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="blockFilter">Block</label>
+                <select id="blockFilter" class="form-control">
+                    <option value="">-- All Blocks --</option>
+                    @foreach (var block in Model.Blocks)
+                    {
+                        <option value="@block">@block</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="btnoSearch">BTNo</label>
+                <input type="text" id="btnoSearch" class="form-control" placeholder="Search by BTNo" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
             <tr>
-                <td>@c.CustomerNo</td>
-                <td>@c.BTNo</td>
-                <td>@c.CustomerName</td>
-                <td>@c.Project</td>
-                <td>@c.SubProject</td>
-                <td>@c.Category</td>
+                <th>BTNo</th>
+                <th>Customer Name</th>
+                <th>Project</th>
+                <th>Block</th>
+                <th>Category</th>
+                <th>Size</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody id="customersGrid">
+            @await Html.PartialAsync("_MaintenanceCustomersGrid", Model.Customers)
+        </tbody>
+    </table>
+</div>
 
-<script>
-    $(document).ready(function () {
-        $('#tbl').DataTable();
-    });
-</script>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function loadBlocks(project) {
+                $.get('@Url.Action("GetBlocksByProject", "MaintenanceNew")',
+                    { project: project },
+                    function (data) {
+                        var $block = $('#blockFilter');
+                        $block.empty();
+                        $block.append($('<option>').val('').text('-- All Blocks --'));
+                        $.each(data, function (i, b) {
+                            $block.append($('<option>').val(b).text(b));
+                        });
+                    });
+            }
+
+            function loadCustomers() {
+                var project = $('#projectFilter').val();
+                var block = $('#blockFilter').val();
+                var btno = $('#btnoSearch').val();
+
+                $.get('@Url.Action("FilterCustomers", "MaintenanceNew")',
+                    { project: project, block: block, btNo: btno },
+                    function (html) {
+                        $('#customersGrid').html(html);
+                    });
+            }
+
+            $('#projectFilter').change(function () {
+                var project = $(this).val();
+                loadBlocks(project);
+                loadCustomers();
+            });
+
+            $('#blockFilter').change(function () {
+                loadCustomers();
+            });
+
+            var typingTimer;
+            $('#btnoSearch').on('keyup', function () {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(loadCustomers, 300);
+            });
+
+            // initial load
+            loadCustomers();
+        });
+    </script>
+}

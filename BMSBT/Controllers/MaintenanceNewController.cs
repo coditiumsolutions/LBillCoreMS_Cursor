@@ -1,12 +1,17 @@
-﻿using BMSBT.BillServices;
+using BMSBT.BillServices;
 using BMSBT.Models;
 using BMSBT.Requests;
 using BMSBT.ViewModels;
+using BMSBT.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data.Entity;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Linq;
+using X.PagedList;
+using X.PagedList.Extensions;
+using X.PagedList.Mvc.Core;
 using static BMSBT.Controllers.MaintenanceBillController;
 
 namespace BMSBT.Controllers
@@ -130,10 +135,75 @@ namespace BMSBT.Controllers
 
         public IActionResult CustomersMaintenance()
         {
-            var customers = _dbContext.CustomersMaintenance.ToList();
-            return View(customers);
+            var projects = _dbContext.CustomersMaintenance
+                .Select(c => c.Project.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
+            var customers = _dbContext.CustomersMaintenance
+                .OrderBy(c => c.Project)
+                .ThenBy(c => c.Block)
+                .ThenBy(c => c.BTNo)
+                .ToList();
+
+            var model = new MaintenanceCustomerFilterViewModel
+            {
+                Projects = projects,
+                Blocks = new List<string>(),
+                Customers = customers
+            };
+
+            return View(model);
         }
 
+        [HttpGet]
+        public JsonResult GetBlocksByProject(string project)
+        {
+            var blocksQuery = _dbContext.CustomersMaintenance.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                blocksQuery = blocksQuery.Where(c => c.Project == project);
+            }
+
+            var blocks = blocksQuery
+                .Select(c => c.Block)
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+
+            return Json(blocks);
+        }
+
+        [HttpGet]
+        public PartialViewResult FilterCustomers(string project, string block, string btNo)
+        {
+            var query = _dbContext.CustomersMaintenance.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                query = query.Where(c => c.Project == project);
+            }
+
+            if (!string.IsNullOrWhiteSpace(block))
+            {
+                query = query.Where(c => c.Block == block);
+            }
+
+            if (!string.IsNullOrWhiteSpace(btNo))
+            {
+                query = query.Where(c => c.BTNo != null && c.BTNo.Contains(btNo));
+            }
+
+            var customers = query
+                .OrderBy(c => c.Project)
+                .ThenBy(c => c.Block)
+                .ThenBy(c => c.BTNo)
+                .ToList();
+
+            return PartialView("_MaintenanceCustomersGrid", customers);
+        }
 
 
 
@@ -776,6 +846,88 @@ namespace BMSBT.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        public IActionResult SearchBill(string? month, string? year, string? BtNo)
+        {
+            // If nothing is provided
+            if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
+            {
+                ViewBag.ErrorMessage = "Please select a month/year or enter a BTNo.";
+                return View("SearchBill");
+            }
+
+            var query = from bill in _dbContext.MaintenanceBills
+                        join customer in _dbContext.CustomersDetails
+                            on bill.Btno equals customer.Btno
+                        select new MaintenanceBillDTO
+                        {
+                            Uid = bill.Uid,
+                            CustomerNo = customer.CustomerNo,
+                            Btno = bill.Btno,
+                            CustomerName = customer.CustomerName,
+                            Cnicno = customer.Cnicno,
+                            FatherName = customer.FatherName,
+                            InstalledOn = customer.InstalledOn,
+                            MobileNo = customer.MobileNo,
+                            TelephoneNo = customer.TelephoneNo,
+                            Ntnnumber = customer.Ntnnumber,
+                            City = customer.City,
+                            Project = customer.Project,
+                            SubProject = customer.SubProject,
+                            TariffName = customer.TariffName,
+                            BankNo = customer.BankNo,
+                            BtnoMaintenance = customer.BtnoMaintenance,
+                            Category = customer.Category,
+                            Block = customer.Block,
+                            PlotType = customer.PlotType,
+                            Size = customer.Size,
+                            Sector = customer.Sector,
+                            PloNo = customer.PloNo,
+                            BillStatusMaint = customer.BillStatusMaint,
+                            BillStatus = customer.BillStatus,
+                            InvoiceNo = bill.InvoiceNo,
+                            BillingMonth = bill.BillingMonth,
+                            BillingYear = bill.BillingYear,
+                            BillingDate = bill.BillingDate,
+                            DueDate = bill.DueDate,
+                            IssueDate = bill.IssueDate,
+                            ValidDate = bill.ValidDate,
+                            PaymentStatus = bill.PaymentStatus,
+                            PaymentDate = bill.PaymentDate,
+                            PaymentMethod = bill.PaymentMethod,
+                            BankDetail = bill.BankDetail,
+                            TaxAmount = bill.TaxAmount,
+                            BillAmountInDueDate = bill.BillAmountInDueDate,
+                            BillSurcharge = bill.BillSurcharge,
+                            BillAmountAfterDueDate = bill.BillAmountAfterDueDate
+                        };
+
+            // Apply filters based on inputs
+            if (!string.IsNullOrEmpty(BtNo))
+            {
+                query = query.Where(b => b.Btno == BtNo);
+
+                if (!string.IsNullOrEmpty(month) && !string.IsNullOrEmpty(year))
+                {
+                    query = query.Where(b => b.BillingMonth == month && b.BillingYear == year);
+                }
+            }
+            else if (!string.IsNullOrEmpty(month) && !string.IsNullOrEmpty(year))
+            {
+                // BtNo is empty, filter by month/year only
+                query = query.Where(b => b.BillingMonth == month && b.BillingYear == year);
+            }
+
+            var bills = query.ToList();
+
+            if (!bills.Any())
+            {
+                ViewBag.ErrorMessage = "No bills found for the provided criteria.";
+            }
+
+            var pagedBills = bills.ToPagedList(1, 5000);
+            return View("SearchBill", pagedBills);
         }
     }
 }

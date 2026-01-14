@@ -1,12 +1,12 @@
 @using BMSBT.DTO
 @using X.PagedList
 @using X.PagedList.Mvc.Core
-@model IPagedList<BillDTO>
+@model IPagedList<MaintenanceBillDTO>
 
 @{
-    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
     // If Model is null, use an empty list to avoid null reference errors.
-    var bills = Model ?? new StaticPagedList<BillDTO>(new List<BillDTO>(), 1, 10000, 0);
+    var bills = Model ?? new StaticPagedList<MaintenanceBillDTO>(new List<MaintenanceBillDTO>(), 1, 10000, 0);
 
     // Group the bills first by Project, then by Block.
     var groupedByProject = bills.GroupBy(b => b.Project)
@@ -16,7 +16,6 @@
             Blocks = projGroup.GroupBy(b => b.Block).OrderBy(bg => bg.Key)
         });
 }
-
 
 
 
@@ -57,6 +56,10 @@
         font-weight: bold;
     }
 
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 
 
@@ -72,7 +75,7 @@
 }
 
 <!-- Filter Form (for Month/Year) -->
-<form method="post" action="@Url.Action("SearchBill", "EBillU")">
+<form method="post" action="@Url.Action("SearchBill", "MaintenanceNew")">
     <div class="row">
         <div class="col-md-3">
             <label for="month" class="form-label">Month:</label>
@@ -107,13 +110,6 @@
     </div>
 </form>
 
-
-<!-- Print Button -->
-<!-- Search Panel -->
-@* <div class="search-panel">
-    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:1000px; display:inline-block; margin-right:10px;margin-top:10px; " />
-
-</div> *@
 
 <!-- Main Nested Table -->
 <div class="table-responsive" style="margin-top:10px">
@@ -394,79 +390,6 @@
                 });
             }
 
-            // Select All functionality
-            $('#selectAll').change(function() {
-                $('.record-checkbox:visible').prop('checked', $(this).prop('checked'));
-                updateSelectAllState();
-            });
-
-            $('.record-checkbox').change(function() {
-                updateSelectAllState();
-            });
-
-            function updateSelectAllState() {
-                var totalVisible = $('.record-checkbox:visible').length;
-                var totalChecked = $('.record-checkbox:visible:checked').length;
-                $('#selectAll').prop({
-                    checked: totalVisible === totalChecked && totalVisible > 0,
-                    indeterminate: totalChecked > 0 && totalChecked < totalVisible
-                });
-            }
-
-                  $('#searchInput').on('keyup', function() {
-            var searchText = $(this).val().toLowerCase();
-
-            // Hide all rows initially
-            $('.customer-row, .category-content, .block-content, .project-content').hide();
-            $('.category-header, .block-header, .project-header').hide();
-
-            // Track which parents need to be shown
-            var visibleCategories = new Set();
-            var visibleBlocks = new Set();
-            var visibleProjects = new Set();
-
-            // Check each row if it matches the search query
-            $('.customer-row').each(function() {
-                var row = $(this);
-                var rowText = row.text().toLowerCase();
-
-                if (rowText.includes(searchText)) {
-                    row.show();
-
-                    // Get parent identifiers
-                    var categoryContent = row.closest('tr.category-content');
-                    var categoryHeader = $('tr.category-header[data-category="' + categoryContent.data('parent') + '"]');
-                    var blockContent = row.closest('.block-content');
-                    var blockHeader = $('.block-header[data-block="' + blockContent.attr('id') + '"]');
-                    var projectContent = row.closest('tr.project-content');
-                    var projectHeader = $('.project-header[data-project="' + projectContent.data('parent') + '"]');
-
-                    // Mark parents as visible
-                    visibleCategories.add(categoryContent.data('parent'));
-                    visibleBlocks.add(blockContent.attr('id'));
-                    visibleProjects.add(projectContent.data('parent'));
-                }
-            });
-
-            // Show only relevant categories, blocks, and projects
-            visibleCategories.forEach(category => {
-                $('tr.category-header[data-category="' + category + '"]').show();
-                $('tr.category-content[data-parent="' + category + '"]').show().find('.toggle-icon').addClass('rotate-icon');
-            });
-
-            visibleBlocks.forEach(block => {
-                $('.block-header[data-block="' + block + '"]').show();
-                $('.block-content[id="' + block + '"]').show().find('.toggle-icon').addClass('rotate-icon');
-            });
-
-            visibleProjects.forEach(project => {
-                $('.project-header[data-project="' + project + '"]').show();
-                $('tr.project-content[data-parent="' + project + '"]').show().find('.toggle-icon').addClass('rotate-icon');
-            });
-
-            updateSelectAllState();
-        });
-
             // Print Bills Button Click
             $("#PrintRecordsButton").on("click", function () {
                 console.log("Print button clicked");
@@ -484,11 +407,11 @@
                     return;
                 }
 
-                // Show loading overlay (make sure you have an element with id "loadingOverlay")
+                // Show loading overlay
                 $("#loadingOverlay").show();
 
                 $.ajax({
-                    url: '/PrintEMultiBill',
+                    url: '/MaintenanceNew/PrintMMultiBills',
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({ uids: selectedUIDs.join(",") }),
@@ -524,71 +447,6 @@
                     }
                 });
             });
-
-
-
-
-
-
-
-
-                       // Pay Records Button Click Handler
-        $("#PayRecordsButton").on("click", function () {
-            // Clear any previous click handlers to prevent duplication
-            $("#PayRecordsButton").off("click").on("click", function() {
-                console.log("Pay button clicked - Debug Mode");
-
-                // Collect UIDs with explicit conversion to array
-                var selectedUIDs = Array.from($('.record-checkbox:checked')).map(checkbox => checkbox.value);
-
-                // Debug logging
-                console.log("Number of checked checkboxes:", $('.record-checkbox:checked').length);
-                console.log("Selected UIDs array:", selectedUIDs);
-                console.log("JSON payload:", JSON.stringify(selectedUIDs));
-
-                if (selectedUIDs.length === 0) {
-                    alert("Please select at least one bill to pay.");
-                    return;
-                }
-
-                $("#loadingOverlay").show();
-                $(".loading-text").text("Processing Payments...");
-
-                // Modified AJAX call with explicit debugging
-                $.ajax({
-                    url: '/EBillU/PayEMultiBill',
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify(selectedUIDs),
-                    beforeSend: function(xhr) {
-                        console.log("Sending request with data:", selectedUIDs);
-                        console.log("Request headers:", xhr.getAllResponseHeaders());
-                    },
-                    success: function(response) {
-                        console.log("Success response:", response);
-                        alert(response.message || "Payment processed successfully!");
-                        location.reload();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Payment Error Details:", {
-                            status: xhr.status,
-                            statusText: xhr.statusText,
-                            responseText: xhr.responseText,
-                            error: error
-                        });
-                        alert("Failed to process payment. Check console for details.");
-                    },
-                    complete: function() {
-                        $("#loadingOverlay").hide();
-                        $(".loading-text").text("Processing...");
-                    }
-                });
-            });
-        });
-
-
-
-
         });
     </script>
 }

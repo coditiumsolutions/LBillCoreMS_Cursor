@@ -55,27 +55,27 @@
             type: "POST",
             data: { month: month, year: year },
             success: function (response) {
-                console.log("API Response:", response); // Log response to check its structure
+           console.log("API Response:", response); // Log response to check its structure
 
-                // Controller returns { Labels: [...], Data: [...] }
-                if (!response || !response.Labels || !response.Data) {
-                    console.error("Invalid API response structure:", response);
-                    return;
-                }
+     if (!response || !response.labels || !response.data) {
+        console.error("Invalid API response structure:", response);
+        return;
+    }
 
-                // If no data exists for the selected month, set graph to zero values
-                if (response.Labels.length === 0 || response.Data.length === 0) {
-                    console.warn("No data available for the selected filters.");
-                    updateChart(["No Data"], [0]); // Set graph to show "No Data"
-                    return;
-                }
+    // If no data exists for the selected month, set graph to zero values
+    if (response.labels.length === 0 || response.data.length === 0) {
+        console.warn("No data available for the selected filters.");
+        updateChart(["No Data"], [0]); // Set graph to show "No Data"
+        return;
+    }
 
-                if (response.Labels.length > 0 && response.Data.length > 0) {
-                    updateChart(response.Labels, response.Data);
-                } else {
-                    console.warn("No data available for the selected filters.");
-                }
-            }
+    if (response.labels.length > 0 && response.data.length > 0) {
+        updateChart(response.labels, response.data); // Use lowercase 'labels' and 'data'
+    } else {
+        console.warn("No data available for the selected filters.");
+    }
+
+    }
         });
     }
 

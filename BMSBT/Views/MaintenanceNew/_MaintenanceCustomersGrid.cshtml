@@ -1,0 +1,21 @@
+@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+
+@foreach (var item in Model)
+{
+    <tr>
+        <td>@item.BTNo</td>
+        <td>@item.CustomerName</td>
+        <td>@item.Project</td>
+        <td>@item.Block</td>
+        <td>@item.Category</td>
+        <td>@item.Size</td>
+    </tr>
+}
+
+@if (!Model.Any())
+{
+    <tr>
+        <td colspan="6" class="text-center">No records found.</td>
+    </tr>
+}
+
