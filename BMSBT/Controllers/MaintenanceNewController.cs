@@ -43,13 +43,13 @@ namespace BMSBT.Controllers
 
             ViewBag.Years = new List<SelectListItem>
     {
-        new SelectListItem { Value = "2024", Text = "2024" },
-        new SelectListItem { Value = "2025", Text = "2025" }
+        new SelectListItem { Value = "2025", Text = "2025" },
+        new SelectListItem { Value = "2026", Text = "2026" }
     };
 
             ViewBag.Months = new List<SelectListItem>
     {
-                 new SelectListItem { Value = "Janurary", Text = "Janurary" },
+                 new SelectListItem { Value = "January", Text = "January" },
                  new SelectListItem { Value = "February", Text = "February" },
                  new SelectListItem { Value = "March", Text = "March" },
                  new SelectListItem { Value = "April", Text = "April" },
@@ -125,9 +125,26 @@ namespace BMSBT.Controllers
             ViewBag.ChartData = readingSheetData.Select(x => x.Total).ToList();
             ViewBag.ChartData.Add(totalMeters); // Add the total as a separate data point
 
-            //// Pass selected filters back to the view
-            //ViewBag.SelectedYear = selectedYear;
-            //ViewBag.SelectedMonth = selectedMonth;
+            // Maintenance Bills summary (Generated, Paid, Unpaid) based on selected month/year
+            var billsQuery = _dbContext.MaintenanceBills.AsQueryable();
+
+            if (!string.IsNullOrEmpty(selectedYear))
+            {
+                billsQuery = billsQuery.Where(b => b.BillingYear == selectedYear);
+            }
+
+            if (!string.IsNullOrEmpty(selectedMonth))
+            {
+                billsQuery = billsQuery.Where(b => b.BillingMonth == selectedMonth);
+            }
+
+            int totalBills = billsQuery.Count();
+            int paidBills = billsQuery.Count(b => b.PaymentStatus == "Paid" || b.PaymentStatus == "Paid with Surcharge");
+            int unpaidBills = totalBills - paidBills;
+
+            ViewBag.TotalBills = totalBills;
+            ViewBag.PaidBills = paidBills;
+            ViewBag.UnpaidBills = unpaidBills;
 
             return View();
         }

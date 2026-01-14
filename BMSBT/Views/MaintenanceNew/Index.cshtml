@@ -105,19 +105,32 @@
     <form id="filterForm" method="get" class="filter-form">
 
         <select id="yearDropdown" name="selectedYear">
-            <option value="">Select Year</option>
+            <option value="">Select Billing Year</option>
             @foreach (var year in ViewBag.Years)
             {
-                <option value="@year.Value">@year.Text</option>
-
+                if (ViewBag.SelectedYear == year.Value)
+                {
+                    <option value="@year.Value" selected="selected">@year.Text</option>
+                }
+                else
+                {
+                    <option value="@year.Value">@year.Text</option>
+                }
             }
         </select>
 
         <select id="monthDropdown" name="selectedMonth">
-            <option value="">Select Month</option>
+            <option value="">Select Billing Month</option>
             @foreach (var month in ViewBag.Months)
             {
-                <option value="@month.Value">@month.Text</option>
+                if (ViewBag.SelectedMonth == month.Value)
+                {
+                    <option value="@month.Value" selected="selected">@month.Text</option>
+                }
+                else
+                {
+                    <option value="@month.Value">@month.Text</option>
+                }
             }
         </select>
         <button type="submit" class="btn btn-primary">Apply Changes</button>
@@ -127,6 +140,18 @@
 
 </div>
 
+
+<div style="margin-top:20px;">
+    @if (!string.IsNullOrEmpty(ViewBag.SelectedYear as string) && !string.IsNullOrEmpty(ViewBag.SelectedMonth as string))
+    {
+        <div class="card" style="max-width:400px; padding:15px; border:1px solid #ddd; border-radius:6px; margin-bottom:20px;">
+            <h5>Maintenance Bills Summary (@ViewBag.SelectedMonth @ViewBag.SelectedYear)</h5>
+            <p><strong>Generated Bills:</strong> @ViewBag.TotalBills</p>
+            <p><strong>Paid Bills:</strong> @ViewBag.PaidBills</p>
+            <p><strong>Unpaid Bills:</strong> @ViewBag.UnpaidBills</p>
+        </div>
+    }
+</div>
 
 <div style="width: 600px; height: 400px;">
     <canvas id="subProjectChart"></canvas>

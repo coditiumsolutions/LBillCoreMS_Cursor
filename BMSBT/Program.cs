@@ -4,6 +4,7 @@ using BMSBT.Models;
 using BMSBT.BillServices;
 using BMSBT.Models.MyObjects;
 using BMSBT.EBillService;
+using BMSBT.Services;
 
 using BMSBT.Helper;
 
@@ -48,6 +49,8 @@ builder.Services.AddScoped<ICurrentOperatorService, CurrentOperatorService>();
 builder.Services.AddScoped<IOperatorService, OperatorService>();  // Register the OperatorService
 builder.Services.AddScoped<SessionHelper>();
 
+// Maintenance bills insert service (isolated from MaintenanceNew UI)
+builder.Services.AddScoped<IMaintenanceBillInsertService, MaintenanceBillInsertService>();
 
 
 

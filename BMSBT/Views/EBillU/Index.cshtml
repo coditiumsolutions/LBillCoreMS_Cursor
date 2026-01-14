@@ -1,50 +1,231 @@
-﻿
+
+@model BMSBT.DTO.DashboardViewModel
 @{
     ViewData["Title"] = "Reading Dashboard";
     Layout = "~/Views/Shared/_LayoutEBills.cshtml";
 }
 
-<h2>📊 Reading Dashboard</h2>
+<style>
+    .billing-container {
+        background-color: #f5f5f5;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
 
-<div class="row text-center mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white shadow-sm">
-            <div class="card-body">
-                <h4>Total Readings</h4>
-                <h2>@ViewBag.TotalReadings</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white shadow-sm">
-            <div class="card-body">
-                <h4>Current Month Readings</h4>
-                <h2>@ViewBag.CurrentMonthReadings</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white shadow-sm">
-            <div class="card-body">
-                <h4>Pending Readings</h4>
-                <h2>@ViewBag.PendingReadings</h2>
-            </div>
-        </div>
-    </div>
-</div>
+    .header-section {
+        background-color: #4a90c2;
+        color: white;
+        padding: 10px 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-<h4>🔗 Quick Actions</h4>
-<div class="row">
-    <div class="col-md-3">
-        <a class="btn btn-outline-primary w-100 mb-2" asp-action="SearchCustomer">➕ Add Reading</a>
+    .billing-period {
+        background-color: white;
+        color: #333;
+        padding: 8px 15px;
+        border-radius: 3px;
+        font-weight: bold;
+        border: 2px solid #4a90c2;
+    }
+
+    .controls-section {
+        background-color: white;
+        padding: 15px;
+        border: 2px solid #ccc;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+
+    .btn-generate {
+        background-color: #ff6b6b;
+        color: white;
+        border: 2px solid #ff5252;
+        padding: 8px 15px;
+        margin-right: 10px;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        margin-top: 20px;
+    }
+
+        .report-table th,
+        .report-table td {
+            border: 1px solid #ccc;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+    .section-header {
+        background-color: #e8e8e8;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .metric-row {
+        background-color: #f9f9f9;
+    }
+
+    .metric-name {
+        font-weight: 500;
+        color: #555;
+        width: 25%;
+    }
+
+    .metric-value {
+        font-weight: bold;
+        color: #1976d2;
+        text-align: right;
+        width: 25%;
+    }
+
+    .metric-note {
+        color: #666;
+        font-style: italic;
+        width: 25%;
+    }
+
+    .metric-secondary {
+        font-weight: bold;
+        color: #1976d2;
+        text-align: right;
+        width: 25%;
+    }
+
+    .important-note {
+        color: #e53935 !important;
+        font-weight: 500;
+    }
+
+    .amount {
+        color: #2e7d32;
+        font-weight: bold;
+    }
+
+    .form-control {
+        margin-right: 10px;
+        display: inline-block;
+        width: auto;
+    }
+</style>
+
+<div class="billing-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <div>
+            <h4 style="margin: 0;">Reading Dashboard - Electricity Billing Summary</h4>
+        </div>
+        <div class="billing-period">
+            Billing Year - Month: @ViewBag.BillingPeriod
+        </div>
     </div>
-    <div class="col-md-3">
-        <a class="btn btn-outline-secondary w-100 mb-2" asp-action="ShowReading">📄 View Readings</a>
+
+    <!-- Controls Section -->
+    <div class="controls-section">
+        @using (Html.BeginForm("Index", "EBillU", FormMethod.Get))
+        {
+            <div class="form-inline row">
+                <!-- Month -->
+                <div class="form-group col-md-2">
+                    <label>Month:</label>
+                    @Html.DropDownList("month", new SelectList(new[] {
+                        new { Value = "January", Text = "January" },
+                        new { Value = "February", Text = "February" },
+                        new { Value = "March", Text = "March" },
+                        new { Value = "April", Text = "April" },
+                        new { Value = "May", Text = "May" },
+                        new { Value = "June", Text = "June" },
+                        new { Value = "July", Text = "July" },
+                        new { Value = "August", Text = "August" },
+                        new { Value = "September", Text = "September" },
+                        new { Value = "October", Text = "October" },
+                        new { Value = "November", Text = "November" },
+                        new { Value = "December", Text = "December" }
+                    }, "Value", "Text", ViewBag.SelectedMonth), "Select Month", new { @class = "form-control" })
+                </div>
+
+                <!-- Year -->
+                <div class="form-group col-md-2">
+                    <label>Year:</label>
+                    @Html.DropDownList("year", new SelectList(Enumerable.Range(2020, 10)
+                             .Select(y => new { Value = y.ToString(), Text = y.ToString() }),
+                             "Value", "Text", ViewBag.SelectedYear), "Select Year", new { @class = "form-control" })
+                </div>
+
+                <!-- Project -->
+                <div class="form-group col-md-2">
+                    <label>Project:</label>
+                    @Html.DropDownList("project", new SelectList(new[] {
+                        new { Value = "Mohlanwal", Text = "Mohlanwal" },
+                        new { Value = "Orchards", Text = "Orchards" }
+                    }, "Value", "Text", ViewBag.SelectedProject), "Select Project", new { @class = "form-control" })
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group col-md-4" style="margin-top: 25px;">
+                    <button type="submit" class="btn btn-generate">Generate Report</button>
+                </div>
+            </div>
+        }
     </div>
-    <div class="col-md-3">
-        <a class="btn btn-outline-warning w-100 mb-2" asp-action="SearchCustomer">👥 View Customers by Sector</a>
-    </div>
-    <div class="col-md-3">
-        <a class="btn btn-outline-info w-100 mb-2" asp-action="Reports">📊 Reports</a>
-    </div>
+
+    <!-- Report Table -->
+    <table class="report-table">
+        <!-- Generated Detail Section -->
+        <tr class="section-header">
+            <td colspan="4"><strong>Generated Detail</strong></td>
+        </tr>
+        <tr class="metric-row">
+            <td class="metric-name">Bills Generated</td>
+            <td class="metric-value">@Model.TotalBillsGenerated.ToString("N0")</td>
+            <td class="metric-note important-note">Important: BSC Excluded</td>
+            <td class="metric-secondary"></td>
+        </tr>
+        <tr class="metric-row">
+            <td class="metric-name">Total Current Billing (Rs)</td>
+            <td class="metric-value amount">@Model.TotalBillAmountGenerated.ToString("N0")</td>
+            <td class="metric-note">Bills Units</td>
+            <td class="metric-secondary">@Model.BillsUnits.ToString("N0")</td>
+        </tr>
+
+        <!-- Net Metering Detail Section -->
+        <tr class="section-header">
+            <td colspan="4"><strong>Net Metering Detail</strong></td>
+        </tr>
+        <tr class="metric-row">
+            <td class="metric-name">Net Meter Bills Generated</td>
+            <td class="metric-value">@Model.NetMeterBillsGenerated.ToString("N0")</td>
+            <td class="metric-note">Net Meter Billing</td>
+            <td class="metric-secondary">@Model.NetMeterBillsUnits.ToString("N0")</td>
+        </tr>
+        <tr class="metric-row">
+            <td class="metric-name">Total Net Meter Billing (Rs)</td>
+            <td class="metric-value amount">@Model.NetMeterTotalBilling.ToString("N0")</td>
+            <td class="metric-note"></td>
+            <td class="metric-secondary"></td>
+        </tr>
+
+        <!-- Payments Detail Section -->
+        <tr class="section-header">
+            <td colspan="4"><strong>Payments Detail</strong></td>
+        </tr>
+        <tr class="metric-row">
+            <td class="metric-name">Bill Paid (Amount)</td>
+            <td class="metric-value amount">@Model.TotalBillAmountCollected.ToString("N0")</td>
+            <td class="metric-note important-note">Unpaid Amount (Rs)</td>
+            <td class="metric-secondary amount">@Model.BillUnpaidAmount.ToString("N0")</td>
+        </tr>
+        <tr class="metric-row">
+            <td class="metric-name">Paid (No Of Bills)</td>
+            <td class="metric-value">@Model.TotalBillsPaid.ToString("N0")</td>
+            <td class="metric-note important-note">Unpaid Bills (Number)</td>
+            <td class="metric-secondary">@Model.UnpaidBillsCount.ToString("N0")</td>
+        </tr>
+    </table>
 </div>

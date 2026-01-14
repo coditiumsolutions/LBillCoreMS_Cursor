@@ -1,4 +1,4 @@
-﻿using BMSBT.BillServices;
+using BMSBT.BillServices;
 using BMSBT.DTO;
 using BMSBT.Models;
 using BMSBT.Requests;
@@ -35,15 +35,101 @@ namespace BMSBT.Controllers
 
 
 
-        // Example: EBillUController
-        public IActionResult Index(string search)
+        // Reading Dashboard - reuse billing dashboard functionality
+        public IActionResult Index(string month, string year, string project)
         {
-            // load the data the view expects (replace EBillViewModel with your actual model)
-            var model = _dbContext.Configurations
-                        .AsQueryable();        
+            var model = new DTO.DashboardViewModel();
 
-            var modelList = model.ToList(); // never null, maybe empty
-            return View(modelList);
+            // Defaults to current month/year if none provided
+            string currentMonth = DateTime.Now.ToString("MMMM");
+            string currentYear = DateTime.Now.Year.ToString();
+
+            month = string.IsNullOrEmpty(month) ? currentMonth : month;
+            year = string.IsNullOrEmpty(year) ? currentYear : year;
+
+            try
+            {
+                model.Projects = new List<string>();
+                model.Years = new List<string>();
+                model.Months = new List<string>();
+
+                var billingReportQuery = @"EXEC sp_GetBillingReportFormatted @Month = {0}, @Year = {1}, @Project = {2}";
+
+                var billingReportData = _dbContext.BillingReportData
+                    .FromSqlRaw(billingReportQuery,
+                        string.IsNullOrEmpty(month) ? (object)DBNull.Value : month,
+                        string.IsNullOrEmpty(year) ? (object)DBNull.Value : year,
+                        string.IsNullOrEmpty(project) ? (object)DBNull.Value : project)
+                    .ToList();
+
+                if (billingReportData != null && billingReportData.Any())
+                {
+                    var generatedDetail = billingReportData.Where(x => x.Section == "Generated Detail").ToList();
+                    var netMeteringDetail = billingReportData.Where(x => x.Section == "Generated Detail - Net Metering").ToList();
+                    var paymentsDetail = billingReportData.Where(x => x.Section == "Payments Detail").ToList();
+
+                    var billsGenerated = generatedDetail.FirstOrDefault(x => x.Metric == "Bills Generated");
+                    var totalCurrentBilling = generatedDetail.FirstOrDefault(x => x.Metric == "Total Current Billing (Rs)");
+
+                    if (billsGenerated != null)
+                    {
+                        model.TotalBillsGenerated = Convert.ToInt32(billsGenerated.Value);
+                        model.BillsUnits = billsGenerated.SecondaryValue ?? 0;
+                    }
+
+                    if (totalCurrentBilling != null)
+                    {
+                        model.TotalBillAmountGenerated = totalCurrentBilling.Value;
+                        if (model.BillsUnits == 0)
+                        {
+                            model.BillsUnits = totalCurrentBilling.SecondaryValue ?? 0;
+                        }
+                    }
+
+                    var netMeterBillsGenerated = netMeteringDetail.FirstOrDefault(x => x.Metric == "Bills Generated");
+                    var netMeterTotalBilling = netMeteringDetail.FirstOrDefault(x => x.Metric == "Total Current Billing (Rs)");
+
+                    if (netMeterBillsGenerated != null)
+                    {
+                        model.NetMeterBillsGenerated = Convert.ToInt32(netMeterBillsGenerated.Value);
+                        model.NetMeterBillsUnits = netMeterBillsGenerated.SecondaryValue ?? 0;
+                    }
+
+                    if (netMeterTotalBilling != null)
+                    {
+                        model.NetMeterTotalBilling = netMeterTotalBilling.Value;
+                    }
+
+                    var billPaidAmount = paymentsDetail.FirstOrDefault(x => x.Metric == "Bill Paid (Amount)");
+                    var paidBillsCount = paymentsDetail.FirstOrDefault(x => x.Metric == "Paid (No Of Bills)");
+
+                    if (billPaidAmount != null)
+                    {
+                        model.TotalBillAmountCollected = billPaidAmount.Value;
+                        model.BillUnpaidAmount = Convert.ToDecimal(billPaidAmount.SecondaryValue ?? 0);
+                    }
+
+                    if (paidBillsCount != null)
+                    {
+                        model.TotalBillsPaid = Convert.ToInt32(paidBillsCount.Value);
+                        model.UnpaidBillsCount = paidBillsCount.SecondaryValue ?? 0;
+                    }
+                }
+
+                model.BillingReportData = billingReportData;
+
+                ViewBag.SelectedMonth = month;
+                ViewBag.SelectedYear = year;
+                ViewBag.SelectedProject = project;
+                ViewBag.BillingPeriod = $"{year} - {month}";
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"An error occurred while loading the dashboard data: {ex.Message}");
+                return View(new DTO.DashboardViewModel());
+            }
         }
 
 

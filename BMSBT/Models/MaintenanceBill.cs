@@ -56,6 +56,13 @@ public partial class MaintenanceBill
     public decimal? Arrears { get; set; }
     public decimal? MaintCharges { get; set; }
 
+    // Additional maintenance-related charges
+    public int? Fine { get; set; }
+
+    public int? OtherCharges { get; set; }
+
+    public int? WaterCharges { get; set; }
+
     public string? History { get; set; }
 
 }

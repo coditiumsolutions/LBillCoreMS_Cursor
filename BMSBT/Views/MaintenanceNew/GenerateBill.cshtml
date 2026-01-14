@@ -82,8 +82,11 @@
             </div>
         }
     </div>
-    <button id="createRecordsButton" type="button" class="btn btn-success mb-3" style="width:150px">
+    <button id="createRecordsButton" type="button" class="btn btn-success mb-3 me-2" style="width:150px">
         Generate Bill
+    </button>
+    <button id="generateMBillButton" type="button" class="btn btn-outline-primary mb-3" style="width:170px">
+        Generate MBill
     </button>
 </form>
 
@@ -163,10 +166,14 @@
     }
 
     $(document).ready(function () {
-        $('#createRecordsButton').click(function () {
-            var selectedIds = $('.record-checkbox:checked').map(function () {
+        function getSelectedIds() {
+            return $('.record-checkbox:checked').map(function () {
                 return +this.value;
             }).get();
+        }
+
+        $('#createRecordsButton').click(function () {
+            var selectedIds = getSelectedIds();
 
             if (!selectedIds.length) {
                 alert('No records selected.');
@@ -200,6 +207,42 @@
                         window.location.href = '@Url.Action("AccessDenied", "Login")';
                     } else {
                         alert('An error occurred.');
+                    }
+                }
+            });
+        });
+
+        // New: Generate MBill using default 15-values logic via isolated insert API
+        $('#generateMBillButton').click(function () {
+            var selectedIds = getSelectedIds();
+
+            if (!selectedIds.length) {
+                alert('No records selected.');
+                return;
+            }
+
+            $('#loadingOverlay').show();
+
+            $.ajax({
+                url: '/api/MaintenanceBillInsert/from-customers',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(selectedIds),
+                success: function (response) {
+                    $('#loadingOverlay').hide();
+                    if (response && response.success) {
+                        alert(response.message || 'MBills generated successfully.');
+                    } else {
+                        alert('MBill generation completed, but response was unexpected.');
+                    }
+                },
+                error: function (xhr) {
+                    $('#loadingOverlay').hide();
+                    if (xhr.status === 403) {
+                        alert('Unauthorized!');
+                        window.location.href = '@Url.Action("AccessDenied", "Login")';
+                    } else {
+                        alert('An error occurred while generating MBills.');
                     }
                 }
             });
