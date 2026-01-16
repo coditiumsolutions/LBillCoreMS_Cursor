@@ -870,39 +870,39 @@ namespace BMSBT.Controllers
             // If nothing is provided
             if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
             {
-                ViewBag.ErrorMessage = "Please select a month/year or enter a BTNo.";
                 return View("SearchBill");
             }
 
             var query = from bill in _dbContext.MaintenanceBills
-                        join customer in _dbContext.CustomersDetails
-                            on bill.Btno equals customer.Btno
+                        join customer in _dbContext.CustomersMaintenance
+                            on bill.Btno equals customer.BTNo into customerJoin
+                        from customer in customerJoin.DefaultIfEmpty()
                         select new MaintenanceBillDTO
                         {
                             Uid = bill.Uid,
-                            CustomerNo = customer.CustomerNo,
+                            CustomerNo = bill.CustomerNo ?? (customer != null ? customer.CustomerNo : ""),
                             Btno = bill.Btno,
-                            CustomerName = customer.CustomerName,
-                            Cnicno = customer.Cnicno,
-                            FatherName = customer.FatherName,
-                            InstalledOn = customer.InstalledOn,
-                            MobileNo = customer.MobileNo,
-                            TelephoneNo = customer.TelephoneNo,
-                            Ntnnumber = customer.Ntnnumber,
-                            City = customer.City,
-                            Project = customer.Project,
-                            SubProject = customer.SubProject,
-                            TariffName = customer.TariffName,
-                            BankNo = customer.BankNo,
-                            BtnoMaintenance = customer.BtnoMaintenance,
-                            Category = customer.Category,
-                            Block = customer.Block,
-                            PlotType = customer.PlotType,
-                            Size = customer.Size,
-                            Sector = customer.Sector,
-                            PloNo = customer.PloNo,
-                            BillStatusMaint = customer.BillStatusMaint,
-                            BillStatus = customer.BillStatus,
+                            CustomerName = bill.CustomerName ?? (customer != null ? customer.CustomerName : ""),
+                            Cnicno = customer != null ? customer.CNICNo : "",
+                            FatherName = customer != null ? customer.FatherName : "",
+                            InstalledOn = customer != null ? customer.InstalledOn : "",
+                            MobileNo = customer != null ? customer.MobileNo : "",
+                            TelephoneNo = customer != null ? customer.TelephoneNo : "",
+                            Ntnnumber = customer != null ? customer.NTNNumber : "",
+                            City = customer != null ? customer.City : "",
+                            Project = customer != null ? customer.Project : "",
+                            SubProject = customer != null ? customer.SubProject : "",
+                            TariffName = customer != null ? customer.TariffName : "",
+                            BankNo = customer != null ? customer.BankNo : "",
+                            BtnoMaintenance = customer != null ? customer.BTNoMaintenance : "",
+                            Category = customer != null ? customer.Category : "",
+                            Block = customer != null ? customer.Block : "",
+                            PlotType = customer != null ? customer.PlotType : "",
+                            Size = customer != null ? customer.Size : "",
+                            Sector = customer != null ? customer.Sector : "",
+                            PloNo = customer != null ? customer.PloNo : "",
+                            BillStatusMaint = customer != null ? customer.BillStatusMaint : "",
+                            BillStatus = customer != null ? customer.BillStatus : "",
                             InvoiceNo = bill.InvoiceNo,
                             BillingMonth = bill.BillingMonth,
                             BillingYear = bill.BillingYear,
@@ -917,13 +917,16 @@ namespace BMSBT.Controllers
                             TaxAmount = bill.TaxAmount,
                             BillAmountInDueDate = bill.BillAmountInDueDate,
                             BillSurcharge = bill.BillSurcharge,
-                            BillAmountAfterDueDate = bill.BillAmountAfterDueDate
+                            BillAmountAfterDueDate = bill.BillAmountAfterDueDate,
+                            MaintCharges = bill.MaintCharges,
+                            Arrears = bill.Arrears
                         };
 
             // Apply filters based on inputs
             if (!string.IsNullOrEmpty(BtNo))
             {
-                query = query.Where(b => b.Btno == BtNo);
+                var trimmedBtNo = BtNo.Trim();
+                query = query.Where(b => b.Btno == trimmedBtNo);
 
                 if (!string.IsNullOrEmpty(month) && !string.IsNullOrEmpty(year))
                 {
@@ -936,14 +939,14 @@ namespace BMSBT.Controllers
                 query = query.Where(b => b.BillingMonth == month && b.BillingYear == year);
             }
 
-            var bills = query.ToList();
+            var billsList = query.ToList();
 
-            if (!bills.Any())
+            if (!billsList.Any())
             {
                 ViewBag.ErrorMessage = "No bills found for the provided criteria.";
             }
 
-            var pagedBills = bills.ToPagedList(1, 5000);
+            var pagedBills = billsList.ToPagedList(1, 5000);
             return View("SearchBill", pagedBills);
         }
     }

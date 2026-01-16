@@ -117,17 +117,20 @@
         <thead>
             <tr>
                 <th style="width:50px;"></th>
-                <th style="width:400px;">
+                <th style="width:100px;">
                     <input type="checkbox" id="selectAll" title="Select All Records" />
                 </th>
 
-                <th data-sort="BillingMonth" class="sort-icon" style="width:300px;">Month</th>
-                <th data-sort="BillingYear" class="sort-icon" style="width:200px;">Year</th>
-                <th data-sort="Category" class="sort-icon" style="width:300px;">Category</th>
-                <th data-sort="CustomerName" class="sort-icon" style="width:400px;">Customer Name</th>
+                <th data-sort="Btno" class="sort-icon" style="width:200px;">BT NO</th>
+                <th data-sort="BillingMonth" class="sort-icon" style="width:200px;">Month</th>
+                <th data-sort="BillingYear" class="sort-icon" style="width:150px;">Year</th>
+                <th data-sort="Category" class="sort-icon" style="width:250px;">Category</th>
+                <th data-sort="CustomerName" class="sort-icon" style="width:300px;">Customer Name</th>
 
-                <th data-sort="Btno" class="sort-icon" style="width:300px;">BT NO</th>
-                <th data-sort="PaymentStatus" class="sort-icon" style="width:200px;">Payment Status</th>
+                <th style="width:150px;">Maint Charges</th>
+                <th style="width:150px;">Arrears</th>
+                <th style="width:150px;">In Due Date</th>
+                <th data-sort="PaymentStatus" class="sort-icon" style="width:150px;">Payment Status</th>
 
                 <!-- Add other column headers as needed -->
             </tr>
@@ -141,13 +144,13 @@
                     <td>
                         <i class="fas fa-chevron-right toggle-icon"></i>
                     </td>
-                    <td colspan="7">
+                    <td colspan="10">
                         Project: @projectGroup.Project
                     </td>
                 </tr>
                 <!-- Project Content Row -->
                 <tr class="project-content" data-parent="@projectId" style="display:none;">
-                    <td colspan="8" style="padding:0;">
+                    <td colspan="11" style="padding:0;">
                         <div class="project-blocks">
                             @foreach (var blockGroup in projectGroup.Blocks)
                             {
@@ -158,7 +161,7 @@
                                         <td style="width:50px;">
                                             <i class="fas fa-chevron-right toggle-icon"></i>
                                         </td>
-                                        <td colspan="6">
+                                        <td colspan="10">
                                             <strong>Block :</strong> @blockGroup.Key
                                         </td>
                                     </tr>
@@ -174,31 +177,30 @@
                                                 <td style="width:50px;">
                                                     <i class="fas fa-chevron-right toggle-icon"></i>
                                                 </td>
-                                                <td colspan="6">
+                                                <td colspan="10">
                                                     Category: @categoryGroup.Key
                                                 </td>
                                             </tr>
                                             <!-- Category Content Rows -->
                                             <tr class="category-content" data-parent="@categoryId" style="display:none;">
-                                                <td colspan="8" style="padding:0;">
+                                                <td colspan="11" style="padding:0;">
                                                     <table class="nested-table" style="width:100%; margin-bottom:0;">
                                                         @foreach (var bill in categoryGroup)
                                                         {
                                                             <tr class="customer-row">
                                                                 <td style="width:50px;"></td>
-                                                                <td style="width:400px;">
+                                                                <td style="width:100px;">
                                                                     <input type="checkbox" class="record-checkbox" value="@bill.Uid" />
                                                                 </td>
-                                                                <td style="width:300px;">@bill.BillingMonth</td>
-                                                                <td style="width:200px;">@bill.BillingYear</td>
-                                                                <td style="width:300px;">@bill.Category</td>
-                                                                <td style="width:400px;">@bill.CustomerName</td>
-
-                                                                <td style="width:300px;">@bill.Btno</td>
-
-
-                                                                <td style="width:200px;">@bill.PaymentStatus</td>
-
+                                                                <td style="width:200px;">@bill.Btno</td>
+                                                                <td style="width:200px;">@bill.BillingMonth</td>
+                                                                <td style="width:150px;">@bill.BillingYear</td>
+                                                                <td style="width:250px;">@bill.Category</td>
+                                                                <td style="width:300px;">@bill.CustomerName</td>
+                                                                <td style="width:150px;">@bill.MaintCharges?.ToString("N0")</td>
+                                                                <td style="width:150px;">@bill.Arrears?.ToString("N0")</td>
+                                                                <td style="width:150px;">@bill.BillAmountInDueDate?.ToString("N0")</td>
+                                                                <td style="width:150px;">@bill.PaymentStatus</td>
                                                             </tr>
                                                         }
                                                     </table>

@@ -83,5 +83,8 @@ namespace BMSBT.DTO
         public int? BillSurcharge { get; set; }
 
         public int? BillAmountAfterDueDate { get; set; }
+
+        public decimal? Arrears { get; set; }
+        public decimal? MaintCharges { get; set; }
     }
 }
