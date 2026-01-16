@@ -1,4 +1,4 @@
-﻿@model IEnumerable<BMSBT.ViewModels.MaintSectorCustomersViewModel>
+@model IEnumerable<BMSBT.ViewModels.MaintSectorCustomersViewModel>
 @using System.Text.Json
 @{
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
@@ -242,7 +242,16 @@
                         alert('Unauthorized!');
                         window.location.href = '@Url.Action("AccessDenied", "Login")';
                     } else {
-                        alert('An error occurred while generating MBills.');
+                        var errorMsg = 'An error occurred while generating MBills.';
+                        if (xhr.responseJSON && xhr.responseMsg) {
+                             errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                var res = JSON.parse(xhr.responseText);
+                                if (res.message) errorMsg = res.message;
+                            } catch(e) {}
+                        }
+                        alert(errorMsg);
                     }
                 }
             });

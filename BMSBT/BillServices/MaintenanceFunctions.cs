@@ -1,4 +1,4 @@
-﻿using BMSBT.Models;
+using BMSBT.Models;
 using BMSBT.Models.MyObjects;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -61,10 +61,10 @@ namespace BMSBT.BillServices
             }
             else
             {
-                // If bill exists, check if it's unpaid
-                if (previousBill.PaymentStatus=="unpaid") // make sure IsPaid exists in your MaintenanceBill model
+                // If bill exists, check if it's unpaid (NULL or 'unpaid')
+                if (string.IsNullOrEmpty(previousBill.PaymentStatus) || previousBill.PaymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase))
                 {
-                    arrearsAmount = previousBill.BillAmountAfterDueDate; // or .BillAmount, depending on your schema
+                    arrearsAmount = previousBill.BillAmountAfterDueDate;
                 }
             }
 
@@ -199,20 +199,15 @@ namespace BMSBT.BillServices
             decimal taxDec = tax;
             decimal actualArrearDec = ArrearAmount ?? 0m;
 
-            // 1) Bill due on‑time (including arrears), rounded
-            decimal billInDueDate = Math.Round(
-                amountDec + taxDec + actualArrearDec
-            , 0);
+            // 1) Bill due on‑time: BillAmountInDueDate = Charges + Tax + Arrears
+            decimal billInDueDate = Math.Round(amountDec + taxDec + actualArrearDec, 0);
 
-            // 2) 10% surcharge on the in‑due date bill, rounded
-            decimal surcharge = Math.Round(
-                billInDueDate * 0.10m
-            , 0);
+            // 2) 10% surcharge on (Charges + Tax)
+            decimal baseChargesAndTax = amountDec + taxDec;
+            decimal surcharge = Math.Round(baseChargesAndTax * 0.10m, 0);
 
-            // 3) Bill after due date (in‑due bill + surcharge), rounded
-            decimal billAfterDue = Math.Round(
-                billInDueDate + surcharge
-            , 0);
+            // 3) Bill after due date: BillAmountAfterDueDate = BillAmountInDueDate + BillSurcharge
+            decimal billAfterDue = Math.Round(billInDueDate + surcharge, 0);
 
             // 4) Tax and arrears as whole numbers (rounded)
             int taxAmount = (int)Math.Round(taxDec, 0);
@@ -236,12 +231,12 @@ namespace BMSBT.BillServices
                 IssueDate = IssueDate,
                 DueDate = DueDate,
 
-                PaymentStatus = "Unpaid",
-                LastUpdated = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                PaymentStatus = "unpaid",
+                LastUpdated = DateTime.Now,
                 BillingDate = DateOnly.FromDateTime(DateTime.Now),
-                //MeterNo = customer.MeterNo,
-                PaymentMethod = "N/A",
-                BankDetail = "N/A",
+                MeterNo = customer.MeterNo,
+                PaymentMethod = "NA",
+                BankDetail = "NA",
                 ValidDate = DateOnly.FromDateTime(DateTime.Now.AddMonths(1)),
                 InvoiceNo = null // Will be assigned later
             };
@@ -260,10 +255,16 @@ namespace BMSBT.BillServices
 
         private void AssignInvoiceNo(MaintenanceBill newBill)
         {
-            string month = DateTime.Now.ToString("MM");
-            string year = DateTime.Now.ToString("yy");
-            string paddedUid = newBill.Uid.ToString().PadLeft(8, '0');
-            newBill.InvoiceNo = $"{month}{year}{paddedUid}";
+            // Per Requirement: YYYYMM + Last 5 digits of CUSTOMERNO
+            // Example: 202601 + 22306 = 20260122306
+            var now = DateTime.Now;
+            var datePart = now.ToString("yyyyMM");
+            var cust = string.IsNullOrWhiteSpace(newBill.CustomerNo) ? "00000" : newBill.CustomerNo.Trim();
+            
+            // Get last 5 digits of customerNo
+            var lastFive = cust.Length >= 5 ? cust[^5..] : cust.PadLeft(5, '0');
+            
+            newBill.InvoiceNo = $"{datePart}{lastFive}";
             _dbContext.Update(newBill);
             _dbContext.SaveChanges();
         }

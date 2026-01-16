@@ -1,4 +1,4 @@
-﻿using BMSBT.BillServices;
+using BMSBT.BillServices;
 using BMSBT.DTO;
 using BMSBT.Models;
 using BMSBT.Requests;
@@ -870,7 +870,7 @@ namespace BMSBT.Controllers
             billToUpdate.PaymentDate = model.PaymentDate;
             billToUpdate.PaymentMethod = model.PaymentMethod;
             billToUpdate.BankDetail = model.BankDetail;
-            billToUpdate.LastUpdated = DateTime.Now.ToString("yyyy-MM-dd"); // assigns date as string
+            billToUpdate.LastUpdated = DateTime.Now;
             billToUpdate.BillAmountInDueDate = model.BillAmountInDueDate;
             billToUpdate.BillSurcharge = model.BillSurcharge;
             billToUpdate.BillAmountAfterDueDate = model.BillAmountAfterDueDate;

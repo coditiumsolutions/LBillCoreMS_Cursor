@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace BMSBT.Models
 {
@@ -95,6 +95,9 @@ namespace BMSBT.Models
 
         [StringLength(50)]
         public string? BillGenerationStatus { get; set; }
+
+        [StringLength(50)]
+        public string? MeterNo { get; set; }
     }
 
 
