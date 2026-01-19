@@ -573,14 +573,40 @@ namespace BMSBT.Controllers
 
 
         [Route("Maintenance/MaintTariff")]
-        public IActionResult MaintTariff(string project, string subproject, string tariff, int? page)
+        public IActionResult MaintTariff(string project, string plotType, int? page)
         {
             int pageSize = 500; // Number of records per page
             int pageNumber = (page ?? 1); // If no page is specified, default to the first page
 
             var query = _dbContext.MaintenanceTarrifs.AsQueryable();
 
+            if (!string.IsNullOrEmpty(project))
+            {
+                query = query.Where(t => t.Project == project);
+            }
 
+            if (!string.IsNullOrEmpty(plotType))
+            {
+                query = query.Where(t => t.PlotType == plotType);
+            }
+
+            // Prepare dropdown data
+            ViewBag.Projects = _dbContext.MaintenanceTarrifs
+                .Select(t => t.Project)
+                .Where(p => p != null)
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
+            ViewBag.PlotTypes = _dbContext.MaintenanceTarrifs
+                .Select(t => t.PlotType)
+                .Where(pt => pt != null)
+                .Distinct()
+                .OrderBy(pt => pt)
+                .ToList();
+
+            ViewBag.SelectedProject = project;
+            ViewBag.SelectedPlotType = plotType;
 
             // Convert to paginated list
             var paginatedList = query.ToPagedList(pageNumber, pageSize);

@@ -1,0 +1,56 @@
+@model IEnumerable<BMSBT.Models.AdditionalCharge>
+@{
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    ViewData["Title"] = "Additional Charges";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Additional Charges</h5>
+        <a asp-action="Create" class="btn btn-sm btn-success">Create New</a>
+    </div>
+    <div class="card-body">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <p>No additional charges found.</p>
+        }
+        else
+        {
+            <table class="table table-bordered table-striped table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>BT No</th>
+                        <th>Service Type</th>
+                        <th>Charges Name</th>
+                        <th class="text-end">Charges Amount</th>
+                        <th style="width:220px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.BTNo</td>
+                            <td>@item.ServiceType</td>
+                            <td>@item.ChargesName</td>
+                            <td class="text-end">@item.ChargesAmount</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-sm btn-primary">Edit</a>
+                                <a asp-action="Details" asp-route-id="@item.Uid" class="btn btn-sm btn-info">Details</a>
+                                <a asp-action="Delete" asp-route-id="@item.Uid" class="btn btn-sm btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+

@@ -1,0 +1,60 @@
+@model BMSBT.Models.AdditionalCharge
+@{
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    ViewData["Title"] = "Create Additional Charge";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Create Additional Charge</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label asp-for="BTNo" class="control-label">BT No</label>
+                    <input asp-for="BTNo" class="form-control" />
+                    <span asp-validation-for="BTNo" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="ServiceType" class="control-label">Service Type</label>
+                    <select asp-for="ServiceType" class="form-control">
+                        <option value="">-- Select Service --</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Electricity">Electricity</option>
+                    </select>
+                    <span asp-validation-for="ServiceType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="ChargesName" class="control-label">Charges Name</label>
+                    <select asp-for="ChargesName" class="form-control">
+                        <option value="">-- Select Charges --</option>
+                        <option value="Water Charges">Water Charges</option>
+                        <option value="Other Charges">Other Charges</option>
+                    </select>
+                    <span asp-validation-for="ChargesName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="ChargesAmount" class="control-label">Charges Amount</label>
+                    <input asp-for="ChargesAmount" class="form-control" type="text" />
+                    <span asp-validation-for="ChargesAmount" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-success">Save</button>
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

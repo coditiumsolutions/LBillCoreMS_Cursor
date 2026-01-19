@@ -40,6 +40,8 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         // Carry forward arrears logic
         decimal arrears = 0;
         int fineToChargeSum = 0;
+        int waterCharges = 0;
+        int otherCharges = 0;
 
         if (!string.IsNullOrEmpty(dto.BillingMonth) && !string.IsNullOrEmpty(dto.BillingYear) && !string.IsNullOrEmpty(dto.BTNo))
         {
@@ -56,10 +58,25 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
                                f.FineService == "Maintenance")
                     .SumAsync(f => f.FineToCharge, cancellationToken);
             }
+
+            // Fetch Additional Charges (Water & Other) from AdditionalCharges table
+            waterCharges = await _dbContext.AdditionalCharges
+                .Where(a => a.BTNo == dto.BTNo && 
+                           a.ServiceType == "Maintenance" && 
+                           a.ChargesName == "Water Charges")
+                .Select(a => a.ChargesAmount)
+                .FirstOrDefaultAsync(cancellationToken) ?? 0;
+
+            otherCharges = await _dbContext.AdditionalCharges
+                .Where(a => a.BTNo == dto.BTNo && 
+                           a.ServiceType == "Maintenance" && 
+                           a.ChargesName == "Other Charges")
+                .Select(a => a.ChargesAmount)
+                .FirstOrDefaultAsync(cancellationToken) ?? 0;
         }
 
-        // Calculate billing amounts based on tariff values, arrears and fine
-        var billingCalculations = CalculateBillingAmounts(maintCharges, taxAmount, arrears, (decimal)fineToChargeSum);
+        // Calculate billing amounts based on tariff values, arrears, fine, and additional charges
+        var billingCalculations = CalculateBillingAmounts(maintCharges, taxAmount, arrears, (decimal)fineToChargeSum, (decimal)waterCharges, (decimal)otherCharges);
 
         var bill = new MaintenanceBill
         {
@@ -84,8 +101,8 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
             BillAmountAfterDueDate = billingCalculations.BillAmountAfterDueDate,
             Arrears = arrears,
             Fine = fineToChargeSum,
-            OtherCharges = 0,
-            WaterCharges = 0,
+            OtherCharges = otherCharges,
+            WaterCharges = waterCharges,
 
             // Dates
             // Prefer values provided by caller (e.g., from OperatorsSetup), else fallback to today
@@ -133,16 +150,16 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     }
 
     /// <summary>
-    /// Calculates billing amounts based on maintenance charges, tax amount, arrears, and fine.
+    /// Calculates billing amounts based on maintenance charges, tax amount, arrears, fine, and additional charges.
     /// Per Requirement:
-    /// BillAmountInDueDate = Charges + Tax + Arrears + Fine
+    /// BillAmountInDueDate = Charges + Tax + Arrears + Fine + Water + Other
     /// BillSurcharge = (Charges + Tax) * 10 / 100
     /// BillAmountAfterDueDate = BillAmountInDueDate + BillSurcharge
     /// </summary>
-    private static BillingCalculations CalculateBillingAmounts(decimal maintCharges, int taxAmount, decimal arrears = 0, decimal fine = 0)
+    private static BillingCalculations CalculateBillingAmounts(decimal maintCharges, int taxAmount, decimal arrears = 0, decimal fine = 0, decimal water = 0, decimal other = 0)
     {
-        // Step 1: Calculate BillAmountInDueDate = Charges + Tax + Arrears + Fine
-        decimal inDueDateDecimal = maintCharges + taxAmount + arrears + fine;
+        // Step 1: Calculate BillAmountInDueDate = Charges + Tax + Arrears + Fine + Water + Other
+        decimal inDueDateDecimal = maintCharges + taxAmount + arrears + fine + water + other;
         int billAmountInDueDate = (int)Math.Round(inDueDateDecimal, MidpointRounding.AwayFromZero);
 
         // Step 2: Calculate Bill Surcharge = 10% of (Charges + Tax) -- Surcharge is usually on the base charges+tax

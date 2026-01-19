@@ -215,8 +215,23 @@ namespace BMSBT.BillServices
 
             decimal fineTotalDec = fineTotalInt;
 
-            // 1) Bill due on‑time: BillAmountInDueDate = MaintCharges + TaxAmount + Arrears + Fine
-            decimal billInDueDate = Math.Round(amountDec + taxDec + actualArrearDec + fineTotalDec, 0);
+            // --- New: Fetch Additional Charges (Water & Other) from AdditionalCharges table ---
+            int waterCharges = _dbContext.AdditionalCharges
+                .Where(a => a.BTNo == customer.BTNo && 
+                           a.ServiceType == "Maintenance" && 
+                           a.ChargesName == "Water Charges")
+                .Select(a => a.ChargesAmount)
+                .FirstOrDefault() ?? 0;
+
+            int otherCharges = _dbContext.AdditionalCharges
+                .Where(a => a.BTNo == customer.BTNo && 
+                           a.ServiceType == "Maintenance" && 
+                           a.ChargesName == "Other Charges")
+                .Select(a => a.ChargesAmount)
+                .FirstOrDefault() ?? 0;
+
+            // 1) Bill due on‑time: BillAmountInDueDate = MaintCharges + TaxAmount + Arrears + Fine + WaterCharges + OtherCharges
+            decimal billInDueDate = Math.Round(amountDec + taxDec + actualArrearDec + fineTotalDec + waterCharges + otherCharges, 0);
 
             // 2) 10% surcharge on (Charges + Tax)
             decimal baseChargesAndTax = amountDec + taxDec;
@@ -246,6 +261,8 @@ namespace BMSBT.BillServices
                 MaintCharges = amount,
                 // Store Fine (sum of FineToCharge) into Fine column
                 Fine = fineTotalInt,
+                WaterCharges = waterCharges,
+                OtherCharges = otherCharges,
                 IssueDate = IssueDate,
                 DueDate = DueDate,
 

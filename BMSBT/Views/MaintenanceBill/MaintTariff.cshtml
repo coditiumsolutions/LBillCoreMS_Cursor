@@ -1,14 +1,48 @@
-﻿@{
+@{
     ViewData["Title"] = "Maintenance Charges";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
 }
 
 
 <!-- Create New Button -->
-<a asp-action="CreateTariff" class="btn btn-primary mb-3">Create New</a>
-<!-- Search Bar -->
-<div class="search-panel mb-3">
-    <input type="text" id="searchInput" placeholder="Search..." class="form-control" style="width:980px; display:inline-block; margin-right:10px;" />
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a asp-action="CreateTariff" class="btn btn-primary">Create New</a>
+    </div>
+</div>
+
+<!-- Search Panel -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="MaintTariff">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Project</label>
+                    <select name="project" class="form-control">
+                        <option value="">-- All Projects --</option>
+                        @foreach (var p in ViewBag.Projects)
+                        {
+                            <option value="@p" selected="@(p == ViewBag.SelectedProject ? "selected" : null)">@p</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Plot Type</label>
+                    <select name="plotType" class="form-control">
+                        <option value="">-- All Plot Types --</option>
+                        @foreach (var pt in ViewBag.PlotTypes)
+                        {
+                            <option value="@pt" selected="@(pt == ViewBag.SelectedPlotType ? "selected" : null)">@pt</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary mr-2">Search</button>
+                    <a asp-action="MaintTariff" class="btn btn-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Maintenance Tariffs Table -->
@@ -44,16 +78,4 @@
 </div>
 
 @section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('#searchInput').on('keyup', function () {
-                var searchText = $(this).val().toLowerCase();
-                $('#maintenanceTable tbody tr').each(function () {
-                    var row = $(this);
-                    var matches = row.text().toLowerCase().includes(searchText);
-                    row.toggle(matches);
-                });
-            });
-        });
-    </script>
 }
