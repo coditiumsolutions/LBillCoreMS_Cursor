@@ -1,0 +1,116 @@
+@{
+    ViewData["Title"] = "Fine Summary";
+    Layout = "~/Views/Shared/_LayoutFine.cshtml";
+}
+
+<h2>Fine Summary</h2>
+
+<form method="get" class="mb-3">
+    <div class="form-row align-items-end">
+        <div class="col-md-3">
+            <label for="FineMonth">Billing Month</label>
+            <select name="FineMonth" class="form-control">
+                <option value="">-- Month --</option>
+                @{
+                    var months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames;
+                    for (int i = 0; i < 12; i++)
+                    {
+                        var month = months[i];
+                        if (!string.IsNullOrEmpty(month))
+                        {
+                            var selected = (string)ViewBag.FineMonth == month ? "selected" : null;
+                            <option value="@month" selected="@selected">@month</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="FineYear">Billing Year</label>
+            <select name="FineYear" class="form-control">
+                <option value="">-- Year --</option>
+                @{
+                    var selYear = (string)ViewBag.FineYear ?? string.Empty;
+                }
+                <option value="2025" selected="@(selYear == "2025" ? "selected" : null)">2025</option>
+                <option value="2026" selected="@(selYear == "2026" ? "selected" : null)">2026</option>
+                <option value="2027" selected="@(selYear == "2027" ? "selected" : null)">2027</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="FineService">Fine Service</label>
+            <select name="FineService" class="form-control">
+                <option value="">-- Fine Service --</option>
+                @{
+                    var selService = (string)ViewBag.FineService ?? string.Empty;
+                }
+                <option value="Electricity" selected="@(selService == "Electricity" ? "selected" : null)">Electricity</option>
+                <option value="Maintenance" selected="@(selService == "Maintenance" ? "selected" : null)">Maintenance</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary mt-4">Show Summary</button>
+        </div>
+    </div>
+</form>
+
+@{
+    bool hasFilters = ViewBag.HasFilters != null && (bool)ViewBag.HasFilters;
+    bool hasResult = ViewBag.HasResult != null && (bool)ViewBag.HasResult;
+    int totalFine = ViewBag.TotalFine != null ? (int)ViewBag.TotalFine : 0;
+    var breakdown = ViewBag.Breakdown as IDictionary<string, int>;
+}
+
+@if (hasFilters)
+{
+    if (hasResult)
+    {
+        if (breakdown != null && breakdown.Any())
+        {
+            <table class="table table-bordered table-striped mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fine Type</th>
+                        <th>Total Fine</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in breakdown)
+                    {
+                        <tr>
+                            <td>@item.Key</td>
+                            <td>@item.Value.ToString("N0")</td>
+                        </tr>
+                    }
+                    <tr class="font-weight-bold">
+                        <td>Total</td>
+                        <td>@totalFine.ToString("N0")</td>
+                    </tr>
+                </tbody>
+            </table>
+        }
+
+        <div class="alert alert-success mt-3">
+            <strong>Total Fine Generated:</strong>
+            @totalFine.ToString("N0") for
+            <strong>@ViewBag.FineService</strong> in
+            <strong>@ViewBag.FineMonth @ViewBag.FineYear</strong>.
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-3">
+            <strong>No fine records found</strong> for the selected month, year and service.
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-info mt-3">
+        <strong>Please select Billing Month, Billing Year and Fine Service</strong> to view the summary.
+    </div>
+}
+

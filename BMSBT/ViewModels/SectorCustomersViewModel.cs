@@ -1,4 +1,4 @@
-﻿using BMSBT.Models;
+using BMSBT.Models;
 
 namespace BMSBT.ViewModels
 {
@@ -14,7 +14,7 @@ namespace BMSBT.ViewModels
 
     public class MaintSectorCustomersViewModel
     {
-        public string Sector { get; set; }
+        public string Block { get; set; }
         public List<CustomersMaintenance> Customers { get; set; }
     }
 }

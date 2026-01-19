@@ -187,10 +187,10 @@
                                                     <table class="nested-table" style="width:100%; margin-bottom:0;">
                                                         @foreach (var bill in categoryGroup)
                                                         {
-                                                            <tr class="customer-row">
+                                                            <tr class="customer-row" ondblclick="window.location.href='@Url.Action("Details", "MaintenanceNew", new { id = bill.Uid })'" style="cursor: pointer;">
                                                                 <td style="width:50px;"></td>
                                                                 <td style="width:100px;">
-                                                                    <input type="checkbox" class="record-checkbox" value="@bill.Uid" />
+                                                                    <input type="checkbox" class="record-checkbox" value="@bill.Uid" onclick="event.stopPropagation();" />
                                                                 </td>
                                                                 <td style="width:200px;">@bill.Btno</td>
                                                                 <td style="width:200px;">@bill.BillingMonth</td>
@@ -321,6 +321,10 @@
     /* Ensure customer rows maintain proper alignment */
     .customer-row {
         padding-left: 0;
+    }
+
+    .customer-row:hover {
+        background-color: #f0f8ff !important;
     }
 
     /* Responsive adjustments */

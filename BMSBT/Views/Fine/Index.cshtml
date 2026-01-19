@@ -1,4 +1,4 @@
-﻿@model List<BMSBT.Models.Fine>
+@model List<BMSBT.Models.Fine>
 
 @{
     ViewData["Title"] = "Fine Records";
@@ -6,6 +6,23 @@
 }
 
 <h2>Fine Records</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var successMessage = '@TempData["SuccessMessage"]';
+            if (successMessage && successMessage.trim() !== '') {
+                alert(successMessage);
+            }
+        });
+    </script>
+}
 
 <form method="get" class="mb-3">
     <div class="form-row align-items-end">
@@ -34,16 +51,10 @@
             <label for="FineYear">Year</label>
             <select name="FineYear" class="form-control">
                 <option value="">-- Year --</option>
-                @{
-                    int startYear = 2020;
-                    int currentYear = DateTime.Now.Year;
-                    for (int i = startYear; i <= currentYear + 2; i++)
-                    {
-                        <option value="@i" selected="@(Context.Request.Query["FineYear"] == i.ToString() ? "selected" : null)">
-                            @i
-                        </option>
-                    }
-                }
+                @{ var qYear = Context.Request.Query["FineYear"].ToString(); }
+                <option value="2027" selected="@(qYear == "2027" ? "selected" : null)">2027</option>
+                <option value="2026" selected="@(qYear == "2026" ? "selected" : null)">2026</option>
+                <option value="2025" selected="@(qYear == "2025" ? "selected" : null)">2025</option>
             </select>
         </div>
 
@@ -53,8 +64,12 @@
         </div>
 
         <div class="col-md-3">
-            <label for="CustomerName">Customer Name</label>
-            <input type="text" name="CustomerName" class="form-control" value="@Context.Request.Query["CustomerName"]" placeholder="Customer Name" />
+            <label for="FineService">Fine Service</label>
+            <select name="FineService" class="form-control">
+                <option value="">-- Fine Service --</option>
+                <option value="Electricity" selected="@(Context.Request.Query["FineService"] == "Electricity" ? "selected" : null)">Electricity</option>
+                <option value="Maintenance" selected="@(Context.Request.Query["FineService"] == "Maintenance" ? "selected" : null)">Maintenance</option>
+            </select>
         </div>
 
         <div class="col-md-2">
@@ -67,43 +82,56 @@
 
 
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>BT No</th>
-            <th>Customer Name</th>
-            <th>Project</th>
-            <th>Month/Year</th>
-            
-            <th>Service</th>
-            <th>Amount</th>
-            <th>Fine By</th>
-            <th>Date</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var fine in Model)
-        {
-            <tr ondblclick="openDetails(@fine.FineID)" data-id="@fine.FineID">
-                <td>@fine.BTNo</td>
-                <td>@fine.CustomerName</td>
-                <td>@fine.ProjectName</td>
-                <td>@fine.FineMonth / @fine.FineYear</td>
-              
-                <td>@fine.FineService</td>
-                <td>@fine.FineToCharge</td>
-                <td>@fine.FineEnteredBy</td>
-                <td>@fine.FineEnterDate.ToString("yyyy-MM-dd")</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@fine.FineID" class="btn btn-info btn-sm">View</a>
-                    <a asp-action="Edit" asp-route-id="@fine.FineID" class="btn btn-warning btn-sm">Edit</a>
-                    @* <a asp-action="Delete" asp-route-id="@fine.FineID" class="btn btn-danger btn-sm">Delete</a> *@
-                </td>
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>BT No</th>
+                <th>Customer Name</th>
+                <th>Project</th>
+                <th>Month/Year</th>
+                <th>Service</th>
+                <th>Amount</th>
+                <th>Fine By</th>
+                <th>Date</th>
+                <th>Action</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var fine in Model)
+            {
+                <tr ondblclick="openDetails(@fine.FineID)" data-id="@fine.FineID">
+                    <td>@fine.BTNo</td>
+                    <td>@fine.CustomerName</td>
+                    <td>@fine.ProjectName</td>
+                    <td>@fine.FineMonth / @fine.FineYear</td>
+                    <td>@fine.FineService</td>
+                    <td>@fine.FineToCharge</td>
+                    <td>@fine.FineEnteredBy</td>
+                    <td>@fine.FineEnterDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@fine.FineID" class="btn btn-info btn-sm">View</a>
+                        <a asp-action="Edit" asp-route-id="@fine.FineID" class="btn btn-warning btn-sm">Edit</a>
+                        @* <a asp-action="Delete" asp-route-id="@fine.FineID" class="btn btn-danger btn-sm">Delete</a> *@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (Context.Request.Query.Any(q => !string.IsNullOrEmpty(q.Value.ToString())))
+{
+    <div class="alert alert-info mt-3">
+        <strong>No records found</strong> for the selected criteria.
+    </div>
+}
+else
+{
+    <div class="alert alert-info mt-3">
+        <strong>Please select search criteria</strong> to view Fine records.
+    </div>
+}
 
 @section Scripts {
     <script>

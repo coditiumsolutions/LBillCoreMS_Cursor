@@ -1,4 +1,4 @@
-﻿using BMSBT.Models;
+using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,15 +26,26 @@ namespace BMSBT.Controllers
 
 
 
-        public IActionResult Index(string BTNo, string CustomerName, string FineMonth, string FineYear)
+        public IActionResult Index(string BTNo, string FineService, string FineMonth, string FineYear)
         {
+            // Initially return empty list if no filters are provided
+            bool hasFilters = !string.IsNullOrEmpty(BTNo) ||
+                              !string.IsNullOrEmpty(FineService) ||
+                              !string.IsNullOrEmpty(FineMonth) ||
+                              !string.IsNullOrEmpty(FineYear);
+
+            if (!hasFilters)
+            {
+                return View(new List<Fine>());
+            }
+
             var fines = _dbContext.Fine.AsQueryable();
 
             if (!string.IsNullOrEmpty(BTNo))
-                fines = fines.Where(f => f.BTNo.Contains(BTNo));
+                fines = fines.Where(f => f.BTNo != null && f.BTNo.Contains(BTNo));
 
-            if (!string.IsNullOrEmpty(CustomerName))
-                fines = fines.Where(f => f.CustomerName.Contains(CustomerName));
+            if (!string.IsNullOrEmpty(FineService))
+                fines = fines.Where(f => f.FineService == FineService);
 
             if (!string.IsNullOrEmpty(FineMonth))
                 fines = fines.Where(f => f.FineMonth == FineMonth);
@@ -45,6 +56,57 @@ namespace BMSBT.Controllers
             var model = fines.ToList();
 
             return View(model);
+        }
+
+
+        // GET: Fine/Summary
+        public IActionResult Summary(string FineMonth, string FineYear, string FineService)
+        {
+            ViewBag.FineMonth = FineMonth;
+            ViewBag.FineYear = FineYear;
+            ViewBag.FineService = FineService;
+
+            bool hasFilters = !string.IsNullOrEmpty(FineMonth) &&
+                              !string.IsNullOrEmpty(FineYear) &&
+                              !string.IsNullOrEmpty(FineService);
+
+            ViewBag.HasFilters = hasFilters;
+
+            if (!hasFilters)
+            {
+                ViewBag.HasResult = false;
+                ViewBag.TotalFine = 0;
+                ViewBag.Breakdown = null;
+                return View();
+            }
+
+            var query = _dbContext.Fine.AsQueryable();
+
+            query = query.Where(f =>
+                f.FineMonth == FineMonth &&
+                f.FineYear.ToString() == FineYear &&
+                f.FineService == FineService);
+
+            bool any = query.Any();
+            int total = any ? query.Sum(f => f.FineToCharge) : 0;
+
+            // Breakdown by Fine Type
+            Dictionary<string, int> breakdown = null;
+            if (any)
+            {
+                breakdown = query
+                    .GroupBy(f => string.IsNullOrEmpty(f.FineType) ? "Other" : f.FineType)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Sum(x => x.FineToCharge)
+                    );
+            }
+
+            ViewBag.HasResult = any;
+            ViewBag.TotalFine = total;
+            ViewBag.Breakdown = breakdown;
+
+            return View();
         }
 
 
@@ -223,6 +285,9 @@ namespace BMSBT.Controllers
         // GET: Fine/Create
         public IActionResult Create(string btNo)
         {
+            // Clear any existing ModelState errors on GET request
+            ModelState.Clear();
+            
             var fine = new Fine
             {
                 BTNo = btNo // pre-fill the BTNo field if value exists
@@ -245,11 +310,22 @@ namespace BMSBT.Controllers
 
             if (ModelState.IsValid)
             {
-                _dbContext.Fine.Add(fine);
-                await _dbContext.SaveChangesAsync();
+                try
+                {
+                    _dbContext.Fine.Add(fine);
+                    await _dbContext.SaveChangesAsync();
 
-                return RedirectToAction("Index"); // Or another view as needed
+                    TempData["SuccessMessage"] = "Fine record saved successfully!";
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while saving: " + ex.Message);
+                    return View(fine);
+                }
             }
+            
+            // If validation fails, return view with errors
             return View(fine);
         }
 

@@ -199,8 +199,24 @@ namespace BMSBT.BillServices
             decimal taxDec = tax;
             decimal actualArrearDec = ArrearAmount ?? 0m;
 
-            // 1) Bill due on‑time: BillAmountInDueDate = Charges + Tax + Arrears
-            decimal billInDueDate = Math.Round(amountDec + taxDec + actualArrearDec, 0);
+            // Look up Maintenance fines for this BTNo/FineMonth/FineYear
+            int parsedYear;
+            int.TryParse(year, out parsedYear);
+
+            // Sum FineToCharge from Fine table (this is "Fine" for the bill)
+            var fineTotalInt = _dbContext.Fine
+                .Where(f =>
+                    f.BTNo == customer.BTNo &&
+                    f.FineMonth == month &&
+                    f.FineYear == parsedYear &&
+                    f.FineService == "Maintenance")
+                .Select(f => (int?)f.FineToCharge)
+                .Sum() ?? 0;
+
+            decimal fineTotalDec = fineTotalInt;
+
+            // 1) Bill due on‑time: BillAmountInDueDate = MaintCharges + TaxAmount + Arrears + Fine
+            decimal billInDueDate = Math.Round(amountDec + taxDec + actualArrearDec + fineTotalDec, 0);
 
             // 2) 10% surcharge on (Charges + Tax)
             decimal baseChargesAndTax = amountDec + taxDec;
@@ -227,7 +243,9 @@ namespace BMSBT.BillServices
                 BillAmountAfterDueDate = (int)billAfterDue,
                 TaxAmount = taxAmount,
                 Arrears = arrearsAmt,
-                MaintCharges=amount,
+                MaintCharges = amount,
+                // Store Fine (sum of FineToCharge) into Fine column
+                Fine = fineTotalInt,
                 IssueDate = IssueDate,
                 DueDate = DueDate,
 

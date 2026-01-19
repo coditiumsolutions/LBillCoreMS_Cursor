@@ -252,12 +252,14 @@ namespace BMSBT.Controllers
                     query = query.Where(c => c.BTNo.Contains(btNoSearch));
                 }
 
-                filteredData = query.GroupBy(c => c.Sector)
+                filteredData = query.GroupBy(c => c.Block)
                 .Select(g => new MaintSectorCustomersViewModel
                 {
-                    Sector = g.Key,
+                    Block = g.Key,
                     Customers = g.ToList()
-                 }).ToList();
+                 })
+                .OrderBy(g => g.Block)
+                .ToList();
 
             }
 

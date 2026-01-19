@@ -33,20 +33,33 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         // Lookup tariff based on Project, PlotType, Size
         var tariff = LookupTariff(dto.Project, dto.PlotType, dto.Size);
         
-        // Use tariff values if found, otherwise use safe defaults
-        decimal maintCharges = tariff != null ? (decimal)tariff.Charges : 15m;
-        int taxAmount = tariff != null ? ParseTaxValue(tariff.Tax) : 15;
+        // Use tariff values if found, otherwise use 0 as default
+        decimal maintCharges = tariff != null ? (decimal)tariff.Charges : 0m;
+        int taxAmount = tariff != null ? ParseTaxValue(tariff.Tax) : 0;
 
         // Carry forward arrears logic
         decimal arrears = 0;
+        int fineToChargeSum = 0;
+
         if (!string.IsNullOrEmpty(dto.BillingMonth) && !string.IsNullOrEmpty(dto.BillingYear) && !string.IsNullOrEmpty(dto.BTNo))
         {
             var (prevMonth, prevYear) = GetPreviousMonthYear(dto.BillingMonth, dto.BillingYear);
             arrears = await GetArrearsAmountAsync(dto.BTNo, prevMonth, prevYear, cancellationToken);
+
+            // Dynamic Fine logic: Sum FineToCharge from Fine table for matching BTNo, Month, and Year
+            if (int.TryParse(dto.BillingYear, out int currentYearInt))
+            {
+                fineToChargeSum = await _dbContext.Fine
+                    .Where(f => f.BTNo == dto.BTNo && 
+                               f.FineMonth == dto.BillingMonth && 
+                               f.FineYear == currentYearInt &&
+                               f.FineService == "Maintenance")
+                    .SumAsync(f => f.FineToCharge, cancellationToken);
+            }
         }
 
-        // Calculate billing amounts based on tariff values and arrears
-        var billingCalculations = CalculateBillingAmounts(maintCharges, taxAmount, arrears);
+        // Calculate billing amounts based on tariff values, arrears and fine
+        var billingCalculations = CalculateBillingAmounts(maintCharges, taxAmount, arrears, (decimal)fineToChargeSum);
 
         var bill = new MaintenanceBill
         {
@@ -70,9 +83,9 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
             BillSurcharge = billingCalculations.BillSurcharge,
             BillAmountAfterDueDate = billingCalculations.BillAmountAfterDueDate,
             Arrears = arrears,
-            Fine = 15,
-            OtherCharges = 15,
-            WaterCharges = 15,
+            Fine = fineToChargeSum,
+            OtherCharges = 0,
+            WaterCharges = 0,
 
             // Dates
             // Prefer values provided by caller (e.g., from OperatorsSetup), else fallback to today
@@ -120,16 +133,16 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     }
 
     /// <summary>
-    /// Calculates billing amounts based on maintenance charges and tax amount.
+    /// Calculates billing amounts based on maintenance charges, tax amount, arrears, and fine.
     /// Per Requirement:
-    /// BillAmountInDueDate = Charges + Tax + Arrears
+    /// BillAmountInDueDate = Charges + Tax + Arrears + Fine
     /// BillSurcharge = (Charges + Tax) * 10 / 100
     /// BillAmountAfterDueDate = BillAmountInDueDate + BillSurcharge
     /// </summary>
-    private static BillingCalculations CalculateBillingAmounts(decimal maintCharges, int taxAmount, decimal arrears = 0)
+    private static BillingCalculations CalculateBillingAmounts(decimal maintCharges, int taxAmount, decimal arrears = 0, decimal fine = 0)
     {
-        // Step 1: Calculate BillAmountInDueDate = Charges + Tax + Arrears
-        decimal inDueDateDecimal = maintCharges + taxAmount + arrears;
+        // Step 1: Calculate BillAmountInDueDate = Charges + Tax + Arrears + Fine
+        decimal inDueDateDecimal = maintCharges + taxAmount + arrears + fine;
         int billAmountInDueDate = (int)Math.Round(inDueDateDecimal, MidpointRounding.AwayFromZero);
 
         // Step 2: Calculate Bill Surcharge = 10% of (Charges + Tax) -- Surcharge is usually on the base charges+tax
@@ -199,13 +212,13 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     /// <summary>
     /// Parses Tax string value to integer.
     /// Handles percentage strings (e.g., "15%" -> 15) or numeric strings.
-    /// Returns default value of 15 if parsing fails.
+    /// Returns default value of 0 if parsing fails.
     /// </summary>
     private static int ParseTaxValue(string? taxString)
     {
         if (string.IsNullOrWhiteSpace(taxString))
         {
-            return 15; // Safe default
+            return 0; // Safe default
         }
 
         // Remove percentage sign if present
@@ -224,7 +237,7 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         }
 
         // If all parsing fails, return safe default
-        return 15;
+        return 0;
     }
 
     private static string GenerateInvoiceNo(DateTime now, string? customerNo)

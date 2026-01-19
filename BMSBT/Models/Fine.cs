@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace BMSBT.Models
 {
@@ -8,7 +8,7 @@ namespace BMSBT.Models
         public int FineID { get; set; }
 
         // Customer Info
-        
+        [Required(ErrorMessage = "BT No is required")]
         public string BTNo { get; set; }
 
         [Required(ErrorMessage = "Project Name is required")]
@@ -40,8 +40,7 @@ namespace BMSBT.Models
         [Required(ErrorMessage = "Fine Type is required")]
         public string FineType { get; set; }
 
-        [Required(ErrorMessage = "Fine Category is required")]
-        public string FineCategory { get; set; }
+        public string? FineCategory { get; set; }
 
         [Required(ErrorMessage = "Fine Service is required")]
         public string FineService { get; set; }
@@ -51,8 +50,12 @@ namespace BMSBT.Models
         [Range(1, int.MaxValue, ErrorMessage = "Fine Amount must be greater than 0")]
         public int? FineAmount { get; set; }
 
-        // ✅ Make these nullable since DB may allow NULL
+        [Required(ErrorMessage = "Waived Amount is required")]
+        [Range(0, int.MaxValue, ErrorMessage = "Waived Amount must be 0 or greater")]
         public int? WaivedAmount { get; set; }
+        
+        [Required(ErrorMessage = "Adjustment Amount is required")]
+        [Range(0, int.MaxValue, ErrorMessage = "Adjustment Amount must be 0 or greater")]
         public int? AdjustmentAmount { get; set; }
 
         [Required(ErrorMessage = "Fine To Charge is required")]

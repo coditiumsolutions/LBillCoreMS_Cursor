@@ -1,4 +1,4 @@
-﻿@model MaintenanceBill
+@model MaintenanceBill
 
 <style>
     .invoice-container {
@@ -66,19 +66,45 @@
     </div>
 
     <div class="details-grid">
+        <!-- Basic Information -->
+        <div class="label">Invoice No</div><div>@Model.InvoiceNo</div>
         <div class="label">Customer No</div><div>@Model.CustomerNo</div>
         <div class="label">Customer Name</div><div>@Model.CustomerName</div>
+        <div class="label">BT No</div><div>@Model.Btno</div>
+        <div class="label">Plot Status</div><div>@Model.PlotStatus</div>
+        <div class="label">Meter No</div><div>@Model.MeterNo</div>
+        
+        <!-- Billing Information -->
+        <div class="label">Billing Month</div><div>@Model.BillingMonth</div>
+        <div class="label">Billing Year</div><div>@Model.BillingYear</div>
+        <div class="label">Billing Date</div><div>@Model.BillingDate?.ToString("dd-MM-yyyy")</div>
         <div class="label">Issue Date</div><div>@Model.IssueDate?.ToString("dd-MM-yyyy")</div>
         <div class="label">Due Date</div><div>@Model.DueDate?.ToString("dd-MM-yyyy")</div>
-        <div class="label">Tax Amount</div><div>@Model.TaxAmount?.ToString("C")</div>
-        <div class="label">Bill (Due Date)</div><div>@Model.BillAmountInDueDate?.ToString("C")</div>
-        <div class="label">Bill (After Due)</div><div>@Model.BillAmountAfterDueDate?.ToString("C")</div>
-        <div class="label">Month</div><div>@Model.BillingMonth</div>
-        <div class="label">Year</div><div>@Model.BillingYear</div>
+        <div class="label">Valid Date</div><div>@Model.ValidDate?.ToString("dd-MM-yyyy")</div>
+        
+        <!-- Payment Information -->
+        <div class="label">Payment Status</div><div>@Model.PaymentStatus</div>
+        <div class="label">Payment Date</div><div>@Model.PaymentDate?.ToString("dd-MM-yyyy")</div>
+        <div class="label">Payment Method</div><div>@Model.PaymentMethod</div>
+        <div class="label">Bank Detail</div><div>@Model.BankDetail</div>
+        
+        <!-- Charges -->
+        <div class="label">Maintenance Charges</div><div>@Model.MaintCharges?.ToString("N2")</div>
+        <div class="label">Arrears</div><div>@Model.Arrears?.ToString("N2")</div>
+        <div class="label">Tax Amount</div><div>@Model.TaxAmount?.ToString("N2")</div>
+        <div class="label">Bill Amount (Due Date)</div><div>@Model.BillAmountInDueDate?.ToString("N2")</div>
+        <div class="label">Bill Surcharge</div><div>@Model.BillSurcharge?.ToString("N2")</div>
+        <div class="label">Bill Amount (After Due)</div><div>@Model.BillAmountAfterDueDate?.ToString("N2")</div>
+        <div class="label">Fine</div><div>@Model.Fine?.ToString("N2")</div>
+        <div class="label">Other Charges</div><div>@Model.OtherCharges?.ToString("N2")</div>
+        <div class="label">Water Charges</div><div>@Model.WaterCharges?.ToString("N2")</div>
+        
+        <!-- Other Information -->
+        <div class="label">Last Updated</div><div>@Model.LastUpdated?.ToString("dd-MM-yyyy HH:mm:ss")</div>
         <div class="label">History</div><div style="grid-column: span 3;">@Model.History</div>
     </div>
 
     <div class="invoice-footer">
-        <a href="@Url.Action("MaintenanceBillsSearch", "MaintenanceNew")" class="btn-secondary">Back to List</a>
+        <a href="@Url.Action("SearchBill", "MaintenanceNew")" class="btn-secondary">Back to List</a>
     </div>
 </div>
