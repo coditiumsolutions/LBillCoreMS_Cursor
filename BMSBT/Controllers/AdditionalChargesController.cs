@@ -1,6 +1,8 @@
 using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
 {
@@ -13,14 +15,24 @@ namespace BMSBT.Controllers
             _dbContext = context;
         }
 
-        // GET: AdditionalCharges
-        public async Task<IActionResult> Index()
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
         {
-            var items = await _dbContext.AdditionalCharges
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            base.OnActionExecuting(context);
+        }
+
+        // GET: AdditionalCharges
+        public IActionResult Index(int? page)
+        {
+            int pageSize = 20;
+            int pageNumber = page ?? 1;
+
+            var items = _dbContext.AdditionalCharges
                 .OrderBy(a => a.BTNo)
                 .ThenBy(a => a.ServiceType)
                 .ThenBy(a => a.ChargesName)
-                .ToListAsync();
+                .ToPagedList(pageNumber, pageSize);
 
             return View(items);
         }

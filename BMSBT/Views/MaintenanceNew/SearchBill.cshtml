@@ -75,7 +75,7 @@
 }
 
 <!-- Filter Form (for Month/Year) -->
-<form method="post" action="@Url.Action("SearchBill", "MaintenanceNew")">
+<form id="searchForm" method="post" action="@Url.Action("SearchBill", "MaintenanceNew")">
     <div class="row">
         <div class="col-md-3">
             <label for="month" class="form-label">Month:</label>
@@ -83,7 +83,7 @@
                 <option value="">-- Choose Month --</option>
                 @foreach (var monthName in System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
                 {
-                    <option value="@monthName">@monthName</option>
+                    <option value="@monthName" selected="@(monthName == ViewBag.SelectedMonth ? "selected" : null)">@monthName</option>
                 }
             </select>
         </div>
@@ -93,18 +93,18 @@
                 <option value="">-- Choose Year --</option>
                 @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 10; i--)
                 {
-                    <option value="@i">@i</option>
+                    <option value="@i" selected="@(i.ToString() == ViewBag.SelectedYear ? "selected" : null)">@i</option>
                 }
             </select>
         </div>
         <div class="col-md-3">
             <label for="btno" class="form-label">BTNo:</label>
-            <input type="text" id="btno" name="btno" class="form-control" placeholder="Enter BTNo"  />
+            <input type="text" id="btno" name="btno" class="form-control" placeholder="Enter BTNo" value="@ViewBag.SelectedBtNo" />
         </div>
         <div class="col-md-3 d-flex align-items-end">
             <div class="w-100 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-50" style="margin-left:-10px">Search</button>
-                <button id="PrintRecordsButton" type="button" class="btn btn-secondary w-50" style="margin-right:10px">Print Bill</button>
+                <button type="submit" class="btn btn-primary w-50" style="margin-left:-10px; height: 32px; padding: 0;">Search</button>
+                <button id="PrintRecordsButton" type="button" class="btn btn-secondary w-50" style="margin-right:10px; height: 32px; padding: 0;">Print Bill</button>
             </div>
         </div>
     </div>
@@ -350,6 +350,32 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            // Restore search state from sessionStorage if it exists and current grid is empty
+            var savedSearch = sessionStorage.getItem('maintenanceSearchState');
+            var isPost = "@Context.Request.Method" === "POST";
+            
+            if (savedSearch && !isPost) {
+                var state = JSON.parse(savedSearch);
+                $('#month').val(state.month);
+                $('#year').val(state.year);
+                $('#btno').val(state.btno);
+                
+                // Automatically resubmit if we have enough criteria
+                if (state.month && state.year || state.btno) {
+                    $('#searchForm').submit();
+                }
+            }
+
+            // Save search state on form submission
+            $('#searchForm').on('submit', function() {
+                var state = {
+                    month: $('#month').val(),
+                    year: $('#year').val(),
+                    btno: $('#btno').val()
+                };
+                sessionStorage.setItem('maintenanceSearchState', JSON.stringify(state));
+            });
+
             // Toggle functionality for Project, Block, and Category rows
             $('.project-header').click(function () {
                 var projectId = $(this).data('project');

@@ -33,6 +33,13 @@ namespace BMSBT.Controllers
         
         }
 
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            base.OnActionExecuting(context);
+        }
+
 
 
 
@@ -40,90 +47,27 @@ namespace BMSBT.Controllers
 
         public IActionResult Index(string selectedYear, string selectedMonth)
         {
-
-            ViewBag.Years = new List<SelectListItem>
-    {
-        new SelectListItem { Value = "2025", Text = "2025" },
-        new SelectListItem { Value = "2026", Text = "2026" }
-    };
-
-            ViewBag.Months = new List<SelectListItem>
-    {
-                 new SelectListItem { Value = "January", Text = "January" },
-                 new SelectListItem { Value = "February", Text = "February" },
-                 new SelectListItem { Value = "March", Text = "March" },
-                 new SelectListItem { Value = "April", Text = "April" },
-                 new SelectListItem { Value = "May", Text = "May" },
-                 new SelectListItem { Value = "June", Text = "June" },
-                 new SelectListItem { Value = "July", Text = "July" },
-                 new SelectListItem { Value = "August", Text = "August" },
-                 new SelectListItem { Value = "September", Text = "September" },
-                 new SelectListItem { Value = "October", Text = "October" },
-                 new SelectListItem { Value = "November", Text = "November" },
-                 new SelectListItem { Value = "December", Text = "December" }
-
-
-
-    };
+            // Defaults to current month/year if none provided
+            if (string.IsNullOrEmpty(selectedYear)) selectedYear = DateTime.Now.Year.ToString();
+            if (string.IsNullOrEmpty(selectedMonth)) selectedMonth = DateTime.Now.ToString("MMMM");
 
             // Retain the selected values
             ViewBag.SelectedYear = selectedYear;
             ViewBag.SelectedMonth = selectedMonth;
 
-
-            // Check if both filters are provided
-            if (string.IsNullOrEmpty(selectedYear) || string.IsNullOrEmpty(selectedMonth))
-            {
-                // Return empty data for the graph
-                ViewBag.ChartLabels = new List<string>();
-                ViewBag.ChartData = new List<int>();
-                return View();
-            }
-
-
-            // ViewBag.Years = _context.ReadingSheets
-            //.Select(r => r.Year)
-            //.Distinct()
-            //.OrderBy(y => y) // Ensure they are sorted
-            //.ToList();
-
-            //     ViewBag.Months = _context.ReadingSheets
-            //         .Select(r => r.Month)
-            //         .Distinct()
-            //         .ToList();
-
-            // Filter data based on selected year and month
-            var filteredData = _dbContext.ReadingSheets.AsQueryable();
-
-            if (!string.IsNullOrEmpty(selectedYear))
-            {
-                filteredData = filteredData.Where(r => r.Year == selectedYear);
-            }
-
-            if (!string.IsNullOrEmpty(selectedMonth))
-            {
-                filteredData = filteredData.Where(r => r.Month == selectedMonth && r.Year == selectedYear);
-            }
-
-            // Generate the data for the graph
-            var totalMeters = filteredData.Count();
-
-            var readingSheetData = filteredData
-                .GroupBy(c => c.MeterType)
-                .Select(group => new
+            // Display total number of customers by project
+            var customerCountsByProject = _dbContext.CustomersMaintenance
+                .GroupBy(c => c.Project)
+                .Select(g => new
                 {
-                    meters = group.Key,
-                    Total = group.Count()
+                    Project = g.Key,
+                    Count = g.Count()
                 })
+                .OrderBy(g => g.Project)
                 .ToList();
 
-            var totalAllSubProjects = readingSheetData.Sum(x => x.Total);
+            ViewBag.ProjectCustomerCounts = customerCountsByProject;
 
-            // Prepare data for the chart
-            ViewBag.ChartLabels = readingSheetData.Select(x => x.meters).ToList();
-            ViewBag.ChartLabels.Add("All SubProjects"); // Add a label for the total
-            ViewBag.ChartData = readingSheetData.Select(x => x.Total).ToList();
-            ViewBag.ChartData.Add(totalMeters); // Add the total as a separate data point
 
             // Maintenance Bills summary (Generated, Paid, Unpaid) based on selected month/year
             var billsQuery = _dbContext.MaintenanceBills.AsQueryable();
@@ -139,12 +83,21 @@ namespace BMSBT.Controllers
             }
 
             int totalBills = billsQuery.Count();
-            int paidBills = billsQuery.Count(b => b.PaymentStatus == "Paid" || b.PaymentStatus == "Paid with Surcharge");
-            int unpaidBills = totalBills - paidBills;
+            decimal totalAmountGenerated = billsQuery.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+
+            var paidBillsQuery = billsQuery.Where(b => b.PaymentStatus == "Paid" || b.PaymentStatus == "Paid with Surcharge");
+            int paidBillsCount = paidBillsQuery.Count();
+            decimal totalAmountCollected = paidBillsQuery.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+
+            int unpaidBillsCount = totalBills - paidBillsCount;
+            decimal unpaidAmount = totalAmountGenerated - totalAmountCollected;
 
             ViewBag.TotalBills = totalBills;
-            ViewBag.PaidBills = paidBills;
-            ViewBag.UnpaidBills = unpaidBills;
+            ViewBag.TotalAmountGenerated = totalAmountGenerated;
+            ViewBag.TotalBillsPaid = paidBillsCount;
+            ViewBag.TotalAmountCollected = totalAmountCollected;
+            ViewBag.UnpaidBillsCount = unpaidBillsCount;
+            ViewBag.BillUnpaidAmount = unpaidAmount;
 
             return View();
         }
@@ -158,17 +111,11 @@ namespace BMSBT.Controllers
                 .OrderBy(p => p)
                 .ToList();
 
-            var customers = _dbContext.CustomersMaintenance
-                .OrderBy(c => c.Project)
-                .ThenBy(c => c.Block)
-                .ThenBy(c => c.BTNo)
-                .ToList();
-
             var model = new MaintenanceCustomerFilterViewModel
             {
                 Projects = projects,
                 Blocks = new List<string>(),
-                Customers = customers
+                Customers = new List<CustomersMaintenance>().ToPagedList(1, 20)
             };
 
             return View(model);
@@ -194,7 +141,7 @@ namespace BMSBT.Controllers
         }
 
         [HttpGet]
-        public PartialViewResult FilterCustomers(string project, string block, string btNo)
+        public PartialViewResult FilterCustomers(string project, string block, string btNo, int? page)
         {
             var query = _dbContext.CustomersMaintenance.AsQueryable();
 
@@ -213,19 +160,43 @@ namespace BMSBT.Controllers
                 query = query.Where(c => c.BTNo != null && c.BTNo.Contains(btNo));
             }
 
+            int pageSize = 20;
+            int pageNumber = (page ?? 1);
+
             var customers = query
                 .OrderBy(c => c.Project)
                 .ThenBy(c => c.Block)
                 .ThenBy(c => c.BTNo)
-                .ToList();
+                .ToPagedList(pageNumber, pageSize);
 
             return PartialView("_MaintenanceCustomersGrid", customers);
         }
 
 
 
-        public IActionResult GenerateBill(string selectedProject, string btNoSearch)
+        public async Task<IActionResult> GenerateBill(string selectedProject, string btNoSearch)
         {
+            // Set Operator Name, Billing Month, Billing Year from session and Operators Setup
+            string userName = HttpContext.Session.GetString("UserName");
+            
+            // 1. Force the displayed Operator Name to match the logged-in session user (e.g., "shahid")
+            ViewBag.OperatorName = userName;
+
+            if (!string.IsNullOrEmpty(userName))
+            {
+                // 2. Fetch the billing month and year from the setup that matches this user
+                var operatorSetup = _dbContext.OperatorsSetups
+                    .AsEnumerable()
+                    .FirstOrDefault(o => string.Equals(o.OperatorName?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase)
+                                      || string.Equals(o.OperatorID?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (operatorSetup != null)
+                {
+                    ViewBag.BillingMonth = operatorSetup.BillingMonth;
+                    ViewBag.BillingYear = operatorSetup.BillingYear;
+                }
+            }
+
             // Dropdown projects
             var projects = _dbContext.CustomersMaintenance
                 .Select(p => p.Project.Trim())
@@ -869,6 +840,10 @@ namespace BMSBT.Controllers
 
         public IActionResult SearchBill(string? month, string? year, string? BtNo)
         {
+            ViewBag.SelectedMonth = month;
+            ViewBag.SelectedYear = year;
+            ViewBag.SelectedBtNo = BtNo;
+
             // If nothing is provided
             if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
             {
@@ -950,6 +925,59 @@ namespace BMSBT.Controllers
 
             var pagedBills = billsList.ToPagedList(1, 5000);
             return View("SearchBill", pagedBills);
+        }
+
+        [HttpGet]
+        public IActionResult Operations(string? month, string? year, string? btno)
+        {
+            var model = new MaintenanceOperationsViewModel
+            {
+                BillingMonth = month,
+                BillingYear = year,
+                Btno = btno
+            };
+
+            if (!string.IsNullOrEmpty(btno) && !string.IsNullOrEmpty(month) && !string.IsNullOrEmpty(year))
+            {
+                var bill = _dbContext.MaintenanceBills
+                    .FirstOrDefault(b => b.Btno == btno.Trim() && b.BillingMonth == month && b.BillingYear == year);
+
+                if (bill != null)
+                {
+                    model.Bill = bill;
+                    model.Customer = _dbContext.CustomersMaintenance
+                        .FirstOrDefault(c => c.BTNo == btno.Trim());
+                }
+                else
+                {
+                    model.ErrorMessage = "No Bill Found";
+                }
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult UpdatePaymentStatus(int billUid, string status)
+        {
+            var bill = _dbContext.MaintenanceBills.Find(billUid);
+            if (bill != null)
+            {
+                bill.PaymentStatus = status;
+                bill.LastUpdated = DateTime.Now;
+                _dbContext.SaveChanges();
+                TempData["SuccessMessage"] = "Payment status updated successfully";
+
+                return RedirectToAction("Operations", new
+                {
+                    month = bill.BillingMonth,
+                    year = bill.BillingYear,
+                    btno = bill.Btno
+                });
+            }
+
+            TempData["ErrorMessage"] = "Bill not found for update";
+            return RedirectToAction("Operations");
         }
     }
 }

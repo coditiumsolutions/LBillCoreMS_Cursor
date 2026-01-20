@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -181,6 +181,12 @@ namespace BMSBT.Controllers
             //  if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             if (user != null && user.PasswordHash == password)
             {
+                // Create session
+                HttpContext.Session.SetString("UserName", user.Username);
+                HttpContext.Session.SetString("Role", user.Role ?? "");
+                HttpContext.Session.SetString("OperatorId", user.EmployeeId ?? "");
+                HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString("hh:mm tt"));
+
                 var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),

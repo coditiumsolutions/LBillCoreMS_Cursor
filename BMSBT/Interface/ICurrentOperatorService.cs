@@ -1,4 +1,4 @@
-﻿// 1. Create a model to hold operator data
+// 1. Create a model to hold operator data
 using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -81,6 +81,7 @@ public class CurrentOperatorService : ICurrentOperatorService
             {
                 BillingMonth = operatorData.BillingMonth,   
                 BillingYear = operatorData.BillingYear, 
+                OperatorName = operatorData.OperatorName,
                 IssueDate=operatorData.IssueDate,
                 DueDate=operatorData.DueDate,
                 FPARate1=operatorData.FPARate1,

@@ -24,12 +24,12 @@ namespace BMSBT.Controllers
         //[Authorize]
         public IActionResult Index()
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
 
-            ViewBag.Username = HttpContext.Session.GetString("UserName");
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
             ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
             return View();
         }

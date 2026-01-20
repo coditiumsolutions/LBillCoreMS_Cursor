@@ -31,6 +31,13 @@ namespace BMSBT.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            base.OnActionExecuting(context);
+        }
+
 
 
 

@@ -36,6 +36,13 @@ namespace BMSBT.Controllers
 
         }
 
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            base.OnActionExecuting(context);
+        }
+
         public IActionResult CustomerForm()
         {
             return View();
@@ -44,12 +51,11 @@ namespace BMSBT.Controllers
 
         public IActionResult Index(string project, string sector, string block, int? page)
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
-            ViewBag.Username = HttpContext.Session.GetString("UserName");
-            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+
 
             // Populate dropdown data
             ViewBag.Projects = _dbContext.Configurations
@@ -575,7 +581,7 @@ namespace BMSBT.Controllers
         [Route("Maintenance/MaintTariff")]
         public IActionResult MaintTariff(string project, string plotType, int? page)
         {
-            int pageSize = 500; // Number of records per page
+            int pageSize = 20; // Number of records per page
             int pageNumber = (page ?? 1); // If no page is specified, default to the first page
 
             var query = _dbContext.MaintenanceTarrifs.AsQueryable();

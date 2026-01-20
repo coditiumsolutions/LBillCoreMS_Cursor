@@ -1,4 +1,4 @@
-﻿using BMSBT.DTO;
+using BMSBT.DTO;
 using BMSBT.Models;
 using BMSBT.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -119,6 +119,24 @@ namespace BMSBT.Controllers
 
         public IActionResult GenerateBill(string selectedProject, string btNoSearch)
         {
+            // Set Operator Name, Billing Month, Billing Year from session and Operators Setup
+            string userName = HttpContext.Session.GetString("UserName");
+            ViewBag.OperatorName = userName;
+
+            if (!string.IsNullOrEmpty(userName))
+            {
+                var operatorSetup = _dbContext.OperatorsSetups
+                    .AsEnumerable()
+                    .FirstOrDefault(o => string.Equals(o.OperatorName?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase)
+                                      || string.Equals(o.OperatorID?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (operatorSetup != null)
+                {
+                    ViewBag.BillingMonth = operatorSetup.BillingMonth;
+                    ViewBag.BillingYear = operatorSetup.BillingYear;
+                }
+            }
+
             // Dropdown projects
             var projects = _dbContext.CustomersDetails
                 .Select(p => p.Project.Trim())

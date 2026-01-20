@@ -1,4 +1,6 @@
-@model IEnumerable<BMSBT.Models.AdditionalCharge>
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BMSBT.Models.AdditionalCharge>
 @{
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
     ViewData["Title"] = "Additional Charges";
@@ -17,7 +19,7 @@
             </div>
         }
 
-        @if (!Model.Any())
+        @if (Model == null || !Model.Any())
         {
             <p>No additional charges found.</p>
         }
@@ -50,6 +52,19 @@
                     }
                 </tbody>
             </table>
+
+            <div class="d-flex justify-content-center">
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), new PagedListRenderOptions
+                {
+                    LiElementClasses = new string[] { "page-item" },
+                    PageClasses = new string[] { "page-link" },
+                    DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+                    DisplayLinkToLastPage = PagedListDisplayMode.Always,
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                    DisplayEllipsesWhenNotShowingAllPageNumbers = true
+                })
+            </div>
         }
     </div>
 </div>

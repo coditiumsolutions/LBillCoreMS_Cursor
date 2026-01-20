@@ -30,37 +30,26 @@
                     }
                 </select>
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label for="btnoSearch">BTNo</label>
                 <input type="text" id="btnoSearch" class="form-control" placeholder="Search by BTNo" />
+            </div>
+            <div class="form-group col-md-1 d-flex align-items-end">
+                <button type="button" id="btnSearch" class="btn btn-primary btn-block">Search</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>BTNo</th>
-                <th>Customer Name</th>
-                <th>Project</th>
-                <th>Block</th>
-                <th>Category</th>
-                <th>Size</th>
-            </tr>
-        </thead>
-        <tbody id="customersGrid">
-            @await Html.PartialAsync("_MaintenanceCustomersGrid", Model.Customers)
-        </tbody>
-    </table>
+<div id="gridContainer">
+    @await Html.PartialAsync("_MaintenanceCustomersGrid", Model.Customers)
 </div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            function loadBlocks(project) {
-                $.get('@Url.Action("GetBlocksByProject", "MaintenanceNew")',
+            function loadBlocks(project, selectedBlock) {
+                return $.get('@Url.Action("GetBlocksByProject", "MaintenanceNew")',
                     { project: project },
                     function (data) {
                         var $block = $('#blockFilter');
@@ -69,39 +58,78 @@
                         $.each(data, function (i, b) {
                             $block.append($('<option>').val(b).text(b));
                         });
+                        if (selectedBlock) {
+                            $block.val(selectedBlock);
+                        }
                     });
             }
 
-            function loadCustomers() {
+            function loadCustomers(page) {
                 var project = $('#projectFilter').val();
                 var block = $('#blockFilter').val();
                 var btno = $('#btnoSearch').val();
 
+                // Save search state
+                var searchState = {
+                    project: project,
+                    block: block,
+                    btno: btno,
+                    page: page
+                };
+                sessionStorage.setItem('maintCustomerSearchState', JSON.stringify(searchState));
+
                 $.get('@Url.Action("FilterCustomers", "MaintenanceNew")',
-                    { project: project, block: block, btNo: btno },
+                    { project: project, block: block, btNo: btno, page: page },
                     function (html) {
-                        $('#customersGrid').html(html);
+                        $('#gridContainer').html(html);
                     });
             }
 
             $('#projectFilter').change(function () {
                 var project = $(this).val();
                 loadBlocks(project);
-                loadCustomers();
             });
 
-            $('#blockFilter').change(function () {
-                loadCustomers();
+            $('#btnSearch').click(function () {
+                loadCustomers(1);
             });
 
-            var typingTimer;
-            $('#btnoSearch').on('keyup', function () {
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(loadCustomers, 300);
+            // Handle pagination clicks via AJAX
+            $(document).on('click', '.pagination a', function (e) {
+                e.preventDefault();
+                var href = $(this).attr('href');
+                if (href) {
+                    var url = new URL(href, window.location.origin);
+                    var page = url.searchParams.get("page");
+                    loadCustomers(page);
+                }
             });
 
-            // initial load
-            loadCustomers();
+            // Double-click event handler for viewing customer details
+            $(document).on('dblclick', '#customersTable tbody tr', function () {
+                var customerId = $(this).data('id');
+                if (customerId) {
+                    window.location.href = '@Url.Action("Details", "CustomersMaintenance")/' + customerId;
+                }
+            });
+
+            // Restore search state if it exists
+            var savedState = sessionStorage.getItem('maintCustomerSearchState');
+            if (savedState) {
+                var state = JSON.parse(savedState);
+                $('#projectFilter').val(state.project);
+                $('#btnoSearch').val(state.btno);
+                
+                if (state.project) {
+                    loadBlocks(state.project, state.block).then(function() {
+                        loadCustomers(state.page || 1);
+                    });
+                } else {
+                    if (state.btno) {
+                        loadCustomers(state.page || 1);
+                    }
+                }
+            }
         });
     </script>
 }

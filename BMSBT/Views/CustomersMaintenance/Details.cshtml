@@ -1,0 +1,153 @@
+@model BMSBT.Models.CustomersMaintenance
+
+@{
+    ViewData["Title"] = "Maintenance Customer Details";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.15);
+        font-family: Arial, sans-serif;
+        margin-bottom: 20px;
+    }
+
+    .custom-table th {
+        background-color: #00bfff;
+        color: #000000;
+        font-weight: bold;
+        padding: 12px;
+        text-align: left;
+        width: 20%;
+    }
+
+    .custom-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+        background-color: #f9f9f9;
+        width: 30%;
+    }
+
+    .custom-table tr:nth-child(odd) td {
+        background-color: #fffbe6;
+    }
+
+    .custom-table tr:hover td {
+        background-color: #dff9fb;
+    }
+
+    h3 {
+        color: #2c3e50;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .btn-container {
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    .btn-warning {
+        background-color: #f39c12;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #7f8c8d;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background-color: #e67e22;
+    }
+
+    .btn-secondary:hover {
+        background-color: #636e72;
+    }
+</style>
+
+<div class="container-fluid">
+    <h3>Maintenance Customer Details</h3>
+
+    <table class="custom-table">
+        <tr>
+            <th>Customer No</th>
+            <td>@Model.CustomerNo</td>
+            <th>BT No</th>
+            <td>@Model.BTNo</td>
+        </tr>
+        <tr>
+            <th>Customer Name</th>
+            <td>@Model.CustomerName</td>
+            <th>Father Name</th>
+            <td>@Model.FatherName</td>
+        </tr>
+        <tr>
+            <th>CNIC No</th>
+            <td>@Model.CNICNo</td>
+            <th>Mobile No</th>
+            <td>@Model.MobileNo</td>
+        </tr>
+        <tr>
+            <th>Project</th>
+            <td>@Model.Project</td>
+            <th>SubProject</th>
+            <td>@Model.SubProject</td>
+        </tr>
+        <tr>
+            <th>Block</th>
+            <td>@Model.Block</td>
+            <th>Sector</th>
+            <td>@Model.Sector</td>
+        </tr>
+        <tr>
+            <th>Plot No</th>
+            <td>@Model.PloNo</td>
+            <th>Plot Type</th>
+            <td>@Model.PlotType</td>
+        </tr>
+        <tr>
+            <th>Category</th>
+            <td>@Model.Category</td>
+            <th>Size</th>
+            <td>@Model.Size</td>
+        </tr>
+        <tr>
+            <th>Tariff Name</th>
+            <td>@Model.TariffName</td>
+            <th>Meter No</th>
+            <td>@Model.MeterNo</td>
+        </tr>
+        <tr>
+            <th>City</th>
+            <td>@Model.City</td>
+            <th>Installed On</th>
+            <td>@Model.InstalledOn</td>
+        </tr>
+        <tr>
+            <th>Maintenance BT No</th>
+            <td>@Model.BTNoMaintenance</td>
+            <th>Bill Status</th>
+            <td>@Model.BillStatusMaint</td>
+        </tr>
+    </table>
+
+    <div class="btn-container">
+        <a href="@Url.Action("Edit", "CustomersMaintenance", new { id = Model.Uid })" class="btn btn-warning">Edit</a>
+        <a href="@Url.Action("CustomersMaintenance", "MaintenanceNew")" class="btn btn-secondary">Back to Grid</a>
+    </div>
+</div>

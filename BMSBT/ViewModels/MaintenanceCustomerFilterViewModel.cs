@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BMSBT.Models;
+using X.PagedList;
 
 namespace BMSBT.ViewModels
 {
@@ -13,8 +14,7 @@ namespace BMSBT.ViewModels
         public List<string> Projects { get; set; } = new List<string>();
         public List<string> Blocks { get; set; } = new List<string>();
 
-        public IEnumerable<CustomersMaintenance> Customers { get; set; }
-            = Enumerable.Empty<CustomersMaintenance>();
+        public IPagedList<CustomersMaintenance> Customers { get; set; }
     }
 }
 

@@ -157,7 +157,12 @@
                         </a>
                     </li>
 
-
+                    <li>
+                        <a asp-controller="MaintenanceNew" asp-action="Operations">
+                            <i class="fas fa-tasks" style="color: yellowgreen; font-size: 14px;"></i>
+                            Operations
+                        </a>
+                    </li>
 
                     <li>
                         <a href="@Url.Action("PrintMMultiBills", "MaintenanceNew")">
@@ -166,12 +171,6 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="AdditionalCharges" asp-action="Index">
-                            <i class='fas fa-plus-circle' style="color: yellowgreen; font-size: 14px;"></i>
-                            Additional Charges
-                        </a>
-                    </li>
                     <!-- Twistee with collapsible internal links (Maintenance) -->
                     <li class="nav-item">
                         <a class="nav-link d-flex justify-content-between align-items-center"
@@ -209,6 +208,13 @@
                                     <a asp-controller="Maintenance" asp-action="MaintTariff">
                                         <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
                                         Setup Rates
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a asp-controller="AdditionalCharges" asp-action="Index">
+                                        <i class='fas fa-plus-circle' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Additional Charges
                                     </a>
                                 </li>
                             </ul>

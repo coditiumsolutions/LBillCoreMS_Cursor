@@ -1,0 +1,138 @@
+@model BMSBT.ViewModels.MaintenanceOperationsViewModel
+@{
+    ViewData["Title"] = "Operations";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Maintenance Operations</h6>
+        </div>
+        <div class="card-body">
+            <!-- Search Area -->
+            <form method="get" asp-action="Operations">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label font-weight-bold">Billing Month</label>
+                        <select name="month" class="form-control" required>
+                            <option value="">-- Choose Month --</option>
+                            @foreach (var m in System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
+                            {
+                                <option value="@m" selected="@(m == Model.BillingMonth)">@m</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label font-weight-bold">Billing Year</label>
+                        <select name="year" class="form-control" required>
+                            <option value="">-- Choose Year --</option>
+                            @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 5; i--)
+                            {
+                                <option value="@i" selected="@(i.ToString() == Model.BillingYear)">@i</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label font-weight-bold">BTNo</label>
+                        <input type="text" name="btno" class="form-control" placeholder="Enter BTNo" value="@Model.Btno" required />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <hr />
+
+            <!-- Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage) || TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @(Model.ErrorMessage ?? TempData["ErrorMessage"])
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+            <!-- Bill Details -->
+            @if (Model.Bill != null)
+            {
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <table class="table table-bordered table-sm">
+                            <tr>
+                                <th class="bg-light" style="width: 40%;">BTNo</th>
+                                <td>@Model.Bill.Btno</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Customer Name</th>
+                                <td>@Model.Bill.CustomerName</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Payment Status</th>
+                                <td>
+                                    <span class="badge @(Model.Bill.PaymentStatus == "Paid" ? "badge-success" : "badge-warning")">
+                                        @Model.Bill.PaymentStatus
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Project</th>
+                                <td>@Model.Customer?.Project</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-bordered table-sm">
+                            <tr>
+                                <th class="bg-light" style="width: 40%;">SubProject</th>
+                                <td>@Model.Customer?.SubProject</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Block</th>
+                                <td>@Model.Customer?.Block</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Plot No</th>
+                                <td>@Model.Customer?.PloNo</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Size</th>
+                                <td>@Model.Customer?.Size</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6 class="font-weight-bold mb-3">Update Payment Status:</h6>
+                        <form method="post" asp-action="UpdatePaymentStatus">
+                            <input type="hidden" name="billUid" value="@Model.Bill.Uid" />
+                            <div class="btn-group w-100" role="group">
+                                <button type="submit" name="status" value="Paid" class="btn btn-success">Paid</button>
+                                <button type="submit" name="status" value="PaidWithSurcharge" class="btn btn-info">Paid with Surcharge</button>
+                                <button type="submit" name="status" value="PartiallyPaid" class="btn btn-warning text-white">Partially Paid</button>
+                                <button type="submit" name="status" value="Unpaid" class="btn btn-danger">Unpaid</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

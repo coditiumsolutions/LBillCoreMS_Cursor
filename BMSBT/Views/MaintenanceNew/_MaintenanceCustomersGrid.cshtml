@@ -1,21 +1,51 @@
-@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+@using X.PagedList.Mvc.Core
+@using X.PagedList
+@model IPagedList<BMSBT.Models.CustomersMaintenance>
 
-@foreach (var item in Model)
-{
-    <tr>
-        <td>@item.BTNo</td>
-        <td>@item.CustomerName</td>
-        <td>@item.Project</td>
-        <td>@item.Block</td>
-        <td>@item.Category</td>
-        <td>@item.Size</td>
-    </tr>
-}
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" id="customersTable">
+        <thead>
+            <tr>
+                <th>BTNo</th>
+                <th>Customer Name</th>
+                <th>Project</th>
+                <th>Block</th>
+                <th>Category</th>
+                <th>Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.Uid" style="cursor: pointer;">
+                    <td>@item.BTNo</td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.Project</td>
+                    <td>@item.Block</td>
+                    <td>@item.Category</td>
+                    <td>@item.Size</td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center">No records found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
-@if (!Model.Any())
-{
-    <tr>
-        <td colspan="6" class="text-center">No records found.</td>
-    </tr>
-}
-
+<div class="d-flex justify-content-center">
+    @Html.PagedListPager(Model, page => Url.Action("FilterCustomers", new { page }), 
+        new X.PagedList.Mvc.Core.PagedListRenderOptions {
+            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+            DisplayLinkToLastPage = PagedListDisplayMode.Always,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+            DisplayLinkToNextPage = PagedListDisplayMode.Always,
+            DisplayPageCountAndCurrentLocation = true,
+            UlElementClasses = new[] { "pagination" },
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" }
+        })
+</div>

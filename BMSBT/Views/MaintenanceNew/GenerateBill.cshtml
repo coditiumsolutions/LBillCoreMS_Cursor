@@ -7,19 +7,11 @@
     var selectedProject = ViewBag.SelectedProject as string;
     var btNoSearch = ViewBag.BTNoSearch as string;
     var projects = ViewBag.Projects as List<string> ?? new List<string>();
-}
-
-@{
-    string operatorJson = Context.Session.GetString("OperatorSetupDetail");
-    string operatorName = "", billingMonth = "", billingYear = "";
-
-    if (!string.IsNullOrEmpty(operatorJson))
-    {
-        var setup = JsonSerializer.Deserialize<Dictionary<string, string>>(operatorJson);
-        operatorName = setup.ContainsKey("OperatorName") ? setup["OperatorName"] : "";
-        billingMonth = setup.ContainsKey("BillingMonth") ? setup["BillingMonth"] : "";
-        billingYear = setup.ContainsKey("BillingYear") ? setup["BillingYear"] : "";
-    }
+    
+    // Get values from ViewBag populated by controller
+    string operatorName = ViewBag.OperatorName as string ?? "";
+    string billingMonth = ViewBag.BillingMonth as string ?? "";
+    string billingYear = ViewBag.BillingYear as string ?? "";
 }
 
 <!-- Include Bootstrap CSS -->
@@ -61,7 +53,7 @@
 <form method="get" asp-action="GenerateBill" asp-controller="MaintenanceNew">
     <div class="row mb-3">
         <div class="col-md-4">
-            <label class="form-label fw-bold">Bills Not Generated</label>
+            <label class="form-label fw-bold">Project</label>
             <select name="selectedProject" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Project --</option>
                 @foreach (var project in projects)
@@ -82,9 +74,6 @@
             </div>
         }
     </div>
-    <button id="createRecordsButton" type="button" class="btn btn-success mb-3 me-2" style="width:150px">
-        Generate Bill
-    </button>
     <button id="generateMBillButton" type="button" class="btn btn-outline-primary mb-3" style="width:170px">
         Generate MBill
     </button>
@@ -112,9 +101,8 @@
                                 <th><input type="checkbox" onclick="toggleGroupCheckboxes(this, '@collapseId')" /></th>
                                 <th>BT Number</th>
                                 <th>Customer Name</th>
-                                <th>CNIC No</th>
-                                <th>Mobile No</th>
-                                <th>SubProject</th>
+                                <th>Project</th>
+                                <th>Category</th>
                                 <th>Block</th>
                                 <th>Size</th>
                                 <th>Bill Status</th>
@@ -131,9 +119,8 @@
                                     </td>
                                     <td>@customer.BTNo</td>
                                     <td>@customer.CustomerName</td>
-                                    <td>@customer.City</td>
                                     <td>@customer.Project</td>
-                                    <td>@customer.SubProject</td>
+                                    <td>@customer.Category</td>
                                     <td>@customer.Block</td>
                                     <td>@customer.Size</td>
                                     <td>@customer.BillStatusMaint</td>
@@ -171,46 +158,6 @@
                 return +this.value;
             }).get();
         }
-
-        $('#createRecordsButton').click(function () {
-            var selectedIds = getSelectedIds();
-
-            if (!selectedIds.length) {
-                alert('No records selected.');
-                return;
-            }
-
-            $('#loadingOverlay').show();
-
-            $.ajax({
-                url: '@Url.Action("GenerateMaintenanceBills", "MaintenanceNew")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    SelectedIds: selectedIds,
-                    Project:    currentProject,
-                    Month:      currentMonth,
-                    Year:       currentYear
-                }),
-                success: function (response) {
-                    $('#loadingOverlay').hide();
-                    if (response.success) {
-                        alert('Operation completed successfully!');
-                    } else {
-                        alert('Warning: ' + response.message);
-                    }
-                },
-                error: function (xhr) {
-                    $('#loadingOverlay').hide();
-                    if (xhr.status === 403) {
-                        alert('Unauthorized!');
-                        window.location.href = '@Url.Action("AccessDenied", "Login")';
-                    } else {
-                        alert('An error occurred.');
-                    }
-                }
-            });
-        });
 
         // New: Generate MBill using default 15-values logic via isolated insert API
         $('#generateMBillButton').click(function () {
