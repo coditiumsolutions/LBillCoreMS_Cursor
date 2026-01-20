@@ -190,7 +190,11 @@
                                                             <tr class="customer-row" ondblclick="window.location.href='@Url.Action("Details", "MaintenanceNew", new { id = bill.Uid })'" style="cursor: pointer;">
                                                                 <td style="width:50px;"></td>
                                                                 <td style="width:100px;">
-                                                                    <input type="checkbox" class="record-checkbox" value="@bill.Uid" onclick="event.stopPropagation();" />
+                                                                    <input type="checkbox" class="record-checkbox" value="@bill.Uid" 
+                                                                           data-btno="@bill.Btno" 
+                                                                           data-month="@bill.BillingMonth" 
+                                                                           data-year="@bill.BillingYear"
+                                                                           onclick="event.stopPropagation();" />
                                                                 </td>
                                                                 <td style="width:200px;">@bill.Btno</td>
                                                                 <td style="width:200px;">@bill.BillingMonth</td>
@@ -424,60 +428,35 @@
 
             // Print Bills Button Click
             $("#PrintRecordsButton").on("click", function () {
-                console.log("Print button clicked");
-
-                 $("#loadingOverlay").show();
-                var selectedUIDs = [];
-                $('.record-checkbox:checked').each(function() {
-                    selectedUIDs.push($(this).val());
-                });
-
-                console.log("Selected UIDs:", selectedUIDs);
-
-                if (selectedUIDs.length === 0) {
-                    alert("Please select at least one bill to print.");
+                var selected = $('.record-checkbox:checked');
+                
+                if (selected.length === 0) {
+                    alert("Please select at least one record to print.");
                     return;
                 }
 
-                // Show loading overlay
-                $("#loadingOverlay").show();
+                var btnos = [];
+                var month = "";
+                var year = "";
 
-                $.ajax({
-                    url: '/MaintenanceNew/PrintMMultiBills',
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify({ uids: selectedUIDs.join(",") }),
-                    xhrFields: {
-                        responseType: 'blob'
-                    },
-                    beforeSend: function() {
-                        console.log("Making AJAX request...");
-                    },
-                    success: function (data, status, xhr) {
-                        console.log("Success response received");
-
-                        var contentType = xhr.getResponseHeader("content-type");
-                        if (contentType && contentType.indexOf("application/pdf") !== -1) {
-                            var blob = new Blob([data], { type: "application/pdf" });
-                            var url = window.URL.createObjectURL(blob);
-                            window.open(url, "_blank"); // Open PDF in a new tab
-                        } else {
-                            alert("Received invalid response format from server");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("AJAX Error:", {
-                            status: xhr.status,
-                            statusText: xhr.statusText,
-                            error: error
-                        });
-                        alert("Failed to generate the bill. Status: " + xhr.status + ", Error: " + error);
-                    },
-                    complete: function () {
-                        // Hide loading overlay after request completes
-                             $("#loadingOverlay").hide();
+                selected.each(function (index) {
+                    btnos.push($(this).data('btno'));
+                    if (index === 0) {
+                        month = $(this).data('month');
+                        year = $(this).data('year');
                     }
                 });
+
+                console.log("Printing selected records for " + month + " " + year + ":", btnos);
+
+                if (btnos.length > 0 && month && year) {
+                    var url = "https://localhost:7077/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
+                              encodeURIComponent(month) + 
+                              "&BillingYear=" + encodeURIComponent(year) + 
+                              "&BTNo=" + encodeURIComponent(btnos.join(','));
+                    
+                    window.open(url, "_blank");
+                }
             });
         });
     </script>

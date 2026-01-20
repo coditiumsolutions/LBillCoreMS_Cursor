@@ -84,7 +84,9 @@
                             <tr>
                                 <th class="bg-light">Payment Status</th>
                                 <td>
-                                    <span class="badge @(Model.Bill.PaymentStatus == "Paid" ? "badge-success" : "badge-warning")">
+                                    <span class="badge @(Model.Bill.PaymentStatus?.ToLower() == "paid" ? "badge-success" : 
+                                                       Model.Bill.PaymentStatus?.ToLower() == "paid with surcharge" ? "badge-info" :
+                                                       Model.Bill.PaymentStatus?.ToLower() == "paritally paid" ? "badge-warning" : "badge-danger")">
                                         @Model.Bill.PaymentStatus
                                     </span>
                                 </td>
@@ -124,10 +126,10 @@
                         <form method="post" asp-action="UpdatePaymentStatus">
                             <input type="hidden" name="billUid" value="@Model.Bill.Uid" />
                             <div class="btn-group w-100" role="group">
-                                <button type="submit" name="status" value="Paid" class="btn btn-success">Paid</button>
-                                <button type="submit" name="status" value="PaidWithSurcharge" class="btn btn-info">Paid with Surcharge</button>
-                                <button type="submit" name="status" value="PartiallyPaid" class="btn btn-warning text-white">Partially Paid</button>
-                                <button type="submit" name="status" value="Unpaid" class="btn btn-danger">Unpaid</button>
+                                <button type="submit" name="status" value="paid" class="btn btn-success">Paid</button>
+                                <button type="submit" name="status" value="paid with surcharge" class="btn btn-info">Paid with Surcharge</button>
+                                <button type="submit" name="status" value="paritally paid" class="btn btn-warning text-white">Partially Paid</button>
+                                <button type="submit" name="status" value="unpaid" class="btn btn-danger">Unpaid</button>
                             </div>
                         </form>
                     </div>

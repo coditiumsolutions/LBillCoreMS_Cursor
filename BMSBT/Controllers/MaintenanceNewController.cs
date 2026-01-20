@@ -85,19 +85,30 @@ namespace BMSBT.Controllers
             int totalBills = billsQuery.Count();
             decimal totalAmountGenerated = billsQuery.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
 
-            var paidBillsQuery = billsQuery.Where(b => b.PaymentStatus == "Paid" || b.PaymentStatus == "Paid with Surcharge");
-            int paidBillsCount = paidBillsQuery.Count();
-            decimal totalAmountCollected = paidBillsQuery.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
-
-            int unpaidBillsCount = totalBills - paidBillsCount;
-            decimal unpaidAmount = totalAmountGenerated - totalAmountCollected;
+            // Individual Status Calculations
+            var paidBills = billsQuery.Where(b => b.PaymentStatus == "paid" || b.PaymentStatus == "Paid").ToList();
+            var surchargeBills = billsQuery.Where(b => 
+                b.PaymentStatus == "paid with surcharge" || 
+                b.PaymentStatus == "Paid with Surcharge" || 
+                b.PaymentStatus == "PaidWithSurcharge" ||
+                b.PaymentStatus == "Paid with surcharge").ToList();
+            var partialBills = billsQuery.Where(b => b.PaymentStatus == "paritally paid" || b.PaymentStatus == "Partially Paid" || b.PaymentStatus == "partially paid").ToList();
+            var unpaidBills = billsQuery.Where(b => b.PaymentStatus == "unpaid" || b.PaymentStatus == "Unpaid" || string.IsNullOrEmpty(b.PaymentStatus)).ToList();
 
             ViewBag.TotalBills = totalBills;
             ViewBag.TotalAmountGenerated = totalAmountGenerated;
-            ViewBag.TotalBillsPaid = paidBillsCount;
-            ViewBag.TotalAmountCollected = totalAmountCollected;
-            ViewBag.UnpaidBillsCount = unpaidBillsCount;
-            ViewBag.BillUnpaidAmount = unpaidAmount;
+
+            ViewBag.PaidCount = paidBills.Count;
+            ViewBag.PaidAmount = paidBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+
+            ViewBag.SurchargeCount = surchargeBills.Count;
+            ViewBag.SurchargeAmount = surchargeBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+
+            ViewBag.PartialCount = partialBills.Count;
+            ViewBag.PartialAmount = partialBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+
+            ViewBag.UnpaidBillsCount = unpaidBills.Count;
+            ViewBag.BillUnpaidAmount = unpaidBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
 
             return View();
         }
@@ -775,14 +786,7 @@ namespace BMSBT.Controllers
 
 
 
-
-
-
-
-
-
-
-            [Route("PrintMMultiBills")]
+        [Route("PrintMMultiBills")]
         [HttpPost]
         public async Task<IActionResult> PrintMMultiBills([FromBody] PrintBillRequest request)
         {
@@ -808,7 +812,14 @@ namespace BMSBT.Controllers
 
                 // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
 
-                var url = $"http://172.20.228.2:81/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                 var url = $"http://172.20.228.2:81/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+                ////SSQ API Working
+                //var url = $"https://localhost:7077/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+
+
+          
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.
@@ -837,6 +848,75 @@ namespace BMSBT.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
+
+
+
+
+        [Route("SSQCursorPrintMMultiBills")]
+        [HttpPost]
+        public async Task<IActionResult> SSQCursorPrintMMultiBills(
+        [FromBody] SSQCursorPrintBillRequest request)
+        {
+            try
+            {
+                // ✅ Validate required parameters
+                if (string.IsNullOrWhiteSpace(request.month) ||
+                    string.IsNullOrWhiteSpace(request.year) ||
+                    string.IsNullOrWhiteSpace(request.btNo))
+                {
+                    return BadRequest("BillingMonth, BillingYear and BTNo are required.");
+                }
+
+                Console.WriteLine(
+                    $"SSQ Cursor Print → BTNo: {request.btNo}, Month: {request.month}, Year: {request.year}"
+                );
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Accept
+                      .Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                // ✅ SAFELY ENCODE PARAMETERS
+                var url =
+                    $"https://localhost:7077/api/SSQCursorMaintenance/GetMBill" +
+                    $"?BillingMonth={Uri.EscapeDataString(request.month)}" +
+                    $"&BillingYear={Uri.EscapeDataString(request.year)}" +
+                    $"&BTNo={Uri.EscapeDataString(request.btNo)}";
+
+                var response = await client.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+                }
+
+                var pdfData = await response.Content.ReadAsByteArrayAsync();
+
+                if (pdfData == null || pdfData.Length == 0)
+                {
+                    return BadRequest("Received empty PDF data.");
+                }
+
+                Response.Headers.Add(
+                    "Content-Disposition",
+                    $"attachment; filename=MaintenanceBill_{request.btNo}.pdf"
+                );
+
+                return File(pdfData, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+
+
+
+
 
         public IActionResult SearchBill(string? month, string? year, string? BtNo)
         {

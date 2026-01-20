@@ -130,16 +130,28 @@
                 <td colspan="4"><strong>Payments Detail</strong></td>
             </tr>
             <tr class="metric-row">
-                <td class="metric-name">Bill Paid (Amount)</td>
-                <td class="metric-value amount">@((ViewBag.TotalAmountCollected as decimal?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note important-note">Unpaid Amount (Rs)</td>
-                <td class="metric-secondary amount">@((ViewBag.BillUnpaidAmount as decimal?)?.ToString("N0") ?? "0")</td>
+                <td class="metric-name">Paid (Amount)</td>
+                <td class="metric-value amount">@((ViewBag.PaidAmount as decimal?)?.ToString("N0") ?? "0")</td>
+                <td class="metric-note">Paid (No Of Bills)</td>
+                <td class="metric-secondary">@((ViewBag.PaidCount as int?)?.ToString("N0") ?? "0")</td>
             </tr>
             <tr class="metric-row">
-                <td class="metric-name">Paid (No Of Bills)</td>
-                <td class="metric-value">@((ViewBag.TotalBillsPaid as int?)?.ToString("N0") ?? "0")</td>
+                <td class="metric-name">Paid with Surcharge (Amount)</td>
+                <td class="metric-value amount">@((ViewBag.SurchargeAmount as decimal?)?.ToString("N0") ?? "0")</td>
+                <td class="metric-note">Surcharge (No Of Bills)</td>
+                <td class="metric-secondary">@((ViewBag.SurchargeCount as int?)?.ToString("N0") ?? "0")</td>
+            </tr>
+            <tr class="metric-row">
+                <td class="metric-name">Partially Paid (Amount)</td>
+                <td class="metric-value amount">@((ViewBag.PartialAmount as decimal?)?.ToString("N0") ?? "0")</td>
+                <td class="metric-note">Partial (No Of Bills)</td>
+                <td class="metric-secondary">@((ViewBag.PartialCount as int?)?.ToString("N0") ?? "0")</td>
+            </tr>
+            <tr class="metric-row">
+                <td class="metric-name important-note">Unpaid Amount (Rs)</td>
+                <td class="metric-value amount important-note">@((ViewBag.BillUnpaidAmount as decimal?)?.ToString("N0") ?? "0")</td>
                 <td class="metric-note important-note">Unpaid Bills (Number)</td>
-                <td class="metric-secondary">@((ViewBag.UnpaidBillsCount as int?)?.ToString("N0") ?? "0")</td>
+                <td class="metric-secondary important-note">@((ViewBag.UnpaidBillsCount as int?)?.ToString("N0") ?? "0")</td>
             </tr>
         </table>
     }
