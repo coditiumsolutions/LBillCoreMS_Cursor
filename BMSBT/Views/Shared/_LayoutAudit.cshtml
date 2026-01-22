@@ -1,4 +1,4 @@
-﻿@* Views/Shared/HomePageLayout.cshtml *@
+@* Views/Shared/HomePageLayout.cshtml *@
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,6 +150,13 @@
                         <a asp-controller="Reports" asp-action="Index">
                             <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
                             Tables
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Audit" asp-action="OperatorsLog">
+                            <i class='fas fa-history' style="color: yellowgreen; font-size: 14px;"></i>
+                            Operators Log
                         </a>
                     </li>
 
