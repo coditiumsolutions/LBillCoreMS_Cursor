@@ -106,6 +106,7 @@
                                 <th>Block</th>
                                 <th>Size</th>
                                 <th>Bill Status</th>
+                                <th>Gen Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,6 +125,7 @@
                                     <td>@customer.Block</td>
                                     <td>@customer.Size</td>
                                     <td>@customer.BillStatusMaint</td>
+                                    <td>@customer.BillGenerationStatus</td>
                                 </tr>
                             }
                         </tbody>
@@ -178,6 +180,12 @@
                 success: function (response) {
                     $('#loadingOverlay').hide();
                     if (response && response.success) {
+                        // Update the "Gen Status" column for the selected rows
+                        $('.record-checkbox:checked').each(function () {
+                            var row = $(this).closest('tr');
+                            row.find('td:last').text(currentMonth + '-' + currentYear);
+                            $(this).prop('checked', false);
+                        });
                         alert(response.message || 'MBills generated successfully.');
                     } else {
                         alert('MBill generation completed, but response was unexpected.');

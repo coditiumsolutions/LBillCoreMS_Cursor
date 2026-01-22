@@ -225,9 +225,7 @@ namespace BMSBT.Controllers
             {
 
                 var query = _dbContext.CustomersMaintenance
-            .Where(c =>
-                (c.BillGenerationStatus == null || c.BillGenerationStatus == "Not Generated") &&
-                c.Project.Trim() == selectedProject.Trim());
+            .Where(c => c.Project.Trim() == selectedProject.Trim());
 
                 if (!string.IsNullOrEmpty(btNoSearch))
                 {
