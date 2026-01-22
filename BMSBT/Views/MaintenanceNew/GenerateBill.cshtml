@@ -180,13 +180,16 @@
                 success: function (response) {
                     $('#loadingOverlay').hide();
                     if (response && response.success) {
-                        // Update the "Gen Status" column for the selected rows
-                        $('.record-checkbox:checked').each(function () {
-                            var row = $(this).closest('tr');
-                            row.find('td:last').text(currentMonth + '-' + currentYear);
-                            $(this).prop('checked', false);
-                        });
-                        alert(response.message || 'MBills generated successfully.');
+                        // Update the "Gen Status" column for the selected rows based on server response
+                        if (response.updates && response.updates.length > 0) {
+                            response.updates.forEach(function (update) {
+                                var checkbox = $('.record-checkbox[value="' + update.uid + '"]');
+                                var row = checkbox.closest('tr');
+                                row.find('td:last').text(update.status);
+                                checkbox.prop('checked', false);
+                            });
+                        }
+                        alert(response.message || 'MBills process completed.');
                     } else {
                         alert('MBill generation completed, but response was unexpected.');
                     }

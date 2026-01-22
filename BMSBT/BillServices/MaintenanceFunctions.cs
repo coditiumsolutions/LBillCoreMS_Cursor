@@ -76,6 +76,10 @@ namespace BMSBT.BillServices
 
             // Assign an invoice number and update the status
             AssignInvoiceNo(newBill);
+
+            // Update BillGenerationStatus with Month-Year
+            customer.BillGenerationStatus = $"{currentBillingMonth}-{currentBillingYear}";
+
             UpdateGeneratedMonthYear(customer, $"Bill created for {currentBillingMonth} {currentBillingYear}");
 
             return $"Bill created successfully for customer {customer.CustomerName}.";
