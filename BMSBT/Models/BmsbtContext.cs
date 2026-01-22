@@ -39,6 +39,7 @@ public partial class BmsbtContext : DbContext
     public virtual DbSet<MeterType> MeterTypes { get; set; }
 
     public virtual DbSet<OperatorsSetup> OperatorsSetups { get; set; }
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     public virtual DbSet<ReadingSheet> ReadingSheets { get; set; }
 

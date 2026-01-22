@@ -2,6 +2,7 @@ using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 
 namespace BMSBT.Controllers
@@ -112,6 +113,13 @@ namespace BMSBT.Controllers
             {
                 try
                 {
+                    // Fetch old record using AsNoTracking() for audit log
+                    var oldRecord = await _context.OperatorsSetups
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(o => o.Uid == id);
+
+                    if (oldRecord == null) return NotFound();
+
                     var existing = await _context.OperatorsSetups.FirstOrDefaultAsync(o => o.Uid == id);
                     if (existing == null) return NotFound();
 
@@ -131,6 +139,37 @@ namespace BMSBT.Controllers
                     existing.FPAYEAR2 = model.FPAYEAR2;
 
                     await _context.SaveChangesAsync();
+
+                    // --- AUDIT LOG START ---
+                    try
+                    {
+                        var newRecord = await _context.OperatorsSetups
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(o => o.Uid == id);
+
+                        var auditLog = new AuditLog
+                        {
+                            TableName = "OperatorsSetup",
+                            Operation = "UPDATE",
+                            RecordId = id,
+                            OldData = JsonSerializer.Serialize(oldRecord),
+                            NewData = JsonSerializer.Serialize(newRecord),
+                            ModuleName = "Operators Setup",
+                            ChangedBy = User.Identity?.Name ?? HttpContext.Session.GetString("UserName") ?? "System",
+                            ChangedAt = DateTime.Now,
+                            IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                        };
+
+                        _context.AuditLogs.Add(auditLog);
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log audit failure but don't stop the main transaction
+                        Console.WriteLine($"Audit log failed: {ex.Message}");
+                    }
+                    // --- AUDIT LOG END ---
+
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
