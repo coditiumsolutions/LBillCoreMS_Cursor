@@ -47,20 +47,16 @@ namespace BMSBT.Models
 
 
         [Required(ErrorMessage = "Fine Amount is required")]
-        [Range(1, int.MaxValue, ErrorMessage = "Fine Amount must be greater than 0")]
-        public int? FineAmount { get; set; }
+        public decimal? FineAmount { get; set; }
 
         [Required(ErrorMessage = "Waived Amount is required")]
-        [Range(0, int.MaxValue, ErrorMessage = "Waived Amount must be 0 or greater")]
-        public int? WaivedAmount { get; set; }
+        public decimal? WaivedAmount { get; set; }
         
         [Required(ErrorMessage = "Adjustment Amount is required")]
-        [Range(0, int.MaxValue, ErrorMessage = "Adjustment Amount must be 0 or greater")]
-        public int? AdjustmentAmount { get; set; }
+        public decimal? AdjustmentAmount { get; set; }
 
         [Required(ErrorMessage = "Fine To Charge is required")]
-        [Range(0, int.MaxValue, ErrorMessage = "Fine To Charge must be 0 or more")]
-        public int FineToCharge { get; set; }
+        public decimal FineToCharge { get; set; }
 
         public string? Comments { get; set; }
         public string? FineEnteredBy { get; set; }

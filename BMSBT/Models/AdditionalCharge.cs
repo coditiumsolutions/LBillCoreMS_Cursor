@@ -19,7 +19,7 @@ namespace BMSBT.Models
         [MaxLength(100)]
         public string? ChargesName { get; set; }
 
-        public int? ChargesAmount { get; set; }
+        public decimal? ChargesAmount { get; set; }
     }
 }
 

@@ -60,8 +60,8 @@
 @{
     bool hasFilters = ViewBag.HasFilters != null && (bool)ViewBag.HasFilters;
     bool hasResult = ViewBag.HasResult != null && (bool)ViewBag.HasResult;
-    int totalFine = ViewBag.TotalFine != null ? (int)ViewBag.TotalFine : 0;
-    var breakdown = ViewBag.Breakdown as IDictionary<string, int>;
+    decimal totalFine = ViewBag.TotalFine != null ? (decimal)ViewBag.TotalFine : 0m;
+    var breakdown = ViewBag.Breakdown as IDictionary<string, decimal>;
 }
 
 @if (hasFilters)

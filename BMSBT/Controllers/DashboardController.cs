@@ -1,4 +1,4 @@
-﻿using BMSBT.DTO;
+using BMSBT.DTO;
 using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +64,7 @@ namespace BMSBT.Controllers
                     if (billsGenerated != null)
                     {
                         model.TotalBillsGenerated = Convert.ToInt32(billsGenerated.Value);
-                        model.BillsUnits = billsGenerated.SecondaryValue ?? 0;
+                        model.BillsUnits = int.TryParse(billsGenerated.SecondaryValue, out int units) ? units : 0;
                     }
 
                     if (totalCurrentBilling != null)
@@ -73,7 +73,7 @@ namespace BMSBT.Controllers
                         // Don't overwrite BillsUnits if it's already set from the first record
                         if (model.BillsUnits == 0)
                         {
-                            model.BillsUnits = totalCurrentBilling.SecondaryValue ?? 0;
+                            model.BillsUnits = int.TryParse(totalCurrentBilling.SecondaryValue, out int units) ? units : 0;
                         }
                     }
 
@@ -84,7 +84,7 @@ namespace BMSBT.Controllers
                     if (netMeterBillsGenerated != null)
                     {
                         model.NetMeterBillsGenerated = Convert.ToInt32(netMeterBillsGenerated.Value);
-                        model.NetMeterBillsUnits = netMeterBillsGenerated.SecondaryValue ?? 0;
+                        model.NetMeterBillsUnits = int.TryParse(netMeterBillsGenerated.SecondaryValue, out int units) ? units : 0;
                     }
 
                     if (netMeterTotalBilling != null)
@@ -99,14 +99,14 @@ namespace BMSBT.Controllers
                     if (billPaidAmount != null)
                     {
                         model.TotalBillAmountCollected = billPaidAmount.Value;
-                        // SecondaryValue for "Bill Paid (Amount)" row contains unpaid amount as INT
-                        model.BillUnpaidAmount = Convert.ToDecimal(billPaidAmount.SecondaryValue ?? 0);
+                        // SecondaryValue for "Bill Paid (Amount)" row contains unpaid amount as STRING/INT
+                        model.BillUnpaidAmount = decimal.TryParse(billPaidAmount.SecondaryValue, out decimal unpaidAmt) ? unpaidAmt : 0;
                     }
 
                     if (paidBillsCount != null)
                     {
                         model.TotalBillsPaid = Convert.ToInt32(paidBillsCount.Value);
-                        model.UnpaidBillsCount = paidBillsCount.SecondaryValue ?? 0;
+                        model.UnpaidBillsCount = int.TryParse(paidBillsCount.SecondaryValue, out int unpaidCount) ? unpaidCount : 0;
                     }
                 }
 

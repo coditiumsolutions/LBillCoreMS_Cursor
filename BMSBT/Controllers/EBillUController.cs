@@ -81,7 +81,7 @@ namespace BMSBT.Controllers
                     if (billsGenerated != null)
                     {
                         model.TotalBillsGenerated = Convert.ToInt32(billsGenerated.Value);
-                        model.BillsUnits = billsGenerated.SecondaryValue ?? 0;
+                        model.BillsUnits = int.TryParse(billsGenerated.SecondaryValue, out int units) ? units : 0;
                     }
 
                     if (totalCurrentBilling != null)
@@ -89,7 +89,7 @@ namespace BMSBT.Controllers
                         model.TotalBillAmountGenerated = totalCurrentBilling.Value;
                         if (model.BillsUnits == 0)
                         {
-                            model.BillsUnits = totalCurrentBilling.SecondaryValue ?? 0;
+                            model.BillsUnits = int.TryParse(totalCurrentBilling.SecondaryValue, out int units) ? units : 0;
                         }
                     }
 
@@ -99,7 +99,7 @@ namespace BMSBT.Controllers
                     if (netMeterBillsGenerated != null)
                     {
                         model.NetMeterBillsGenerated = Convert.ToInt32(netMeterBillsGenerated.Value);
-                        model.NetMeterBillsUnits = netMeterBillsGenerated.SecondaryValue ?? 0;
+                        model.NetMeterBillsUnits = int.TryParse(netMeterBillsGenerated.SecondaryValue, out int units) ? units : 0;
                     }
 
                     if (netMeterTotalBilling != null)
@@ -113,13 +113,13 @@ namespace BMSBT.Controllers
                     if (billPaidAmount != null)
                     {
                         model.TotalBillAmountCollected = billPaidAmount.Value;
-                        model.BillUnpaidAmount = Convert.ToDecimal(billPaidAmount.SecondaryValue ?? 0);
+                        model.BillUnpaidAmount = decimal.TryParse(billPaidAmount.SecondaryValue, out decimal unpaidAmt) ? unpaidAmt : 0;
                     }
 
                     if (paidBillsCount != null)
                     {
                         model.TotalBillsPaid = Convert.ToInt32(paidBillsCount.Value);
-                        model.UnpaidBillsCount = paidBillsCount.SecondaryValue ?? 0;
+                        model.UnpaidBillsCount = int.TryParse(paidBillsCount.SecondaryValue, out int unpaidCount) ? unpaidCount : 0;
                     }
                 }
 
@@ -146,7 +146,7 @@ namespace BMSBT.Controllers
 
         public IActionResult GenerateBillMain(string project, string sector, string block, int? page)
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
@@ -337,7 +337,7 @@ namespace BMSBT.Controllers
 
         public IActionResult GenerateEBill(string project, string sector, string block, int? page)
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }

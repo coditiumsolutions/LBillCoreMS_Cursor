@@ -76,13 +76,13 @@ namespace BMSBT.DTO
 
         public string? BankDetail { get; set; }
 
-        public int? TaxAmount { get; set; }
+        public decimal? TaxAmount { get; set; }
 
-        public int? BillAmountInDueDate { get; set; }
+        public decimal? BillAmountInDueDate { get; set; }
 
-        public int? BillSurcharge { get; set; }
+        public decimal? BillSurcharge { get; set; }
 
-        public int? BillAmountAfterDueDate { get; set; }
+        public decimal? BillAmountAfterDueDate { get; set; }
 
         public decimal? Arrears { get; set; }
         public decimal? MaintCharges { get; set; }

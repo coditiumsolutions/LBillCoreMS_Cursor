@@ -1,4 +1,4 @@
-﻿using BMSBT.BillServices;
+using BMSBT.BillServices;
 using BMSBT.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
@@ -26,7 +26,7 @@ namespace BMSBT.Controllers
 
         public IActionResult Generated(string project, string sector, string block, int? page)
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }

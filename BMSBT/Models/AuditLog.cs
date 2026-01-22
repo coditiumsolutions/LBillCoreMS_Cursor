@@ -16,7 +16,7 @@ namespace BMSBT.Models
         [Required]
         public string Operation { get; set; }
         
-        public int RecordId { get; set; }
+        public string? RecordId { get; set; }
         
         public string? OldData { get; set; }
         

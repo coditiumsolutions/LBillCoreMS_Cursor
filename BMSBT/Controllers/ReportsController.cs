@@ -1,4 +1,4 @@
-﻿using BMSBT.Models;
+using BMSBT.Models;
 using BMSBT.Roles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +19,7 @@ namespace BMSBT.Controllers
 
         public IActionResult Index()
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }

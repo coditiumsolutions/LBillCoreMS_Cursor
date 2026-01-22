@@ -45,23 +45,23 @@ public partial class MaintenanceBill
 
     public DateTime? LastUpdated { get; set; }
 
-    public int? TaxAmount { get; set; }
+    public decimal? TaxAmount { get; set; }
 
-    public int? BillAmountInDueDate { get; set; }
+    public decimal? BillAmountInDueDate { get; set; }
 
-    public int? BillSurcharge { get; set; }
+    public decimal? BillSurcharge { get; set; }
 
-    public int? BillAmountAfterDueDate { get; set; }
+    public decimal? BillAmountAfterDueDate { get; set; }
 
     public decimal? Arrears { get; set; }
     public decimal? MaintCharges { get; set; }
 
     // Additional maintenance-related charges
-    public int? Fine { get; set; }
+    public decimal? Fine { get; set; }
 
-    public int? OtherCharges { get; set; }
+    public decimal? OtherCharges { get; set; }
 
-    public int? WaterCharges { get; set; }
+    public decimal? WaterCharges { get; set; }
 
     public string? History { get; set; }
 

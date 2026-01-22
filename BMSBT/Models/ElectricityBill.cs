@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace BMSBT.Models;
@@ -35,7 +35,7 @@ public partial class ElectricityBill
     public string? MeterNo { get; set; }
 
     public string? PaymentStatus { get; set; }
-    public int? AmountPaid { get; set; }
+    public decimal? AmountPaid { get; set; }
 
     public DateOnly? PaymentDate { get; set; }
 
@@ -43,15 +43,15 @@ public partial class ElectricityBill
 
     public string? BankDetail { get; set; }
 
-    public int? EnergyCoast { get; set; }
+    public decimal? EnergyCoast { get; set; }
 
     public string? LastUpdated { get; set; }
 
-    public int? BillAmountInDueDate { get; set; }
+    public decimal? BillAmountInDueDate { get; set; }
 
-    public int? BillSurcharge { get; set; }
+    public decimal? BillSurcharge { get; set; }
 
-    public int? BillAmountAfterDueDate { get; set; }
+    public decimal? BillAmountAfterDueDate { get; set; }
 
     public int? PreviousReading1 { get; set; }
 

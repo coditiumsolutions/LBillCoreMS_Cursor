@@ -88,10 +88,10 @@ namespace BMSBT.Controllers
                 f.FineService == FineService);
 
             bool any = query.Any();
-            int total = any ? query.Sum(f => f.FineToCharge) : 0;
+            decimal total = any ? query.Sum(f => f.FineToCharge) : 0;
 
             // Breakdown by Fine Type
-            Dictionary<string, int> breakdown = null;
+            Dictionary<string, decimal> breakdown = null;
             if (any)
             {
                 breakdown = query

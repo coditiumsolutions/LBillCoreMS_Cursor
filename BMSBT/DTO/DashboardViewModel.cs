@@ -1,4 +1,4 @@
-﻿namespace BMSBT.DTO
+namespace BMSBT.DTO
 {
     public class DashboardViewModel
     {
@@ -45,7 +45,7 @@
         public string Metric { get; set; }
         public decimal Value { get; set; }
         public string Note { get; set; }
-        public int? SecondaryValue { get; set; }
+        public string? SecondaryValue { get; set; }
     }
 
 }

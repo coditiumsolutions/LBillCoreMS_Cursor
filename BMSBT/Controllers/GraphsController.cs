@@ -15,7 +15,7 @@ namespace BMSBT.Controllers
         }
         public IActionResult Index()
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
@@ -50,7 +50,7 @@ namespace BMSBT.Controllers
 
         public IActionResult GraphSelection()
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }

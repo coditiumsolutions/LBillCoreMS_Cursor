@@ -1,0 +1,206 @@
+@{
+    ViewData["Title"] = "AI Chat";
+    Layout = "~/Views/Shared/_LayoutAudit.cshtml";
+}
+
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Chat Window (Left Side) -->
+        <div class="col-md-8 col-lg-9 p-0 d-flex flex-column" style="height: calc(100vh - 200px);">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot mr-2"></i>
+                        AI Assistant
+                    </h5>
+                </div>
+                <div class="card-body flex-grow-1 overflow-auto" id="chatMessages" style="background-color: #f8f9fa;">
+                    <!-- Chat messages will appear here -->
+                    <div class="text-center text-muted mt-5">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>Start a conversation with AI</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <form id="chatForm" class="d-flex">
+                        <input type="text" 
+                               class="form-control mr-2" 
+                               id="messageInput" 
+                               placeholder="Type your message here..." 
+                               autocomplete="off"
+                               required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-4 col-lg-3 p-3" style="background-color: #ffffff; border-left: 1px solid #dee2e6;">
+            <div class="mb-4">
+                <h6 class="text-muted mb-3">Welcome</h6>
+                <p class="lead">
+                    Good to see you, <strong>@ViewBag.UserName</strong>.
+                </p>
+            </div>
+            
+            <div class="mb-4">
+                <h6 class="text-muted mb-3">Quick Actions</h6>
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action quick-action" data-action="help">
+                        <i class="fas fa-question-circle mr-2"></i> How can I help?
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action quick-action" data-action="report">
+                        <i class="fas fa-chart-bar mr-2"></i> Generate Report
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action quick-action" data-action="analyze">
+                        <i class="fas fa-chart-line mr-2"></i> Analyze Data
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action quick-action" data-action="clear">
+                        <i class="fas fa-trash mr-2"></i> Clear Chat
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h6 class="text-muted mb-3">Chat History</h6>
+                <div id="chatHistory" class="list-group" style="max-height: 300px; overflow-y: auto;">
+                    <small class="text-muted">No previous conversations</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .message {
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+
+    .message.user {
+        background-color: #007bff;
+        color: white;
+        margin-left: auto;
+        text-align: right;
+    }
+
+    .message.ai {
+        background-color: #e9ecef;
+        color: #212529;
+        margin-right: auto;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-top: 0.25rem;
+    }
+
+    #chatMessages {
+        min-height: 400px;
+    }
+
+    .quick-action:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .list-group-item {
+        border: 1px solid #dee2e6;
+        margin-bottom: 0.25rem;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        var userName = '@ViewBag.UserName' || 'User';
+
+        // Handle form submission
+        $('#chatForm').on('submit', function(e) {
+            e.preventDefault();
+            var message = $('#messageInput').val().trim();
+            if (message) {
+                addMessage('user', message);
+                $('#messageInput').val('');
+                
+                // Simulate AI response (replace with actual API call)
+                setTimeout(function() {
+                    addMessage('ai', 'I received your message: "' + message + '". This is a placeholder response. Connect to your AI service to get real responses.');
+                }, 500);
+            }
+        });
+
+        // Quick action buttons
+        $('.quick-action').on('click', function() {
+            var action = $(this).data('action');
+            var message = '';
+
+            switch(action) {
+                case 'help':
+                    message = 'How can I help you today?';
+                    break;
+                case 'report':
+                    message = 'Generate a report for me';
+                    break;
+                case 'analyze':
+                    message = 'Analyze the current data';
+                    break;
+                case 'clear':
+                    $('#chatMessages').html('<div class="text-center text-muted mt-5"><i class="fas fa-comments fa-3x mb-3"></i><p>Start a conversation with AI</p></div>');
+                    return;
+            }
+
+            if (message) {
+                $('#messageInput').val(message);
+                $('#chatForm').submit();
+            }
+        });
+
+        // Allow Enter key to send message
+        $('#messageInput').on('keypress', function(e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                $('#chatForm').submit();
+            }
+        });
+
+        function addMessage(type, text) {
+            var messagesContainer = $('#chatMessages');
+            
+            // Remove placeholder if exists
+            messagesContainer.find('.text-center.text-muted').remove();
+            
+            var time = new Date().toLocaleTimeString();
+            var messageClass = type === 'user' ? 'user' : 'ai';
+            var icon = type === 'user' ? '<i class="fas fa-user mr-2"></i>' : '<i class="fas fa-robot mr-2"></i>';
+            
+            var messageHtml = '<div class="message ' + messageClass + '">' +
+                '<div>' + icon + '<strong>' + (type === 'user' ? userName : 'AI Assistant') + ':</strong></div>' +
+                '<div class="mt-2">' + escapeHtml(text) + '</div>' +
+                '<div class="message-time">' + time + '</div>' +
+                '</div>';
+            
+            messagesContainer.append(messageHtml);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+        }
+
+        function escapeHtml(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    });
+</script>

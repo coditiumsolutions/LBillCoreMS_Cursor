@@ -1,0 +1,451 @@
+@{
+    ViewData["Title"] = "Data Science Report";
+    Layout = "~/Views/Shared/_LayoutAudit.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold">Data Science & Analytics Report</h6>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <form method="get" asp-action="DataScience" class="mb-4">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label font-weight-bold">Project</label>
+                        <select name="project" class="form-control" onchange="this.form.submit()">
+                            <option value="">-- All Projects --</option>
+                            @if (ViewBag.Projects != null)
+                            {
+                                foreach (var proj in (SelectList)ViewBag.Projects)
+                                {
+                                    <option value="@proj.Value" selected="@(proj.Value == ViewBag.SelectedProject)">@proj.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label font-weight-bold">Year</label>
+                        <select name="year" class="form-control" style="color: #212529;" onchange="this.form.submit()">
+                            <option value="" style="color: #212529;">-- All Years --</option>
+                            @{
+                                var shownYears = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                            }
+                            @* Hardcoded visible years *@
+                            <option value="2026" selected="@(ViewBag.SelectedYear == "2026")" style="color: #212529;">2026</option>
+                            @{ shownYears.Add("2026"); }
+                            <option value="2025" selected="@(ViewBag.SelectedYear == "2025")" style="color: #212529;">2025</option>
+                            @{ shownYears.Add("2025"); }
+                            <option value="2024" selected="@(ViewBag.SelectedYear == "2024")" style="color: #212529;">2024</option>
+                            @{ shownYears.Add("2024"); }
+
+                            @* Additional years from database, if any (excluding duplicates) *@
+                            @if (ViewBag.Years != null)
+                            {
+                                foreach (var yr in (SelectList)ViewBag.Years)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(yr.Value) && !shownYears.Contains(yr.Value))
+                                    {
+                                        var text = string.IsNullOrWhiteSpace(yr.Text) ? yr.Value : yr.Text;
+                                        <option value="@yr.Value" selected="@(yr.Value == ViewBag.SelectedYear)" style="color: #212529;">@text</option>
+                                        shownYears.Add(yr.Value);
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="DataScience" class="btn btn-secondary btn-block">Reset</a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Customers</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalCustomers</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Billed</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@string.Format("{0:N0}", ViewBag.TotalBilledAmount)</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Collection Rate</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@string.Format("{0:F1}%", ViewBag.CollectionRate)</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-percent fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Arrears</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">@string.Format("{0:N0}", ViewBag.TotalArrears)</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Monthly Billing Trends</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="monthlyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Payment Status Distribution</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="paymentStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Yearly Trends</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="yearlyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Project-wise Analysis</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="projectAnalysisChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Tables -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Top Customers with Arrears</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>BT No</th>
+                                            <th>Total Arrears</th>
+                                            <th>Bill Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (ViewBag.TopArrearsCustomers != null)
+                                        {
+                                            foreach (var customer in ViewBag.TopArrearsCustomers)
+                                            {
+                                                <tr>
+                                                    <td>@customer.BTNo</td>
+                                                    <td>@string.Format("{0:N0}", customer.TotalArrears)</td>
+                                                    <td>@customer.BillCount</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-danger">Overdue Accounts</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>BT No</th>
+                                            <th>Customer</th>
+                                            <th>Due Date</th>
+                                            <th>Days Overdue</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (ViewBag.OverdueAccounts != null)
+                                        {
+                                            foreach (var account in ViewBag.OverdueAccounts)
+                                            {
+                                                <tr>
+                                                    <td>@account.Btno</td>
+                                                    <td>@account.CustomerName</td>
+                                                    <td>@account.DueDate?.ToString("dd-MMM-yyyy")</td>
+                                                    <td><span class="badge badge-danger">@account.DaysOverdue days</span></td>
+                                                    <td>@string.Format("{0:N0}", account.BillAmountAfterDueDate)</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insights Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 bg-info text-white">
+                            <h6 class="m-0 font-weight-bold">Key Insights & Recommendations</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success mr-2"></i>
+                                    <strong>Total Bills Generated:</strong> @ViewBag.TotalBills bills with an average amount of @string.Format("{0:N0}", ViewBag.AverageBillAmount) per bill.
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-info-circle text-info mr-2"></i>
+                                    <strong>Collection Performance:</strong> @string.Format("{0:F1}%", ViewBag.CollectionRate) collection rate with @string.Format("{0:N0}", ViewBag.TotalCollectedAmount) collected out of @string.Format("{0:N0}", ViewBag.TotalBilledAmount) total billed.
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                                    <strong>Outstanding Issues:</strong> @ViewBag.TotalUnpaidBills unpaid bills totaling @string.Format("{0:N0}", ViewBag.TotalUnpaidAmount) require immediate attention.
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-chart-line text-primary mr-2"></i>
+                                    <strong>Arrears Management:</strong> Total arrears of @string.Format("{0:N0}", ViewBag.TotalArrears) indicate need for proactive collection strategies.
+                                </li>
+                                @if (ViewBag.OverdueAccounts != null && ((dynamic)ViewBag.OverdueAccounts).Count > 0)
+                                {
+                                    <li class="mb-2">
+                                        <i class="fas fa-clock text-danger mr-2"></i>
+                                        <strong>Action Required:</strong> @((dynamic)ViewBag.OverdueAccounts).Count accounts are overdue. Immediate follow-up recommended for accounts with highest days overdue.
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .text-xs {
+        font-size: 0.7rem;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+    // Monthly Billing Trends Chart
+    var monthlyData = @Html.Raw(Json.Serialize(ViewBag.MonthlySummary ?? new List<object>()));
+    var monthlyLabels = monthlyData && monthlyData.length > 0 ? monthlyData.map(x => x.month + ' ' + x.year) : [];
+    var monthlyBilled = monthlyData && monthlyData.length > 0 ? monthlyData.map(x => x.totalAmount) : [];
+    var monthlyCollected = monthlyData && monthlyData.length > 0 ? monthlyData.map(x => x.collectedAmount) : [];
+
+    if (monthlyLabels.length > 0) {
+        var monthlyCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+        new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: 'Billed Amount',
+                data: monthlyBilled,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Collected Amount',
+                data: monthlyCollected,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+        });
+    } else {
+        document.getElementById('monthlyTrendChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">No monthly data available</p>';
+    }
+
+    // Payment Status Distribution Chart
+    var paymentData = @Html.Raw(Json.Serialize(ViewBag.PaymentStatusDistribution ?? new List<object>()));
+    var paymentLabels = paymentData && paymentData.length > 0 ? paymentData.map(x => x.status) : [];
+    var paymentCounts = paymentData && paymentData.length > 0 ? paymentData.map(x => x.count) : [];
+
+    if (paymentLabels.length > 0) {
+        var paymentCtx = document.getElementById('paymentStatusChart').getContext('2d');
+        new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: paymentLabels,
+            datasets: [{
+                data: paymentCounts,
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(153, 102, 255, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+        });
+    } else {
+        document.getElementById('paymentStatusChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">No payment status data available</p>';
+    }
+
+    // Yearly Trends Chart
+    var yearlyData = @Html.Raw(Json.Serialize(ViewBag.YearlyTrends ?? new List<object>()));
+    var yearlyLabels = yearlyData && yearlyData.length > 0 ? yearlyData.map(x => x.year) : [];
+    var yearlyBilled = yearlyData && yearlyData.length > 0 ? yearlyData.map(x => x.totalAmount) : [];
+    var yearlyCollected = yearlyData && yearlyData.length > 0 ? yearlyData.map(x => x.collectedAmount) : [];
+
+    if (yearlyLabels.length > 0) {
+        var yearlyCtx = document.getElementById('yearlyTrendChart').getContext('2d');
+        new Chart(yearlyCtx, {
+        type: 'bar',
+        data: {
+            labels: yearlyLabels,
+            datasets: [{
+                label: 'Billed Amount',
+                data: yearlyBilled,
+                backgroundColor: 'rgba(54, 162, 235, 0.8)'
+            }, {
+                label: 'Collected Amount',
+                data: yearlyCollected,
+                backgroundColor: 'rgba(75, 192, 192, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+        });
+    } else {
+        document.getElementById('yearlyTrendChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">No yearly data available</p>';
+    }
+
+    // Project Analysis Chart
+    var projectData = @Html.Raw(Json.Serialize(ViewBag.ProjectAnalysis ?? new List<object>()));
+    var projectLabels = projectData && projectData.length > 0 ? projectData.map(x => x.project) : [];
+    var projectAmounts = projectData && projectData.length > 0 ? projectData.map(x => x.totalAmount) : [];
+
+    if (projectLabels.length > 0) {
+        var projectCtx = document.getElementById('projectAnalysisChart').getContext('2d');
+        new Chart(projectCtx, {
+        type: 'bar',
+        data: {
+            labels: projectLabels,
+            datasets: [{
+                label: 'Total Amount',
+                data: projectAmounts,
+                backgroundColor: 'rgba(153, 102, 255, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+        });
+    } else {
+        document.getElementById('projectAnalysisChart').parentElement.innerHTML = '<p class="text-muted text-center p-4">No project data available</p>';
+    }
+</script>

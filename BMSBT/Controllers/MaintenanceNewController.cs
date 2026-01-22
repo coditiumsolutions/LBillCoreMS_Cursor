@@ -99,16 +99,16 @@ namespace BMSBT.Controllers
             ViewBag.TotalAmountGenerated = totalAmountGenerated;
 
             ViewBag.PaidCount = paidBills.Count;
-            ViewBag.PaidAmount = paidBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+            ViewBag.PaidAmount = paidBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
 
             ViewBag.SurchargeCount = surchargeBills.Count;
-            ViewBag.SurchargeAmount = surchargeBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+            ViewBag.SurchargeAmount = surchargeBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
 
             ViewBag.PartialCount = partialBills.Count;
-            ViewBag.PartialAmount = partialBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+            ViewBag.PartialAmount = partialBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
 
             ViewBag.UnpaidBillsCount = unpaidBills.Count;
-            ViewBag.BillUnpaidAmount = unpaidBills.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+            ViewBag.BillUnpaidAmount = unpaidBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
 
             return View();
         }

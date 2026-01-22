@@ -1,4 +1,4 @@
-﻿using BMSBT.Models;
+using BMSBT.Models;
 using BMSBT.Roles;
 using BMSBT.ViewModels;
 using DevExpress.ClipboardSource.SpreadsheetML;
@@ -30,7 +30,7 @@ namespace BMSBT.Controllers
         public async Task<IActionResult> Index(string searchString, string sortOrder, int pageNumber = 1, int pageSize = 10)
         {
             // Session Check
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
@@ -138,7 +138,7 @@ namespace BMSBT.Controllers
 
         public IActionResult AllCustomers(string project, string sector, string block, int? page)
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
@@ -199,7 +199,7 @@ namespace BMSBT.Controllers
 
         public IActionResult AllCustomersBySector(string project, string sector, string block, int? page)
         {
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
@@ -420,7 +420,7 @@ namespace BMSBT.Controllers
         public async Task<IActionResult> CustomersSelection()
         {
             // Session Check
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return RedirectToAction("Index", "Login");
             }
@@ -485,7 +485,7 @@ namespace BMSBT.Controllers
         public async Task<IActionResult> GetCustomersBySelection(string project, string block, string category)
         {
             // Session Check
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return Json(new { success = false, message = "Session expired. Please login again." });
             }
@@ -524,7 +524,7 @@ namespace BMSBT.Controllers
         public async Task<IActionResult> GetAllCustomersBySelection(string project, string block, string category)
         {
             // Session Check
-            if (HttpContext.Session.GetInt32("UserName") == null)
+            if (HttpContext.Session.GetString("UserName") == null)
             {
                 return Json(new { success = false, message = "Session expired. Please login again." });
             }

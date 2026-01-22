@@ -1,10 +1,19 @@
 @using X.PagedList
 @using X.PagedList.Mvc.Core
+@using System.Text
+@using System.Text.Json
 @model IPagedList<BMSBT.Models.AuditLog>
 
 @{
     ViewData["Title"] = "Operators Log";
     Layout = "~/Views/Shared/_LayoutAudit.cshtml";
+    
+    string EncodeBase64(string data)
+    {
+        if (string.IsNullOrEmpty(data)) return "";
+        var bytes = Encoding.UTF8.GetBytes(data);
+        return Convert.ToBase64String(bytes);
+    }
 }
 
 <div class="container-fluid">
@@ -30,7 +39,7 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <a asp-action="OperatorsLog" class="btn btn-secondary btn-block">Reset</a>
+                        <a asp-action="OperatorsLog" asp-route-changedBy="" asp-route-page="" class="btn btn-secondary btn-block">Reset</a>
                     </div>
                 </div>
             </form>
@@ -53,17 +62,24 @@
                         {
                             foreach (var item in Model)
                             {
-                                <tr>
+                                <tr class="audit-row" 
+                                    style="cursor: pointer;" 
+                                    data-old-data="@EncodeBase64(item.OldData ?? "")"
+                                    data-new-data="@EncodeBase64(item.NewData ?? "")"
+                                    data-changed-at="@item.ChangedAt.ToString("dd-MMM-yyyy hh:mm tt")"
+                                    data-operation="@item.Operation"
+                                    data-record-id="@item.RecordId"
+                                    data-changed-by="@item.ChangedBy">
                                     <td>@item.ChangedAt.ToString("dd-MMM-yyyy hh:mm tt")</td>
                                     <td><span class="badge badge-info">@item.Operation</span></td>
                                     <td>@item.RecordId</td>
                                     <td>@item.ChangedBy</td>
                                     <td>@item.IPAddress</td>
                                     <td>
-                                        <button type="button" class="btn btn-link btn-sm" onclick="showData('@Html.Raw(item.OldData?.Replace("'", "\\'"))')">View Old</button>
+                                        <button type="button" class="btn btn-link btn-sm" onclick="event.stopPropagation(); showDataFromAttribute(this.closest('tr'), 'old');">View Old</button>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-link btn-sm" onclick="showData('@Html.Raw(item.NewData?.Replace("'", "\\'"))')">View New</button>
+                                        <button type="button" class="btn btn-link btn-sm" onclick="event.stopPropagation(); showDataFromAttribute(this.closest('tr'), 'new');">View New</button>
                                     </td>
                                 </tr>
                             }
@@ -95,12 +111,12 @@
     </div>
 </div>
 
-<!-- Modal for JSON Data -->
+<!-- Modal for Single JSON Data -->
 <div class="modal fade" id="dataModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Record Details</h5>
+                <h5 class="modal-title" id="dataModalTitle">Record Details</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -112,18 +128,152 @@
     </div>
 </div>
 
+<!-- Modal for Record Details (Old vs New) -->
+<div class="modal fade" id="recordDetailsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Record Change Details</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Date & Time:</strong> <span id="detailChangedAt"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Operation:</strong> <span class="badge badge-info" id="detailOperation"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Record ID:</strong> <span id="detailRecordId"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Changed By:</strong> <span id="detailChangedBy"></span>
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-danger font-weight-bold">Old Data</h6>
+                        <pre id="oldDataContent" class="bg-light p-3 border border-danger" style="white-space: pre-wrap; word-wrap: break-word; max-height: 500px; overflow-y: auto;"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success font-weight-bold">New Data</h6>
+                        <pre id="newDataContent" class="bg-light p-3 border border-success" style="white-space: pre-wrap; word-wrap: break-word; max-height: 500px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    function showData(jsonData) {
+    // Handle row click to show full record details
+    $(document).ready(function() {
+        $('.audit-row').on('click', function(e) {
+            // Don't trigger if clicking on buttons
+            if ($(e.target).is('button') || $(e.target).closest('button').length) {
+                return;
+            }
+            
+            var row = $(this);
+            var oldDataEncoded = row.data('old-data') || '';
+            var newDataEncoded = row.data('new-data') || '';
+            var oldData = decodeBase64(oldDataEncoded);
+            var newData = decodeBase64(newDataEncoded);
+            var changedAt = row.data('changed-at') || '';
+            var operation = row.data('operation') || '';
+            var recordId = row.data('record-id') || '';
+            var changedBy = row.data('changed-by') || '';
+            
+            showRecordDetails(oldData, newData, changedAt, operation, recordId, changedBy);
+        });
+    });
+
+    function decodeBase64(str) {
+        if (!str) return '';
+        try {
+            var decoded = atob(str);
+            return decoded;
+        } catch (e) {
+            return str;
+        }
+    }
+
+    function showDataFromAttribute(row, type) {
+        var encodedData = type === 'old' ? $(row).data('old-data') || '' : $(row).data('new-data') || '';
+        var data = decodeBase64(encodedData);
+        var title = type === 'old' ? 'Old Data' : 'New Data';
+        showData(data, title);
+    }
+
+    function showData(jsonData, title) {
+        var modalTitle = document.getElementById('dataModalTitle');
+        var jsonContent = document.getElementById('jsonContent');
+        
+        if (title) {
+            modalTitle.textContent = title;
+        } else {
+            modalTitle.textContent = 'Record Details';
+        }
+        
         if (!jsonData || jsonData === '' || jsonData === 'null') {
-            document.getElementById('jsonContent').textContent = 'No data available.';
+            jsonContent.textContent = 'No data available.';
         } else {
             try {
                 var obj = JSON.parse(jsonData);
-                document.getElementById('jsonContent').textContent = JSON.stringify(obj, null, 4);
+                jsonContent.textContent = JSON.stringify(obj, null, 4);
             } catch (e) {
-                document.getElementById('jsonContent').textContent = jsonData;
+                jsonContent.textContent = jsonData;
             }
         }
         $('#dataModal').modal('show');
+    }
+
+    function showRecordDetails(oldData, newData, changedAt, operation, recordId, changedBy) {
+        // Set header information
+        document.getElementById('detailChangedAt').textContent = changedAt || 'N/A';
+        document.getElementById('detailOperation').textContent = operation || 'N/A';
+        document.getElementById('detailRecordId').textContent = recordId || 'N/A';
+        document.getElementById('detailChangedBy').textContent = changedBy || 'N/A';
+        
+        // Format and display Old Data
+        var oldContent = document.getElementById('oldDataContent');
+        if (!oldData || oldData === '' || oldData === 'null') {
+            oldContent.textContent = 'No old data available.';
+            oldContent.classList.add('text-muted');
+        } else {
+            oldContent.classList.remove('text-muted');
+            try {
+                var oldObj = JSON.parse(oldData);
+                oldContent.textContent = JSON.stringify(oldObj, null, 4);
+            } catch (e) {
+                oldContent.textContent = oldData;
+            }
+        }
+        
+        // Format and display New Data
+        var newContent = document.getElementById('newDataContent');
+        if (!newData || newData === '' || newData === 'null') {
+            newContent.textContent = 'No new data available.';
+            newContent.classList.add('text-muted');
+        } else {
+            newContent.classList.remove('text-muted');
+            try {
+                var newObj = JSON.parse(newData);
+                newContent.textContent = JSON.stringify(newObj, null, 4);
+            } catch (e) {
+                newContent.textContent = newData;
+            }
+        }
+        
+        $('#recordDetailsModal').modal('show');
     }
 </script>

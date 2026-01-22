@@ -1,4 +1,4 @@
-﻿namespace BMSBT.DTO
+namespace BMSBT.DTO
 {
     public class BillDTO
     {
@@ -83,12 +83,12 @@
 
     
 
-        public int? TaxAmount { get; set; }
+        public decimal? TaxAmount { get; set; }
 
-        public int? BillAmountInDueDate { get; set; }
+        public decimal? BillAmountInDueDate { get; set; }
 
-        public int? BillSurcharge { get; set; }
+        public decimal? BillSurcharge { get; set; }
 
-        public int? BillAmountAfterDueDate { get; set; }
+        public decimal? BillAmountAfterDueDate { get; set; }
     }
 }

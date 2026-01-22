@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace BMSBT.Models
 {
@@ -14,7 +14,7 @@ namespace BMSBT.Models
 
         public int MonthsOutstanding { get; set; }       // COUNT() = int
         public decimal TotalBill { get; set; }           // SUM(money) = decimal
-        public int TotalPaid { get; set; }           // SUM(money) = decimal
+        public decimal TotalPaid { get; set; }           // SUM(money) = decimal
         public decimal TotalOutstanding { get; set; }    // SUM(money) = decimal
     }
 }

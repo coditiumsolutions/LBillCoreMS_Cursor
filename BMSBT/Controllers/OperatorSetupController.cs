@@ -151,7 +151,7 @@ namespace BMSBT.Controllers
                         {
                             TableName = "OperatorsSetup",
                             Operation = "UPDATE",
-                            RecordId = id,
+                            RecordId = id.ToString(),
                             OldData = JsonSerializer.Serialize(oldRecord),
                             NewData = JsonSerializer.Serialize(newRecord),
                             ModuleName = "Operators Setup",

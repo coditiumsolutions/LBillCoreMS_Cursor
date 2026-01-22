@@ -35,13 +35,13 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         
         // Use tariff values if found, otherwise use 0 as default
         decimal maintCharges = tariff != null ? (decimal)tariff.Charges : 0m;
-        int taxAmount = tariff != null ? ParseTaxValue(tariff.Tax) : 0;
+        decimal taxAmount = tariff != null ? ParseTaxValue(tariff.Tax) : 0m;
 
         // Carry forward arrears logic
         decimal arrears = 0;
-        int fineToChargeSum = 0;
-        int waterCharges = 0;
-        int otherCharges = 0;
+        decimal fineToChargeSum = 0;
+        decimal waterCharges = 0;
+        decimal otherCharges = 0;
 
         if (!string.IsNullOrEmpty(dto.BillingMonth) && !string.IsNullOrEmpty(dto.BillingYear) && !string.IsNullOrEmpty(dto.BTNo))
         {
@@ -65,18 +65,18 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
                            a.ServiceType == "Maintenance" && 
                            a.ChargesName == "Water Charges")
                 .Select(a => a.ChargesAmount)
-                .FirstOrDefaultAsync(cancellationToken) ?? 0;
+                .FirstOrDefaultAsync(cancellationToken) ?? 0m;
 
             otherCharges = await _dbContext.AdditionalCharges
                 .Where(a => a.BTNo == dto.BTNo && 
                            a.ServiceType == "Maintenance" && 
                            a.ChargesName == "Other Charges")
                 .Select(a => a.ChargesAmount)
-                .FirstOrDefaultAsync(cancellationToken) ?? 0;
+                .FirstOrDefaultAsync(cancellationToken) ?? 0m;
         }
 
         // Calculate billing amounts based on tariff values, arrears, fine, and additional charges
-        var billingCalculations = CalculateBillingAmounts(maintCharges, taxAmount, arrears, (decimal)fineToChargeSum, (decimal)waterCharges, (decimal)otherCharges);
+        var billingCalculations = CalculateBillingAmounts(maintCharges, taxAmount, arrears, fineToChargeSum, waterCharges, otherCharges);
 
         var bill = new MaintenanceBill
         {
@@ -156,20 +156,20 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     /// BillSurcharge = (Charges + Tax) * 10 / 100
     /// BillAmountAfterDueDate = BillAmountInDueDate + BillSurcharge
     /// </summary>
-    private static BillingCalculations CalculateBillingAmounts(decimal maintCharges, int taxAmount, decimal arrears = 0, decimal fine = 0, decimal water = 0, decimal other = 0)
+    private static BillingCalculations CalculateBillingAmounts(decimal maintCharges, decimal taxAmount, decimal arrears = 0, decimal fine = 0, decimal water = 0, decimal other = 0)
     {
         // Step 1: Calculate BillAmountInDueDate = Charges + Tax + Arrears + Fine + Water + Other
         decimal inDueDateDecimal = maintCharges + taxAmount + arrears + fine + water + other;
-        int billAmountInDueDate = (int)Math.Round(inDueDateDecimal, MidpointRounding.AwayFromZero);
+        decimal billAmountInDueDate = Math.Round(inDueDateDecimal, MidpointRounding.AwayFromZero);
 
         // Step 2: Calculate Bill Surcharge = 10% of (Charges + Tax) -- Surcharge is usually on the base charges+tax
         decimal baseChargesAndTax = maintCharges + taxAmount;
         decimal surchargeDecimal = baseChargesAndTax * SURCHARGE_PERCENTAGE;
-        int billSurcharge = (int)Math.Round(surchargeDecimal, MidpointRounding.AwayFromZero);
+        decimal billSurcharge = Math.Round(surchargeDecimal, MidpointRounding.AwayFromZero);
 
         // Step 3: Calculate BillAmountAfterDueDate = BillAmountInDueDate + BillSurcharge
-        decimal totalAfterDue = (decimal)billAmountInDueDate + (decimal)billSurcharge;
-        int billAmountAfterDueDate = (int)Math.Round(totalAfterDue, MidpointRounding.AwayFromZero);
+        decimal totalAfterDue = billAmountInDueDate + billSurcharge;
+        decimal billAmountAfterDueDate = Math.Round(totalAfterDue, MidpointRounding.AwayFromZero);
 
         return new BillingCalculations
         {
@@ -191,7 +191,7 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
 
         if (prevBill != null && (string.IsNullOrEmpty(prevBill.PaymentStatus) || prevBill.PaymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase)))
         {
-            return prevBill.BillAmountAfterDueDate ?? 0;
+            return prevBill.BillAmountAfterDueDate ?? 0m;
         }
 
         return 0m;
@@ -221,40 +221,34 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     /// </summary>
     private class BillingCalculations
     {
-        public int BillAmountInDueDate { get; set; }
-        public int BillSurcharge { get; set; }
-        public int BillAmountAfterDueDate { get; set; }
+        public decimal BillAmountInDueDate { get; set; }
+        public decimal BillSurcharge { get; set; }
+        public decimal BillAmountAfterDueDate { get; set; }
     }
 
     /// <summary>
-    /// Parses Tax string value to integer.
+    /// Parses Tax string value to decimal.
     /// Handles percentage strings (e.g., "15%" -> 15) or numeric strings.
     /// Returns default value of 0 if parsing fails.
     /// </summary>
-    private static int ParseTaxValue(string? taxString)
+    private static decimal ParseTaxValue(string? taxString)
     {
         if (string.IsNullOrWhiteSpace(taxString))
         {
-            return 0; // Safe default
+            return 0m; // Safe default
         }
 
         // Remove percentage sign if present
         var cleaned = taxString.Trim().TrimEnd('%').Trim();
 
-        // Try parsing as integer
-        if (int.TryParse(cleaned, out int taxValue))
-        {
-            return taxValue;
-        }
-
-        // Try parsing as decimal and converting to int
+        // Try parsing as decimal
         if (decimal.TryParse(cleaned, out decimal taxDecimal))
         {
-            return (int)Math.Round(taxDecimal);
+            return taxDecimal;
         }
 
         // If all parsing fails, return safe default
-        return 0;
+        return 0m;
     }
 
     private static string GenerateInvoiceNo(DateTime now, string? customerNo)
