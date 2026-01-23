@@ -5,7 +5,7 @@ using BMSBT.ViewModels;
 using BMSBT.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Linq;
@@ -83,32 +83,36 @@ namespace BMSBT.Controllers
             }
 
             int totalBills = billsQuery.Count();
-            decimal totalAmountGenerated = billsQuery.Sum(b => (decimal?)b.BillAmountInDueDate) ?? 0;
+            
+            // Materialize query - now using int? types that match the database
+            var billsData = billsQuery.AsNoTracking().ToList();
+            
+            int totalAmountGenerated = billsData.Sum(b => b.BillAmountInDueDate ?? 0);
 
             // Individual Status Calculations
-            var paidBills = billsQuery.Where(b => b.PaymentStatus == "paid" || b.PaymentStatus == "Paid").ToList();
-            var surchargeBills = billsQuery.Where(b => 
+            var paidBills = billsData.Where(b => b.PaymentStatus == "paid" || b.PaymentStatus == "Paid").ToList();
+            var surchargeBills = billsData.Where(b => 
                 b.PaymentStatus == "paid with surcharge" || 
                 b.PaymentStatus == "Paid with Surcharge" || 
                 b.PaymentStatus == "PaidWithSurcharge" ||
                 b.PaymentStatus == "Paid with surcharge").ToList();
-            var partialBills = billsQuery.Where(b => b.PaymentStatus == "paritally paid" || b.PaymentStatus == "Partially Paid" || b.PaymentStatus == "partially paid").ToList();
-            var unpaidBills = billsQuery.Where(b => b.PaymentStatus == "unpaid" || b.PaymentStatus == "Unpaid" || string.IsNullOrEmpty(b.PaymentStatus)).ToList();
+            var partialBills = billsData.Where(b => b.PaymentStatus == "paritally paid" || b.PaymentStatus == "Partially Paid" || b.PaymentStatus == "partially paid").ToList();
+            var unpaidBills = billsData.Where(b => b.PaymentStatus == "unpaid" || b.PaymentStatus == "Unpaid" || string.IsNullOrEmpty(b.PaymentStatus)).ToList();
 
             ViewBag.TotalBills = totalBills;
             ViewBag.TotalAmountGenerated = totalAmountGenerated;
 
             ViewBag.PaidCount = paidBills.Count;
-            ViewBag.PaidAmount = paidBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
+            ViewBag.PaidAmount = paidBills.Sum(b => b.BillAmountInDueDate ?? 0);
 
             ViewBag.SurchargeCount = surchargeBills.Count;
-            ViewBag.SurchargeAmount = surchargeBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
+            ViewBag.SurchargeAmount = surchargeBills.Sum(b => b.BillAmountInDueDate ?? 0);
 
             ViewBag.PartialCount = partialBills.Count;
-            ViewBag.PartialAmount = partialBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
+            ViewBag.PartialAmount = partialBills.Sum(b => b.BillAmountInDueDate ?? 0);
 
             ViewBag.UnpaidBillsCount = unpaidBills.Count;
-            ViewBag.BillUnpaidAmount = unpaidBills.Sum(b => b.BillAmountInDueDate) ?? 0m;
+            ViewBag.BillUnpaidAmount = unpaidBills.Sum(b => b.BillAmountInDueDate ?? 0);
 
             return View();
         }
@@ -877,10 +881,15 @@ namespace BMSBT.Controllers
 
                 // ✅ SAFELY ENCODE PARAMETERS
                 var url =
-                    $"https://localhost:7077/api/SSQCursorMaintenance/GetMBill" +
+                    $"http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill" +
                     $"?BillingMonth={Uri.EscapeDataString(request.month)}" +
                     $"&BillingYear={Uri.EscapeDataString(request.year)}" +
                     $"&BTNo={Uri.EscapeDataString(request.btNo)}";
+
+
+
+
+
 
                 var response = await client.GetAsync(url);
 

@@ -80,6 +80,7 @@ public partial class BmsbtContext : DbContext
         modelBuilder.Entity<BillingReportData>().HasNoKey();
 
         modelBuilder.Entity<DashboardStatisticsResult>().HasNoKey();
+        
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Customer>(entity =>
         {

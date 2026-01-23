@@ -450,11 +450,19 @@
                 console.log("Printing selected records for " + month + " " + year + ":", btnos);
 
                 if (btnos.length > 0 && month && year) {
-                    var url = "https://localhost:7077/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
+                    var url = "http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
                               encodeURIComponent(month) + 
                               "&BillingYear=" + encodeURIComponent(year) + 
                               "&BTNo=" + encodeURIComponent(btnos.join(','));
-                    
+
+
+                       // var    url = "https://localhost:7077/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
+                       //        encodeURIComponent(month) +
+                       //         "&BillingYear=" + encodeURIComponent(year) +
+                       //         "&BTNo=" + encodeURIComponent(btnos.join(','));
+                            
+
+
                     window.open(url, "_blank");
                 }
             });

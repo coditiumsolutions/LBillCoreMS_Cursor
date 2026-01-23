@@ -158,8 +158,8 @@ namespace BMSBT.Controllers
             ViewBag.TotalArrears = totalArrears;
             ViewBag.TotalUnpaidBills = totalUnpaidBills;
             ViewBag.TotalUnpaidAmount = totalUnpaidAmount;
-            ViewBag.CollectionRate = totalBilledAmount > 0 ? (totalCollectedAmount / totalBilledAmount * 100) : 0;
-            ViewBag.AverageBillAmount = totalBills > 0 ? (totalBilledAmount / totalBills) : 0;
+            ViewBag.CollectionRate = totalBilledAmount > 0 ? ((decimal)totalCollectedAmount / totalBilledAmount * 100) : 0;
+            ViewBag.AverageBillAmount = totalBills > 0 ? ((decimal)totalBilledAmount / totalBills) : 0;
 
             // 2. Monthly Billing Summary
             var monthlySummary = await billsQuery

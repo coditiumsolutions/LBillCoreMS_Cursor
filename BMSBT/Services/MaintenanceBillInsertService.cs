@@ -92,17 +92,18 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
             BillingYear = dto.BillingYear,
 
             // Tariff-based values (dynamically calculated from MaintenanceTarrif table)
-            MaintCharges = maintCharges,
-            TaxAmount = taxAmount,
+            // Cast decimal to int to match database column types
+            MaintCharges = (int)Math.Round(maintCharges, MidpointRounding.AwayFromZero),
+            TaxAmount = (int)Math.Round(taxAmount, MidpointRounding.AwayFromZero),
 
             // Billing calculations (dynamically calculated based on MaintCharges + TaxAmount)
             BillAmountInDueDate = billingCalculations.BillAmountInDueDate,
             BillSurcharge = billingCalculations.BillSurcharge,
             BillAmountAfterDueDate = billingCalculations.BillAmountAfterDueDate,
-            Arrears = arrears,
-            Fine = fineToChargeSum,
-            OtherCharges = otherCharges,
-            WaterCharges = waterCharges,
+            Arrears = (int)Math.Round(arrears, MidpointRounding.AwayFromZero),
+            Fine = (int)Math.Round(fineToChargeSum, MidpointRounding.AwayFromZero),
+            OtherCharges = (int)Math.Round(otherCharges, MidpointRounding.AwayFromZero),
+            WaterCharges = (int)Math.Round(waterCharges, MidpointRounding.AwayFromZero),
 
             // Dates
             // Prefer values provided by caller (e.g., from OperatorsSetup), else fallback to today
@@ -160,16 +161,15 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     {
         // Step 1: Calculate BillAmountInDueDate = Charges + Tax + Arrears + Fine + Water + Other
         decimal inDueDateDecimal = maintCharges + taxAmount + arrears + fine + water + other;
-        decimal billAmountInDueDate = Math.Round(inDueDateDecimal, MidpointRounding.AwayFromZero);
+        int billAmountInDueDate = (int)Math.Round(inDueDateDecimal, MidpointRounding.AwayFromZero);
 
         // Step 2: Calculate Bill Surcharge = 10% of (Charges + Tax) -- Surcharge is usually on the base charges+tax
         decimal baseChargesAndTax = maintCharges + taxAmount;
         decimal surchargeDecimal = baseChargesAndTax * SURCHARGE_PERCENTAGE;
-        decimal billSurcharge = Math.Round(surchargeDecimal, MidpointRounding.AwayFromZero);
+        int billSurcharge = (int)Math.Round(surchargeDecimal, MidpointRounding.AwayFromZero);
 
         // Step 3: Calculate BillAmountAfterDueDate = BillAmountInDueDate + BillSurcharge
-        decimal totalAfterDue = billAmountInDueDate + billSurcharge;
-        decimal billAmountAfterDueDate = Math.Round(totalAfterDue, MidpointRounding.AwayFromZero);
+        int billAmountAfterDueDate = billAmountInDueDate + billSurcharge;
 
         return new BillingCalculations
         {
@@ -221,9 +221,9 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
     /// </summary>
     private class BillingCalculations
     {
-        public decimal BillAmountInDueDate { get; set; }
-        public decimal BillSurcharge { get; set; }
-        public decimal BillAmountAfterDueDate { get; set; }
+        public int BillAmountInDueDate { get; set; }
+        public int BillSurcharge { get; set; }
+        public int BillAmountAfterDueDate { get; set; }
     }
 
     /// <summary>

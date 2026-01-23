@@ -254,17 +254,17 @@ namespace BMSBT.BillServices
                 BillingMonth = month,
                 BillingYear = year,
 
-                // Assign the rounded values
-                BillAmountInDueDate = billInDueDate,
-                BillSurcharge = surcharge,
-                BillAmountAfterDueDate = billAfterDue,
-                TaxAmount = taxAmount,
-                Arrears = arrearsAmt,
-                MaintCharges = amount,
+                // Assign the rounded values - cast to int to match database column types
+                BillAmountInDueDate = (int)billInDueDate,
+                BillSurcharge = (int)surcharge,
+                BillAmountAfterDueDate = (int)billAfterDue,
+                TaxAmount = (int)taxAmount,
+                Arrears = (int)arrearsAmt,
+                MaintCharges = (int)amount,
                 // Store Fine (sum of FineToCharge) into Fine column
-                Fine = fineTotalDec,
-                WaterCharges = waterCharges,
-                OtherCharges = otherCharges,
+                Fine = (int)fineTotalDec,
+                WaterCharges = (int)waterCharges,
+                OtherCharges = (int)otherCharges,
                 IssueDate = IssueDate,
                 DueDate = DueDate,
 
