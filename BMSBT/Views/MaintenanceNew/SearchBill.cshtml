@@ -1,4 +1,4 @@
-@using BMSBT.DTO
+﻿@using BMSBT.DTO
 @using X.PagedList
 @using X.PagedList.Mvc.Core
 @model IPagedList<MaintenanceBillDTO>
@@ -427,45 +427,130 @@
             }
 
             // Print Bills Button Click
-            $("#PrintRecordsButton").on("click", function () {
-                var selected = $('.record-checkbox:checked');
+            // $("#PrintRecordsButton").on("click", function () {
+            //     var selected = $('.record-checkbox:checked');
                 
-                if (selected.length === 0) {
-                    alert("Please select at least one record to print.");
-                    return;
-                }
+            //     if (selected.length === 0) {
+            //         alert("Please select at least one record to print.");
+            //         return;
+            //     }
 
-                var btnos = [];
-                var month = "";
-                var year = "";
+            //     var btnos = [];
+            //     var month = "";
+            //     var year = "";
 
-                selected.each(function (index) {
-                    btnos.push($(this).data('btno'));
-                    if (index === 0) {
-                        month = $(this).data('month');
-                        year = $(this).data('year');
-                    }
-                });
+            //     selected.each(function (index) {
+            //         btnos.push($(this).data('btno'));
+            //         if (index === 0) {
+            //             month = $(this).data('month');
+            //             year = $(this).data('year');
+            //         }
+            //     });
 
-                console.log("Printing selected records for " + month + " " + year + ":", btnos);
+            //     console.log("Printing selected records for " + month + " " + year + ":", btnos);
 
-                if (btnos.length > 0 && month && year) {
-                    var url = "http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
-                              encodeURIComponent(month) + 
-                              "&BillingYear=" + encodeURIComponent(year) + 
-                              "&BTNo=" + encodeURIComponent(btnos.join(','));
+            //     if (btnos.length > 0 && month && year) {
+            //         var url = "http:172.20.228.2:81/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
+            //                   encodeURIComponent(month) + 
+            //                   "&BillingYear=" + encodeURIComponent(year) + 
+            //                   "&BTNo=" + encodeURIComponent(btnos.join(','));
 
 
-                       // var    url = "https://localhost:7077/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
-                       //        encodeURIComponent(month) +
-                       //         "&BillingYear=" + encodeURIComponent(year) +
-                       //         "&BTNo=" + encodeURIComponent(btnos.join(','));
+            //            var    url = "https:localhost:7077/api/SSQCursorMaintenance/GetMBill?BillingMonth=" + 
+            //                   encodeURIComponent(month) +
+            //                    "&BillingYear=" + encodeURIComponent(year) +
+            //                    "&BTNo=" + encodeURIComponent(btnos.join(','));
                             
 
 
-                    window.open(url, "_blank");
+            //         window.open(url, "_blank");
+            //     }
+            // });
+
+
+       
+
+            $('#PrintRecordsButton').on('click', function () {
+            var selected = $('.record-checkbox:checked');
+            if (selected.length === 0) {
+                alert("Please select at least one record to print.");
+                return;
+            }
+
+            // Create arrays for lists
+            var months = [];
+            var years = [];
+            var btnos = [];
+
+            selected.each(function () {
+                var btno = $(this).data('btno');
+                var month = $(this).data('month');
+                var year = $(this).data('year');
+
+                // Add unique values to arrays
+                if (!months.includes(month)) months.push(month);
+                if (!years.includes(year)) years.push(year);
+                btnos.push(btno); // BTNo can have duplicates for same month-year combinations
+            });
+
+            console.log("Months List:", months);
+            console.log("Years List:", years);
+            console.log("BTNos List:", btnos);
+
+            // Build URL in list format for .NET Core API
+            // Format: paramName=value1&paramName=value2&paramName=value3
+            var params = [];
+
+            // Add each month multiple times (for each BTNo)
+            selected.each(function() {
+                var month = $(this).data('month');
+                params.push(`BillingMonths=${encodeURIComponent(month)}`);
+            });
+
+            // Add each year multiple times (for each BTNo)
+            selected.each(function() {
+                var year = $(this).data('year');
+                params.push(`BillingYears=${encodeURIComponent(year)}`);
+            });
+
+            // Add each BTNo
+            selected.each(function() {
+                var btno = $(this).data('btno');
+                params.push(`BTNo=${encodeURIComponent(btno)}`);
+            });
+
+            var apiUrl = "http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill?" +
+                         params.join('&');
+
+            // var apiUrl = "https:localhost:7077/api/SSQCursorMaintenance/GetMBill?" +
+            //              params.join('&');
+
+            console.log("API URL (List format):", apiUrl);
+
+            // Test - Open in new tab
+            // window.open(apiUrl, '_blank');
+
+            // Or with loading overlay
+          
+            $('#loadingOverlay').show();
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                xhrFields: { responseType: 'blob' },
+                success: function (data) {
+                    $('#loadingOverlay').hide();
+                    var blob = new Blob([data], { type: 'application/pdf' });
+                    var blobUrl = URL.createObjectURL(blob);
+                    window.open(blobUrl, '_blank');
+                },
+                error: function (xhr) {
+                    $('#loadingOverlay').hide();
+                    alert('Error: ' + (xhr.responseText || 'Server error'));
                 }
             });
+            
+        });
+
         });
     </script>
 }
