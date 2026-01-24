@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BMSBT.Models;
 using System.Linq;
@@ -171,6 +171,17 @@ namespace BMSBT.Controllers
             {
                 try
                 {
+                    // Get the original record to preserve CustomerNo and BTNo
+                    var originalCustomer = await _context.CustomersMaintenance.FindAsync(id);
+                    if (originalCustomer == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Preserve the original CustomerNo and BTNo values (read-only fields)
+                    customer.CustomerNo = originalCustomer.CustomerNo;
+                    customer.BTNo = originalCustomer.BTNo;
+
                     _context.Update(customer);
                     await _context.SaveChangesAsync();
                 }
