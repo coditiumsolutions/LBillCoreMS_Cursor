@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BMSBT.DTO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BMSBT.Models;
 
@@ -458,6 +459,31 @@ public partial class BmsbtContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.Username).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<AdditionalCharge>(entity =>
+        {
+            entity.HasKey(e => e.Uid);
+
+            entity.ToTable("AdditionalCharges");
+
+            entity.Property(e => e.Uid).HasColumnName("uid");
+            entity.Property(e => e.BTNo)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ServiceType)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.ChargesName)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            // Map ChargesAmountInt to the database column (which is int)
+            entity.Property(e => e.ChargesAmountInt)
+                .HasColumnName("ChargesAmount")
+                .HasColumnType("int");
+            
+            // ChargesAmount is a computed property, so ignore it in mapping
+            entity.Ignore(e => e.ChargesAmount);
         });
 
         OnModelCreatingPartial(modelBuilder);

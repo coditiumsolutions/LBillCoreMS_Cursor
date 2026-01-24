@@ -931,6 +931,22 @@ namespace BMSBT.Controllers
             ViewBag.SelectedYear = year;
             ViewBag.SelectedBtNo = BtNo;
 
+            // Get counts for each month and year from MaintenanceBills
+            var monthCounts = _dbContext.MaintenanceBills
+                .Where(b => !string.IsNullOrEmpty(b.BillingMonth))
+                .GroupBy(b => b.BillingMonth)
+                .Select(g => new { Month = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Month, x => x.Count);
+
+            var yearCounts = _dbContext.MaintenanceBills
+                .Where(b => !string.IsNullOrEmpty(b.BillingYear))
+                .GroupBy(b => b.BillingYear)
+                .Select(g => new { Year = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Year, x => x.Count);
+
+            ViewBag.MonthCounts = monthCounts;
+            ViewBag.YearCounts = yearCounts;
+
             // If nothing is provided
             if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
             {

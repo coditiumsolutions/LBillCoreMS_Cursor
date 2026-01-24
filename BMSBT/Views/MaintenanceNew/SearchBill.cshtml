@@ -1,4 +1,4 @@
-﻿@using BMSBT.DTO
+@using BMSBT.DTO
 @using X.PagedList
 @using X.PagedList.Mvc.Core
 @model IPagedList<MaintenanceBillDTO>
@@ -81,9 +81,15 @@
             <label for="month" class="form-label">Month:</label>
             <select id="month" name="month" class="form-control" >
                 <option value="">-- Choose Month --</option>
+                @{
+                    var monthCounts = ViewBag.MonthCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
+                }
                 @foreach (var monthName in System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
                 {
-                    <option value="@monthName" selected="@(monthName == ViewBag.SelectedMonth ? "selected" : null)">@monthName</option>
+                    var count = monthCounts.ContainsKey(monthName) ? monthCounts[monthName] : 0;
+                    <option value="@monthName" selected="@(monthName == ViewBag.SelectedMonth ? "selected" : null)">
+                        @monthName @(count > 0 ? $"({count})" : "")
+                    </option>
                 }
             </select>
         </div>
@@ -91,9 +97,16 @@
             <label for="year" class="form-label">Year:</label>
             <select id="year" name="year" class="form-control" >
                 <option value="">-- Choose Year --</option>
+                @{
+                    var yearCounts = ViewBag.YearCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
+                }
                 @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 10; i--)
                 {
-                    <option value="@i" selected="@(i.ToString() == ViewBag.SelectedYear ? "selected" : null)">@i</option>
+                    var yearStr = i.ToString();
+                    var count = yearCounts.ContainsKey(yearStr) ? yearCounts[yearStr] : 0;
+                    <option value="@i" selected="@(i.ToString() == ViewBag.SelectedYear ? "selected" : null)">
+                        @i @(count > 0 ? $"({count})" : "")
+                    </option>
                 }
             </select>
         </div>
