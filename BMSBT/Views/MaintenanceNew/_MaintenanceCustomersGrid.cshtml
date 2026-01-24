@@ -12,6 +12,7 @@
                 <th>Block</th>
                 <th>Category</th>
                 <th>Size</th>
+                <th>PlotNo</th>
             </tr>
         </thead>
         <tbody>
@@ -24,12 +25,13 @@
                     <td>@item.Block</td>
                     <td>@item.Category</td>
                     <td>@item.Size</td>
+                    <td>@item.PloNo</td>
                 </tr>
             }
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="6" class="text-center">No records found.</td>
+                    <td colspan="7" class="text-center">No records found.</td>
                 </tr>
             }
         </tbody>

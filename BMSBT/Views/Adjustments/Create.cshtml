@@ -1,0 +1,71 @@
+@model BMSBT.Models.Adjustment
+@{
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    ViewData["Title"] = "Create Adjustment";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Create Adjustment</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label asp-for="BTNo" class="control-label">BT No</label>
+                    <input asp-for="BTNo" class="form-control" />
+                    <span asp-validation-for="BTNo" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="BillingType" class="control-label">Billing Type</label>
+                    <select asp-for="BillingType" class="form-control">
+                        <option value="">-- Select Billing Type --</option>
+                        <option value="Electricity">Electricity</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                    <span asp-validation-for="BillingType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="AdjustmentName" class="control-label">Adjustment Name</label>
+                    <select asp-for="AdjustmentName" class="form-control">
+                        <option value="">-- Select Adjustment Name --</option>
+                        <option value="Discount">Discount</option>
+                        <option value="Addition">Addition</option>
+                    </select>
+                    <span asp-validation-for="AdjustmentName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="AdjustmentType" class="control-label">Adjustment Type</label>
+                    <select asp-for="AdjustmentType" class="form-control">
+                        <option value="">-- Select Adjustment Type --</option>
+                        <option value="Fixed">Fixed</option>
+                        <option value="Percentage">Percentage</option>
+                    </select>
+                    <span asp-validation-for="AdjustmentType" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label asp-for="AdjustmentValue" class="control-label">Adjustment Value</label>
+                    <input asp-for="AdjustmentValue" class="form-control" type="number" />
+                    <span asp-validation-for="AdjustmentValue" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-success">Save</button>
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

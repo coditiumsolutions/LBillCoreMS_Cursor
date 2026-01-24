@@ -53,6 +53,7 @@ public partial class BmsbtContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public DbSet<Fine> Fine { get; set; }
     public DbSet<AdditionalCharge> AdditionalCharges { get; set; }
+    public DbSet<Adjustment> Adjustments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -484,6 +485,29 @@ public partial class BmsbtContext : DbContext
             
             // ChargesAmount is a computed property, so ignore it in mapping
             entity.Ignore(e => e.ChargesAmount);
+        });
+
+        modelBuilder.Entity<Adjustment>(entity =>
+        {
+            entity.HasKey(e => e.AdjustmentId);
+
+            entity.ToTable("Adjustments");
+
+            entity.Property(e => e.AdjustmentId).HasColumnName("AdjustmentId");
+            entity.Property(e => e.BTNo)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.BillingType)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.AdjustmentName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.AdjustmentType)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.AdjustmentValue)
+                .HasColumnType("int");
         });
 
         OnModelCreatingPartial(modelBuilder);
