@@ -51,6 +51,8 @@ builder.Services.AddScoped<SessionHelper>();
 
 // Maintenance bills insert service (isolated from MaintenanceNew UI)
 builder.Services.AddScoped<IMaintenanceBillInsertService, MaintenanceBillInsertService>();
+builder.Services.AddScoped<IBillingLogicReader, BillingLogicReaderService>();
+builder.Services.AddScoped<IMdBillingService, MdBillingService>();
 
 
 

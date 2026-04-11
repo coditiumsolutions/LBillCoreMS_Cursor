@@ -14,11 +14,16 @@ namespace BMSBT.Controllers;
 public class MaintenanceBillInsertController : ControllerBase
 {
     private readonly IMaintenanceBillInsertService _service;
+    private readonly IMdBillingService _mdBillingService;
     private readonly BmsbtContext _dbContext;
 
-    public MaintenanceBillInsertController(IMaintenanceBillInsertService service, BmsbtContext dbContext)
+    public MaintenanceBillInsertController(
+        IMaintenanceBillInsertService service,
+        IMdBillingService mdBillingService,
+        BmsbtContext dbContext)
     {
         _service = service;
+        _mdBillingService = mdBillingService;
         _dbContext = dbContext;
     }
 
@@ -192,6 +197,81 @@ public class MaintenanceBillInsertController : ControllerBase
             var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
             return StatusCode(500, new { success = false, message = $"Error generating MBills: {message}", details = ex.StackTrace });
         }
+    }
+
+    /// <summary>
+    /// Generate bills using full MD-based pipeline (ResidentialBillLogic.md).
+    /// Called from the M-Bill-MDFile button on GenerateBill view.
+    /// </summary>
+    [HttpPost("md-generate")]
+    public async Task<IActionResult> MdGenerate([FromBody] MdGenerateRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (request?.CustomerUids == null || request.CustomerUids.Length == 0)
+                return BadRequest(new { success = false, message = "No customers selected." });
+
+            // Resolve operator: try request param → session → first available
+            string? userName = request.OperatorName;
+            if (string.IsNullOrWhiteSpace(userName))
+                userName = HttpContext.Session.GetString("UserName");
+
+            OperatorsSetup? op = null;
+
+            if (!string.IsNullOrWhiteSpace(userName))
+            {
+                op = _dbContext.OperatorsSetups
+                    .AsEnumerable()
+                    .FirstOrDefault(o =>
+                        string.Equals(o.OperatorName?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(o.OperatorID?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Fallback: pick first operator that has BillingMonth and BillingYear set
+            op ??= _dbContext.OperatorsSetups
+                .AsEnumerable()
+                .FirstOrDefault(o => !string.IsNullOrEmpty(o.BillingMonth) && !string.IsNullOrEmpty(o.BillingYear));
+
+            if (op == null)
+                return BadRequest(new { success = false, message = "Operator setup not found. Please add your name in Operator Setup." });
+
+            if (string.IsNullOrEmpty(op.BillingMonth) || string.IsNullOrEmpty(op.BillingYear))
+                return BadRequest(new { success = false, message = "Please add Billing Month and Billing Year in Operator Setup." });
+
+            DateOnly? issueDate = op.IssueDate.HasValue ? DateOnly.FromDateTime(op.IssueDate.Value) : null;
+            DateOnly? dueDate   = op.DueDate.HasValue   ? DateOnly.FromDateTime(op.DueDate.Value)   : null;
+            DateOnly? validDate = op.ValidDate.HasValue  ? DateOnly.FromDateTime(op.ValidDate.Value) : null;
+
+            var updates = new List<object>();
+
+            foreach (var uid in request.CustomerUids)
+            {
+                var result = await _mdBillingService.GenerateBillForCustomerAsync(
+                    uid, op.BillingMonth, op.BillingYear,
+                    issueDate, dueDate, validDate, cancellationToken);
+
+                updates.Add(new { uid = result.CustomerUid, status = result.Status, generated = result.Generated, debug = result.DebugInfo });
+            }
+
+            int generated = updates.Count(u => ((dynamic)u).generated == true);
+            return Ok(new
+            {
+                success = true,
+                message = $"MD pipeline completed: {generated}/{request.CustomerUids.Length} bills generated for {op.BillingMonth} {op.BillingYear}.",
+                updates
+            });
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            return StatusCode(500, new { success = false, message = $"Error in MD bill generation: {message}" });
+        }
+    }
+
+    public class MdGenerateRequest
+    {
+        public int[] CustomerUids { get; set; } = Array.Empty<int>();
+        public string? OperatorName { get; set; }
     }
 
     /// <summary>

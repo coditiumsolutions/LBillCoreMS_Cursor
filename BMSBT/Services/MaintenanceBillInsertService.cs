@@ -60,19 +60,21 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
             }
 
             // Fetch Additional Charges (Water & Other) from AdditionalCharges table
-            waterCharges = await _dbContext.AdditionalCharges
-                .Where(a => a.BTNo == dto.BTNo && 
-                           a.ServiceType == "Maintenance" && 
+            var waterInt = await _dbContext.AdditionalCharges
+                .Where(a => a.BTNo == dto.BTNo &&
+                           a.ServiceType == "Maintenance" &&
                            a.ChargesName == "Water Charges")
-                .Select(a => a.ChargesAmount)
-                .FirstOrDefaultAsync(cancellationToken) ?? 0m;
+                .Select(a => a.ChargesAmountInt)
+                .FirstOrDefaultAsync(cancellationToken);
+            waterCharges = waterInt ?? 0m;
 
-            otherCharges = await _dbContext.AdditionalCharges
-                .Where(a => a.BTNo == dto.BTNo && 
-                           a.ServiceType == "Maintenance" && 
+            var otherInt = await _dbContext.AdditionalCharges
+                .Where(a => a.BTNo == dto.BTNo &&
+                           a.ServiceType == "Maintenance" &&
                            a.ChargesName == "Other Charges")
-                .Select(a => a.ChargesAmount)
-                .FirstOrDefaultAsync(cancellationToken) ?? 0m;
+                .Select(a => a.ChargesAmountInt)
+                .FirstOrDefaultAsync(cancellationToken);
+            otherCharges = otherInt ?? 0m;
         }
 
         // Calculate billing amounts based on tariff values, arrears, fine, and additional charges
@@ -189,12 +191,25 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
             .OrderByDescending(b => b.Uid) // Get the latest bill for that month if multiple exist
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (prevBill != null && (string.IsNullOrEmpty(prevBill.PaymentStatus) || prevBill.PaymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase)))
+        if (prevBill != null && !IsPaidStatus(prevBill.PaymentStatus))
         {
             return prevBill.BillAmountAfterDueDate ?? 0m;
         }
 
         return 0m;
+    }
+
+    private static bool IsPaidStatus(string? paymentStatus)
+    {
+        if (string.IsNullOrWhiteSpace(paymentStatus))
+        {
+            return false;
+        }
+
+        var status = paymentStatus.Trim();
+        return status.Equals("paid", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("paid with surcharge", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("paidwithsurcharge", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

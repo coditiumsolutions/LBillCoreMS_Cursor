@@ -7,6 +7,8 @@
     var selectedProject = ViewBag.SelectedProject as string;
     var btNoSearch = ViewBag.BTNoSearch as string;
     var projects = ViewBag.Projects as List<string> ?? new List<string>();
+    var selectedBillCategory = ViewBag.SelectedBillCategory as string ?? "Residential";
+    var billingLogicMarkdown = ViewBag.BillingLogicMarkdown as string ?? "";
     
     // Get values from ViewBag populated by controller
     string operatorName = ViewBag.OperatorName as string ?? "";
@@ -63,9 +65,16 @@
                 }
             </select>
         </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Bill Category</label>
+            <select name="selectedBillCategory" class="form-select">
+                <option value="Residential" selected="@(selectedBillCategory == "Residential" ? "selected" : null)">Residential</option>
+                <option value="Commercial" selected="@(selectedBillCategory == "Commercial" ? "selected" : null)">Commercial</option>
+            </select>
+        </div>
         @if (!string.IsNullOrEmpty(selectedProject))
         {
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label fw-bold">Search by BTNo:</label>
                 <input type="text" name="btNoSearch" value="@btNoSearch" class="form-control" placeholder="Enter BTNo..." />
             </div>
@@ -74,10 +83,23 @@
             </div>
         }
     </div>
-    <button id="generateMBillButton" type="button" class="btn btn-outline-primary mb-3" style="width:170px">
-        Generate MBill
-    </button>
+    <div class="d-flex gap-2 mb-3">
+        <button id="mdBillButton" type="button" class="btn btn-outline-secondary">
+            M-Bill-MDFile
+        </button>
+        <button id="generateMBillButton" type="button" class="btn btn-outline-primary" style="width:170px">
+            Generate MBill
+        </button>
+    </div>
 </form>
+
+@if (!string.IsNullOrWhiteSpace(billingLogicMarkdown))
+{
+    <div class="mb-3">
+        <label class="form-label fw-bold">Loaded Billing Logic (.md)</label>
+        <textarea class="form-control" rows="12" readonly>@billingLogicMarkdown</textarea>
+    </div>
+}
 
 <div class="accordion" id="@accordionId">
     @foreach (var group in Model)
@@ -146,9 +168,10 @@
 
 <script>
     // expose Razor vars to JS
-    var currentProject = "@selectedProject";
-    var currentMonth   = "@billingMonth";
-    var currentYear    = "@billingYear";
+    var currentProject  = "@selectedProject";
+    var currentMonth    = "@billingMonth";
+    var currentYear     = "@billingYear";
+    var currentOperator = "@operatorName";
 
     function toggleGroupCheckboxes(source, groupId) {
         var selector = '.checkbox-' + groupId;
@@ -163,7 +186,51 @@
             }).get();
         }
 
-        // New: Generate MBill using default 15-values logic via isolated insert API
+        // MD pipeline: full billing logic from ResidentialBillLogic.md
+        $('#mdBillButton').click(function () {
+            var selectedIds = getSelectedIds();
+            if (!selectedIds.length) { alert('No records selected.'); return; }
+
+            $('#loadingOverlay').show();
+            $.ajax({
+                url: '/api/MaintenanceBillInsert/md-generate',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ customerUids: selectedIds, operatorName: currentOperator }),
+                success: function (response) {
+                    $('#loadingOverlay').hide();
+                    if (response && response.success) {
+                        var debugLines = [];
+                        if (response.updates && response.updates.length > 0) {
+                            response.updates.forEach(function (update) {
+                                var checkbox = $('.record-checkbox[value="' + update.uid + '"]');
+                                var row = checkbox.closest('tr');
+                                row.find('td:last').text(update.status);
+                                checkbox.prop('checked', false);
+                                if (update.debug) {
+                                    debugLines.push('UID ' + update.uid + ': ' + update.debug);
+                                }
+                            });
+                        }
+                        var msg = response.message || 'MD bill generation completed.';
+                        if (debugLines.length > 0) {
+                            msg += '\n\n--- Arrears Debug ---\n' + debugLines.join('\n');
+                        }
+                        alert(msg);
+                    } else {
+                        alert(response.message || 'MD bill generation completed with unexpected response.');
+                    }
+                },
+                error: function (xhr) {
+                    $('#loadingOverlay').hide();
+                    var errorMsg = 'An error occurred during MD bill generation.';
+                    try { var res = JSON.parse(xhr.responseText); if (res.message) errorMsg = res.message; } catch(e) {}
+                    alert(errorMsg);
+                }
+            });
+        });
+
+        // Generate MBill using default 15-values logic via isolated insert API
         $('#generateMBillButton').click(function () {
             var selectedIds = getSelectedIds();
 

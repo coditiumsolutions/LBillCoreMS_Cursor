@@ -57,7 +57,7 @@
             <a class="navbar-brand" href="#">
                 <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
             </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
+            <span class="navbar-text text-white">Billing System Lahore</span>
         </div>
     </nav>
 
@@ -100,17 +100,9 @@
 
 
                     <li>
-                        <a asp-controller="SSQCustomers" asp-action="Dashboard">
-                            <i class="fas fa-user-friends" style="color: yellowgreen; font-size: 14px;"></i>
-                            Customers                           
-                        </a>
-                    </li>
-
-                   
-                    <li>
                         <a asp-controller="EBillU" asp-action="Index">
                             <i class='fas fa-bolt' style="color: yellowgreen; font-size: 14px;"></i>
-                            Elect Bills
+                            Electricity
                         </a>
                     </li>
 
@@ -118,79 +110,9 @@
                     <li>
                         <a asp-controller="MaintenanceNew" asp-action="Index">
                             <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Maint Bills
+                            Maintenance
                         </a>
                     </li>
-
-
-
-
-
-                    <!-- Twistee with collapsible internal links (BMS Home) -->
-                    <li class="nav-item">
-                        <a class="nav-link d-flex justify-content-between align-items-center"
-                           data-toggle="collapse"
-                           href="#twisteeSubMenuBMS"
-                           role="button"
-                           aria-expanded="false"
-                           aria-controls="twisteeSubMenuBMS">
-                            <span>
-                                <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
-                                &nbsp; Settings
-                            </span>
-                            <i class="fas fa-chevron-down twistee-caret"></i>
-                        </a>
-
-                        <div class="collapse" id="twisteeSubMenuBMS">
-                            <ul class="nav flex-column ml-3">
-                                
-                                <!-- Add more Twistee internal links here -->
-                                <li>
-                                    <a asp-controller="Reading" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Reading Sheet
-                                    </a>
-                                </li>
-
-
-                                <li>
-                                    <a asp-controller="Fine" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Fine
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a asp-controller="Setup" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Setups
-                                    </a>
-                                </li>
-
-
-
-                                <li>
-                                    <a asp-controller="Reports" asp-action="Index">
-                                        <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Reports
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a asp-controller="Audit" asp-action="Index">
-                                        <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Audit
-                                    </a>
-                                </li>
-
-
-                            </ul>
-                        </div>
-                    </li>
-
-
-
-
 
 
 
@@ -213,14 +135,6 @@
                         </a>
                         <div class="collapse" id="billOperationSubMenu">
                             <ul class="nav flex-column ml-3">
-
-                                <li>
-                                    <a asp-controller="SSQCustomers" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Customers
-                                    </a>
-                                </li>
-
 
                                 <li>
                                     <a asp-controller="Fine" asp-action="Index">
@@ -262,9 +176,14 @@
                         </div>
                     </li>
 
+                    <li>
+                        <a asp-controller="Login" asp-action="Logout"
+                           onclick="return confirm('Are you sure you want to log out?');">
+                            <i class="fas fa-sign-out-alt" style="color: yellowgreen; font-size: 14px;"></i>
+                            Exit
+                        </a>
+                    </li>
 
-
-                                      
                 </ul>
             </div>
 

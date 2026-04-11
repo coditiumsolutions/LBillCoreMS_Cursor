@@ -3,6 +3,7 @@ using BMSBT.Models;
 using BMSBT.Requests;
 using BMSBT.ViewModels;
 using BMSBT.DTO;
+using BMSBT.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -22,14 +23,20 @@ namespace BMSBT.Controllers
         private readonly MaintenanceFunctions MaintenanceFunctions;
         private readonly ICurrentOperatorService _operatorService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IBillingLogicReader _billingLogicReader;
 
        
-        public MaintenanceNewController(IHttpClientFactory httpClientFactory, BmsbtContext context, ICurrentOperatorService operatorService)
+        public MaintenanceNewController(
+            IHttpClientFactory httpClientFactory,
+            BmsbtContext context,
+            ICurrentOperatorService operatorService,
+            IBillingLogicReader billingLogicReader)
         {
             _dbContext = context;
             MaintenanceFunctions = new MaintenanceFunctions(_dbContext);
             _operatorService = operatorService;
             _httpClientFactory = httpClientFactory;
+            _billingLogicReader = billingLogicReader;
         
         }
 
@@ -120,8 +127,13 @@ namespace BMSBT.Controllers
 
         public IActionResult CustomersMaintenance()
         {
-            var projects = _dbContext.CustomersMaintenance
-                .Select(c => c.Project.Trim())
+            var projects = _dbContext.Configurations
+                .AsNoTracking()
+                .Where(c => c.ConfigKey != null &&
+                            c.ConfigValue != null &&
+                            c.ConfigKey.Trim().ToLower() == "project" &&
+                            c.ConfigValue.Trim() != "")
+                .Select(c => c.ConfigValue!.Trim())
                 .Distinct()
                 .OrderBy(p => p)
                 .ToList();
@@ -189,7 +201,11 @@ namespace BMSBT.Controllers
 
 
 
-        public async Task<IActionResult> GenerateBill(string selectedProject, string btNoSearch)
+        public async Task<IActionResult> GenerateBill(
+            string selectedProject,
+            string btNoSearch,
+            string selectedBillCategory = "Residential",
+            bool loadMdFile = false)
         {
             // Set Operator Name, Billing Month, Billing Year from session and Operators Setup
             string userName = HttpContext.Session.GetString("UserName");
@@ -214,6 +230,7 @@ namespace BMSBT.Controllers
 
             // Dropdown projects
             var projects = _dbContext.CustomersMaintenance
+                .Where(p => !string.IsNullOrWhiteSpace(p.Project))
                 .Select(p => p.Project.Trim())
                 .Distinct()
                 .ToList();
@@ -247,8 +264,27 @@ namespace BMSBT.Controllers
 
             }
 
+            if (string.IsNullOrWhiteSpace(selectedBillCategory))
+            {
+                selectedBillCategory = "Residential";
+            }
+
+            if (loadMdFile)
+            {
+                try
+                {
+                    ViewBag.BillingLogicMarkdown = await _billingLogicReader.ReadBillingLogicAsync(selectedBillCategory);
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.BillingLogicMarkdown = $"Unable to load billing logic file: {ex.Message}";
+                }
+            }
+
             ViewBag.Projects = projects;
             ViewBag.SelectedProject = selectedProject;
+            ViewBag.BTNoSearch = btNoSearch;
+            ViewBag.SelectedBillCategory = selectedBillCategory;
 
             return View(filteredData);
 
@@ -931,22 +967,6 @@ namespace BMSBT.Controllers
             ViewBag.SelectedYear = year;
             ViewBag.SelectedBtNo = BtNo;
 
-            // Get counts for each month and year from MaintenanceBills
-            var monthCounts = _dbContext.MaintenanceBills
-                .Where(b => !string.IsNullOrEmpty(b.BillingMonth))
-                .GroupBy(b => b.BillingMonth)
-                .Select(g => new { Month = g.Key, Count = g.Count() })
-                .ToDictionary(x => x.Month, x => x.Count);
-
-            var yearCounts = _dbContext.MaintenanceBills
-                .Where(b => !string.IsNullOrEmpty(b.BillingYear))
-                .GroupBy(b => b.BillingYear)
-                .Select(g => new { Year = g.Key, Count = g.Count() })
-                .ToDictionary(x => x.Year, x => x.Count);
-
-            ViewBag.MonthCounts = monthCounts;
-            ViewBag.YearCounts = yearCounts;
-
             // If nothing is provided
             if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
             {
@@ -1020,6 +1040,8 @@ namespace BMSBT.Controllers
             }
 
             var billsList = query.ToList();
+
+            ViewBag.SearchResultCount = billsList.Count;
 
             if (!billsList.Any())
             {

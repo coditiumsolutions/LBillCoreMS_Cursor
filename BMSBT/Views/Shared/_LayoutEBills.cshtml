@@ -253,6 +253,57 @@
                         </div>
                     </li>
 
+                    <!-- Settings (same links as former Home sidebar) -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#twisteeSubMenuSettingsEBill"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="twisteeSubMenuSettingsEBill">
+                            <span>
+                                <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Settings
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
+                        </a>
+
+                        <div class="collapse" id="twisteeSubMenuSettingsEBill">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="Reading" asp-action="Index">
+                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Reading Sheet
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Fine" asp-action="Index">
+                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Fine
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Setup" asp-action="Index">
+                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Setups
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Reports" asp-action="Index">
+                                        <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Reports
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Audit" asp-action="Index">
+                                        <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Audit
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
 
 
 
@@ -318,6 +369,14 @@
         });
 
         $(document).on('hide.bs.collapse', '#twisteeSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
+
+        $(document).on('show.bs.collapse', '#twisteeSubMenuSettingsEBill', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+
+        $(document).on('hide.bs.collapse', '#twisteeSubMenuSettingsEBill', function () {
             $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
         });
     </script>

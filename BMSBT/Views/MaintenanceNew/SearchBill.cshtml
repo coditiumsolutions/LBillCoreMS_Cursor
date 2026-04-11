@@ -81,14 +81,10 @@
             <label for="month" class="form-label">Month:</label>
             <select id="month" name="month" class="form-control" >
                 <option value="">-- Choose Month --</option>
-                @{
-                    var monthCounts = ViewBag.MonthCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
-                }
                 @foreach (var monthName in System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
                 {
-                    var count = monthCounts.ContainsKey(monthName) ? monthCounts[monthName] : 0;
                     <option value="@monthName" selected="@(monthName == ViewBag.SelectedMonth ? "selected" : null)">
-                        @monthName @(count > 0 ? $"({count})" : "")
+                        @monthName
                     </option>
                 }
             </select>
@@ -97,15 +93,10 @@
             <label for="year" class="form-label">Year:</label>
             <select id="year" name="year" class="form-control" >
                 <option value="">-- Choose Year --</option>
-                @{
-                    var yearCounts = ViewBag.YearCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
-                }
                 @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 10; i--)
                 {
-                    var yearStr = i.ToString();
-                    var count = yearCounts.ContainsKey(yearStr) ? yearCounts[yearStr] : 0;
                     <option value="@i" selected="@(i.ToString() == ViewBag.SelectedYear ? "selected" : null)">
-                        @i @(count > 0 ? $"({count})" : "")
+                        @i
                     </option>
                 }
             </select>
@@ -123,6 +114,28 @@
     </div>
 </form>
 
+@if (ViewBag.SearchResultCount != null)
+{
+    <div class="card border-info mb-2" style="margin-top:10px">
+        <div class="card-body py-2">
+            @{
+                var total = Convert.ToInt32(ViewBag.SearchResultCount);
+                var sm = ViewBag.SelectedMonth as string;
+                var sy = ViewBag.SelectedYear as string;
+                var sbt = ViewBag.SelectedBtNo as string;
+            }
+            <strong>@total.ToString("N0")</strong> record@(total == 1 ? "" : "s") found
+            @if (!string.IsNullOrEmpty(sm) && !string.IsNullOrEmpty(sy))
+            {
+                <span> for billing period <strong>@sm</strong> <strong>@sy</strong></span>
+            }
+            @if (!string.IsNullOrEmpty(sbt))
+            {
+                <span> (BTNo <strong>@sbt</strong>)</span>
+            }
+        </div>
+    </div>
+}
 
 <!-- Main Nested Table -->
 <div class="table-responsive" style="margin-top:10px">
@@ -134,16 +147,16 @@
                     <input type="checkbox" id="selectAll" title="Select All Records" />
                 </th>
 
-                <th data-sort="Btno" class="sort-icon" style="width:200px;">BT NO</th>
+                <th data-sort="Btno" class="sort-icon" style="width:200px;">BTNo</th>
                 <th data-sort="BillingMonth" class="sort-icon" style="width:200px;">Month</th>
                 <th data-sort="BillingYear" class="sort-icon" style="width:150px;">Year</th>
                 <th data-sort="Category" class="sort-icon" style="width:250px;">Category</th>
-                <th data-sort="CustomerName" class="sort-icon" style="width:300px;">Customer Name</th>
+                <th data-sort="CustomerName" class="sort-icon" style="width:300px;">Name</th>
 
-                <th style="width:150px;">Maint Charges</th>
+                <th style="width:150px;">Charges</th>
                 <th style="width:150px;">Arrears</th>
-                <th style="width:150px;">In Due Date</th>
-                <th data-sort="PaymentStatus" class="sort-icon" style="width:150px;">Payment Status</th>
+                <th style="width:150px;">BillTotal</th>
+                <th data-sort="PaymentStatus" class="sort-icon" style="width:150px;">Status</th>
 
                 <!-- Add other column headers as needed -->
             </tr>
@@ -251,6 +264,11 @@
 
 <!-- Optional styling (adapted from your CustomersDetail grid) -->
 <style>
+    #maintenanceTable > thead > tr > th {
+        font-weight: normal;
+        color: #0056b3;
+    }
+
     .dropdown-container {
         display: flex;
         gap: 10px;

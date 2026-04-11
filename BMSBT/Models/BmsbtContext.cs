@@ -292,6 +292,24 @@ public partial class BmsbtContext : DbContext
                 .IsFixedLength();
         });
 
+        // MaintenanceBills: DB uses decimal for MaintCharges and Arrears; model uses int? for bill math UX.
+        modelBuilder.Entity<MaintenanceBill>(entity =>
+        {
+            entity.ToTable("MaintenanceBills");
+
+            entity.Property(e => e.MaintCharges)
+                .HasColumnType("decimal(18,0)")
+                .HasConversion(
+                    v => v.HasValue ? (decimal)v.Value : (decimal?)null,
+                    v => v.HasValue ? (int)Math.Round(v.Value, MidpointRounding.AwayFromZero) : (int?)null);
+
+            entity.Property(e => e.Arrears)
+                .HasColumnType("decimal(18,1)")
+                .HasConversion(
+                    v => v.HasValue ? (decimal)v.Value : (decimal?)null,
+                    v => v.HasValue ? (int)Math.Round(v.Value, MidpointRounding.AwayFromZero) : (int?)null);
+        });
+
         modelBuilder.Entity<MeterType>(entity =>
         {
             entity.HasKey(e => e.MeterId).HasName("PK__MeterTyp__59223BAC81CB4E1A");

@@ -39,6 +39,9 @@ public partial class MaintenanceBill
 
     public DateOnly? PaymentDate { get; set; }
 
+    // Amount actually paid against this bill (matches MaintenanceBills.PaymentAmount int column)
+    public int? PaymentAmount { get; set; }
+
     public string? PaymentMethod { get; set; }
 
     public string? BankDetail { get; set; }
@@ -53,8 +56,8 @@ public partial class MaintenanceBill
 
     public int? BillAmountAfterDueDate { get; set; }
 
-    public decimal? Arrears { get; set; }
-    public decimal? MaintCharges { get; set; }
+    public int? Arrears { get; set; }
+    public int? MaintCharges { get; set; }
 
     // Additional maintenance-related charges
     public int? Fine { get; set; }

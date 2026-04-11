@@ -61,8 +61,8 @@ namespace BMSBT.BillServices
             }
             else
             {
-                // If bill exists, check if it's unpaid (NULL or 'unpaid')
-                if (string.IsNullOrEmpty(previousBill.PaymentStatus) || previousBill.PaymentStatus.Equals("unpaid", StringComparison.OrdinalIgnoreCase))
+                // If bill exists, carry arrears for any non-paid status
+                if (!IsPaidStatus(previousBill.PaymentStatus))
                 {
                     arrearsAmount = previousBill.BillAmountAfterDueDate;
                 }
@@ -182,6 +182,19 @@ namespace BMSBT.BillServices
                 b.Btno == customer.BTNo && b.BillingMonth == month && b.BillingYear == year);
         }
 
+        private static bool IsPaidStatus(string? paymentStatus)
+        {
+            if (string.IsNullOrWhiteSpace(paymentStatus))
+            {
+                return false;
+            }
+
+            var status = paymentStatus.Trim();
+            return status.Equals("paid", StringComparison.OrdinalIgnoreCase)
+                || status.Equals("paid with surcharge", StringComparison.OrdinalIgnoreCase)
+                || status.Equals("paidwithsurcharge", StringComparison.OrdinalIgnoreCase);
+        }
+
 
 
 
@@ -219,17 +232,17 @@ namespace BMSBT.BillServices
 
             // --- New: Fetch Additional Charges (Water & Other) from AdditionalCharges table ---
             decimal waterCharges = _dbContext.AdditionalCharges
-                .Where(a => a.BTNo == customer.BTNo && 
-                           a.ServiceType == "Maintenance" && 
+                .Where(a => a.BTNo == customer.BTNo &&
+                           a.ServiceType == "Maintenance" &&
                            a.ChargesName == "Water Charges")
-                .Select(a => a.ChargesAmount)
+                .Select(a => a.ChargesAmountInt)
                 .FirstOrDefault() ?? 0m;
 
             decimal otherCharges = _dbContext.AdditionalCharges
-                .Where(a => a.BTNo == customer.BTNo && 
-                           a.ServiceType == "Maintenance" && 
+                .Where(a => a.BTNo == customer.BTNo &&
+                           a.ServiceType == "Maintenance" &&
                            a.ChargesName == "Other Charges")
-                .Select(a => a.ChargesAmount)
+                .Select(a => a.ChargesAmountInt)
                 .FirstOrDefault() ?? 0m;
 
             // 1) Bill due on‑time: BillAmountInDueDate = MaintCharges + TaxAmount + Arrears + Fine + WaterCharges + OtherCharges
