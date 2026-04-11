@@ -30,8 +30,11 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now);
 
-        // Lookup tariff based on Project, PlotType, Size
-        var tariff = LookupTariff(dto.Project, dto.PlotType, dto.Size);
+        // Lookup tariff: apartment blocks use Project + Category Apartment only (ignore Size)
+        var categoryKey = dto.Category ?? dto.PlotType;
+        MaintenanceTarrif? tariff = BlockIndicatesApartment(dto.Block)
+            ? LookupTariffApartmentIgnoreSize(dto.Project)
+            : LookupTariff(dto.Project, categoryKey, dto.Size);
         
         // Use tariff values if found, otherwise use 0 as default
         decimal maintCharges = tariff != null ? (decimal)tariff.Charges : 0m;
@@ -58,23 +61,26 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
                                f.FineService == "Maintenance")
                     .SumAsync(f => f.FineToCharge, cancellationToken);
             }
+        }
 
-            // Fetch Additional Charges (Water & Other) from AdditionalCharges table
-            var waterInt = await _dbContext.AdditionalCharges
-                .Where(a => a.BTNo == dto.BTNo &&
-                           a.ServiceType == "Maintenance" &&
-                           a.ChargesName == "Water Charges")
-                .Select(a => a.ChargesAmountInt)
-                .FirstOrDefaultAsync(cancellationToken);
-            waterCharges = waterInt ?? 0m;
+        // AdditionalCharges: sum all rows for Maintenance service, matched by BTNo (and optional alternate BT numbers)
+        var chargeBtKeys = BuildAdditionalChargeBtNoKeys(dto);
+        if (chargeBtKeys.Count > 0)
+        {
+            var additionalRows = await _dbContext.AdditionalCharges
+                .Where(a => a.BTNo != null && chargeBtKeys.Contains(a.BTNo))
+                .ToListAsync(cancellationToken);
 
-            var otherInt = await _dbContext.AdditionalCharges
-                .Where(a => a.BTNo == dto.BTNo &&
-                           a.ServiceType == "Maintenance" &&
-                           a.ChargesName == "Other Charges")
-                .Select(a => a.ChargesAmountInt)
-                .FirstOrDefaultAsync(cancellationToken);
-            otherCharges = otherInt ?? 0m;
+            var maintenanceRows = additionalRows
+                .Where(a => string.Equals(a.ServiceType?.Trim(), "Maintenance", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            waterCharges = maintenanceRows
+                .Where(a => ChargeNameEquals(a.ChargesName, "Water Charges"))
+                .Sum(a => (decimal)(a.ChargesAmountInt ?? 0));
+            otherCharges = maintenanceRows
+                .Where(a => ChargeNameEquals(a.ChargesName, "Other Charges"))
+                .Sum(a => (decimal)(a.ChargesAmountInt ?? 0));
         }
 
         // Calculate billing amounts based on tariff values, arrears, fine, and additional charges
@@ -132,14 +138,34 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         return bill;
     }
 
+    private static bool BlockIndicatesApartment(string? block) =>
+        !string.IsNullOrWhiteSpace(block)
+        && block.Contains("apartment", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>
-    /// Looks up MaintenanceTarrif record matching Project, PlotType, and Size.
+    /// Apartment tariff: Project + Category = Apartment; Size is not used.
+    /// </summary>
+    private MaintenanceTarrif? LookupTariffApartmentIgnoreSize(string? project)
+    {
+        if (string.IsNullOrWhiteSpace(project))
+            return null;
+
+        var p = project.Trim();
+        return _dbContext.MaintenanceTarrifs
+            .Where(t => t.Project != null && t.Category != null)
+            .Where(t => t.Project!.Trim() == p && t.Category!.Trim().ToLower() == "apartment")
+            .OrderBy(t => t.Uid)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Looks up MaintenanceTarrif record matching Project, Category, and Size.
     /// Returns null if no match found.
     /// </summary>
-    private MaintenanceTarrif? LookupTariff(string? project, string? plotType, string? size)
+    private MaintenanceTarrif? LookupTariff(string? project, string? category, string? size)
     {
         if (string.IsNullOrWhiteSpace(project) || 
-            string.IsNullOrWhiteSpace(plotType) || 
+            string.IsNullOrWhiteSpace(category) || 
             string.IsNullOrWhiteSpace(size))
         {
             return null; // Cannot lookup without all three attributes
@@ -148,7 +174,7 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         return _dbContext.MaintenanceTarrifs
             .FirstOrDefault(t => 
                 t.Project == project.Trim() &&
-                t.PlotType == plotType.Trim() &&
+                t.Category == category.Trim() &&
                 t.Size == size.Trim());
     }
 
@@ -198,6 +224,26 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
 
         return 0m;
     }
+
+    private static List<string> BuildAdditionalChargeBtNoKeys(MaintenanceBillCreateDto dto)
+    {
+        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(dto.BTNo))
+            keys.Add(dto.BTNo.Trim());
+        if (dto.BtNosForAdditionalChargeLookup != null)
+        {
+            foreach (var s in dto.BtNosForAdditionalChargeLookup)
+            {
+                if (!string.IsNullOrWhiteSpace(s))
+                    keys.Add(s.Trim());
+            }
+        }
+
+        return keys.ToList();
+    }
+
+    private static bool ChargeNameEquals(string? chargesName, string expected) =>
+        string.Equals(chargesName?.Trim(), expected, StringComparison.OrdinalIgnoreCase);
 
     private static bool IsPaidStatus(string? paymentStatus)
     {

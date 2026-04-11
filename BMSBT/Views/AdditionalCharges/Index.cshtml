@@ -19,6 +19,19 @@
             </div>
         }
 
+        <form method="get" asp-action="Index" class="form-inline mb-3">
+            <div class="form-row align-items-end w-100">
+                <div class="col-md-4 col-lg-3">
+                    <label for="btNoSearch" class="form-label mb-1">BT No</label>
+                    <input type="text" id="btNoSearch" name="btNo" class="form-control" placeholder="Enter BTNo to search" value="@ViewBag.SelectedBtNo" />
+                </div>
+                <div class="col-auto mt-4 mt-md-0">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </div>
+        </form>
+
         @if (Model == null || !Model.Any())
         {
             <p>No additional charges found.</p>
@@ -54,7 +67,7 @@
             </table>
 
             <div class="d-flex justify-content-center">
-                @Html.PagedListPager(Model, page => Url.Action("Index", new { page }), new PagedListRenderOptions
+                @Html.PagedListPager(Model, page => Url.Action("Index", new { page, btNo = ViewBag.SelectedBtNo }), new PagedListRenderOptions
                 {
                     LiElementClasses = new string[] { "page-item" },
                     PageClasses = new string[] { "page-link" },

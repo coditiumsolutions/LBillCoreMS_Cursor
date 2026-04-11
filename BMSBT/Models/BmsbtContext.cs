@@ -282,7 +282,8 @@ public partial class BmsbtContext : DbContext
             entity.ToTable("MaintenanceTarrif");
 
             entity.Property(e => e.Uid).HasColumnName("UID");
-            entity.Property(e => e.PlotType).IsUnicode(false);
+            entity.Property(e => e.Category).IsUnicode(false);
+            entity.Property(e => e.History).IsUnicode(false);
             entity.Property(e => e.Project)
                 .HasMaxLength(50)
                 .IsUnicode(false);

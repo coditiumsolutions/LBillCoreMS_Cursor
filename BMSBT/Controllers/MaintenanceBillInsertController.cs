@@ -154,18 +154,26 @@ public class MaintenanceBillInsertController : ControllerBase
 
                 if (shouldGenerate)
                 {
+                    var additionalBtNos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    if (!string.IsNullOrWhiteSpace(customer.BTNo))
+                        additionalBtNos.Add(customer.BTNo.Trim());
+                    if (!string.IsNullOrWhiteSpace(customer.BTNoMaintenance))
+                        additionalBtNos.Add(customer.BTNoMaintenance.Trim());
+
                     var dto = new MaintenanceBillCreateDto
                     {
                         CustomerNo = customer.CustomerNo ?? string.Empty,
                         CustomerName = customer.CustomerName ?? string.Empty,
                         BTNo = btNoForLookup,
+                        BtNosForAdditionalChargeLookup = additionalBtNos.ToList(),
                         PlotStatus = customer.PlotType,
                         MeterNo = customer.MeterNo,
 
                         // Tariff matching attributes (required for tariff lookup)
                         Project = customer.Project,
-                        PlotType = customer.PlotType,
+                        Category = customer.Category ?? customer.PlotType,
                         Size = customer.Size,
+                        Block = customer.Block,
 
                         // Billing period and dates
                         BillingMonth = billingMonth,

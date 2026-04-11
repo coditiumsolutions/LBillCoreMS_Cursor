@@ -23,12 +23,22 @@ namespace BMSBT.Controllers
         }
 
         // GET: AdditionalCharges
-        public IActionResult Index(int? page)
+        public IActionResult Index(int? page, string? btNo)
         {
             int pageSize = 20;
             int pageNumber = page ?? 1;
 
-            var items = _dbContext.AdditionalCharges
+            var query = _dbContext.AdditionalCharges.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(btNo))
+            {
+                var term = btNo.Trim();
+                query = query.Where(a => a.BTNo != null && a.BTNo.Contains(term));
+            }
+
+            ViewBag.SelectedBtNo = btNo;
+
+            var items = query
                 .OrderBy(a => a.BTNo)
                 .ThenBy(a => a.ServiceType)
                 .ThenBy(a => a.ChargesName)

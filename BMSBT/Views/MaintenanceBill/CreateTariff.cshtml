@@ -14,13 +14,24 @@
             <div class="row">
                 <div class="col-md-3">
                     <label asp-for="Project" class="form-label"></label>
-                    <input asp-for="Project" class="form-control" required />
+                    <select asp-for="Project" class="form-control" required>
+                        <option value="">-- Select Project --</option>
+                        @foreach (var p in ViewBag.Projects as List<string> ?? new List<string>())
+                        {
+                            <option value="@p">@p</option>
+                        }
+                    </select>
                     <span asp-validation-for="Project" class="text-danger"></span>
                 </div>
                 <div class="col-md-3">
-                    <label asp-for="PlotType" class="form-label"></label>
-                    <input asp-for="PlotType" class="form-control" required />
-                    <span asp-validation-for="PlotType" class="text-danger"></span>
+                    <label asp-for="Category" class="form-label"></label>
+                    <select asp-for="Category" class="form-control" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Apartment">Apartment</option>
+                    </select>
+                    <span asp-validation-for="Category" class="text-danger"></span>
                 </div>
                 <div class="col-md-3">
                     <label asp-for="Size" class="form-label"></label>
@@ -43,7 +54,7 @@
                 </div>
                 <div  style="margin-top:30px">
                     <button type="submit" class="btn btn-success">Save</button>
-                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    <a asp-action="MaintTariff" class="btn btn-secondary">Cancel</a>
                 </div>
             </div>
 

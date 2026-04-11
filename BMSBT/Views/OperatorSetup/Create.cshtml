@@ -12,6 +12,11 @@
     .form-label {
         margin-bottom: 0.25rem;
     }
+    textarea.operator-setup-history {
+        min-height: 3.5em;
+        max-height: 6em;
+        resize: vertical;
+    }
 </style>
 
 <div class="container-fluid">
@@ -177,7 +182,7 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <label asp-for="History" class="form-label"></label>
-                            <textarea asp-for="History" class="form-control" rows="3"></textarea>
+                            <textarea asp-for="History" class="form-control operator-setup-history" rows="2"></textarea>
                             <span asp-validation-for="History" class="text-danger"></span>
                         </div>
                     </div>

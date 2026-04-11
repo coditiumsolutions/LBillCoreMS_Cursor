@@ -164,6 +164,20 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a asp-controller="MaintenanceBill" asp-action="MaintTariff">
+                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                            Setup Rates
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="OperatorSetup" asp-action="Index">
+                            <i class="fas fa-id-badge" style="color: yellowgreen; font-size: 14px;"></i>
+                            Operator Setup
+                        </a>
+                    </li>
+
                     <!-- Twistee with collapsible internal links (Maintenance) -->
                     <li class="nav-item">
                         <a class="nav-link d-flex justify-content-between align-items-center"
@@ -193,14 +207,6 @@
                                     <a asp-controller="MaintenanceBill" asp-action="PaymentForm">
                                         <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
                                         Pay Bill(s)
-                                    </a>
-                                </li>
-
-
-                                <li>
-                                    <a asp-controller="Maintenance" asp-action="MaintTariff">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Setup Rates
                                     </a>
                                 </li>
 
@@ -289,7 +295,7 @@
                     <h4>Quick Links</h4>
                     <ul class="nav flex-column">
                         <li>
-                            <a asp-controller="Maintenance" asp-action="MaintTariff">
+                            <a asp-controller="MaintenanceBill" asp-action="MaintTariff">
 
                                 <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
                                 Rates Setup

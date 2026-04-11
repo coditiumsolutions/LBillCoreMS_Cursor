@@ -42,7 +42,7 @@ namespace BMSBT.BillServices
             var tariff = GetTarrifDetails(customer, currentBillingMonth, currentBillingYear);
             if (tariff == null)
             {
-                UpdateGeneratedMonthYear(customer, $"Tariff not found for {customer.Project} {customer.PlotType} {customer.Size}");
+                UpdateGeneratedMonthYear(customer, $"Tariff not found for {customer.Project} {customer.Category ?? customer.PlotType} {customer.Size}");
                 return $"Tariff not found for customer {customer.CustomerName}.";
             }
 
@@ -138,15 +138,33 @@ namespace BMSBT.BillServices
 
 
 
-        private MaintenanceTarrif GetTarrifDetails(CustomersMaintenance customer, string month, string year)
+        private static bool BlockIndicatesApartment(string? block) =>
+            !string.IsNullOrWhiteSpace(block)
+            && block.Contains("apartment", StringComparison.OrdinalIgnoreCase);
+
+        private MaintenanceTarrif? GetTarrifDetails(CustomersMaintenance customer, string month, string year)
             {
                 // Fetch the customer details based on the BTNo
                 var customerDetail = _dbContext.CustomersMaintenance.FirstOrDefault(c => c.BTNo == customer.BTNo);
+                if (customerDetail == null)
+                    return null;
 
-                // Return the matching maintenance tariff if customer details are found
+                if (BlockIndicatesApartment(customerDetail.Block))
+                {
+                    var projectKey = customerDetail.Project?.Trim() ?? string.Empty;
+                    if (string.IsNullOrEmpty(projectKey))
+                        return null;
+
+                    return _dbContext.MaintenanceTarrifs
+                        .Where(t => t.Project != null && t.Category != null)
+                        .Where(t => t.Project!.Trim() == projectKey && t.Category!.Trim().ToLower() == "apartment")
+                        .OrderBy(t => t.Uid)
+                        .FirstOrDefault();
+                }
+
+                var categoryKey = customerDetail.Category ?? customerDetail.PlotType;
                 return _dbContext.MaintenanceTarrifs
-                    .FirstOrDefault(t => customerDetail != null
-                                         && t.PlotType == customerDetail.PlotType
+                    .FirstOrDefault(t => t.Category == categoryKey
                                          && t.Size == customerDetail.Size
                                          && t.Project == customerDetail.Project);
             }

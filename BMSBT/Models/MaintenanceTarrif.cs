@@ -9,11 +9,13 @@ public partial class MaintenanceTarrif
 
     public string Project { get; set; } = null!;
 
-    public string PlotType { get; set; } = null!;
+    public string Category { get; set; } = null!;
 
     public string Size { get; set; } = null!;
 
     public double Charges { get; set; }
 
     public string? Tax { get; set; }
+
+    public string? History { get; set; }
 }

@@ -1,7 +1,7 @@
 @model BMSBT.Models.OperatorsSetup
 
 @{
-    ViewData["Title"] = "Edit Operator";
+    ViewData["Title"] = "Operator Detail";
     Layout = "~/Views/Shared/_LayoutSetup.cshtml";
 }
 
@@ -12,18 +12,35 @@
     .form-label {
         margin-bottom: 0.25rem;
     }
+    textarea.operator-setup-history {
+        min-height: 3.5em;
+        max-height: 6em;
+        resize: vertical;
+    }
+    .operator-setup-panel {
+        padding: 1rem 1.25rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+    .operator-setup-panel--detail {
+        background-color: #e8f4fc;
+    }
+    .operator-setup-panel--ebilling {
+        background-color: #f5f0e8;
+    }
 </style>
 
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
-            <h4>Edit Operator</h4>
+            <h4>Operator Detail</h4>
         </div>
         <div class="card-body">
             <form asp-action="Edit" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="Uid" />
 
+                <div class="operator-setup-panel operator-setup-panel--detail">
                 <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -32,7 +49,6 @@
                             <span asp-validation-for="OperatorID" class="text-danger"></span>
                         </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="OperatorName" class="form-label"></label>
@@ -52,7 +68,6 @@
                             <span asp-validation-for="BillingMonth" class="text-danger"></span>
                         </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="BillingYear" class="form-label"></label>
@@ -74,7 +89,6 @@
                             <span asp-validation-for="BankName" class="text-danger"></span>
                         </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="IssueDate" class="form-label"></label>
@@ -92,7 +106,20 @@
                             <span asp-validation-for="DueDate" class="text-danger"></span>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ValidDate" class="form-label"></label>
+                            <input asp-for="ValidDate" class="form-control" type="date" />
+                            <span asp-validation-for="ValidDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                </div>
 
+                <div class="operator-setup-panel operator-setup-panel--ebilling">
+                <h6 class="text-secondary border-bottom pb-2 mb-3">E-Billing Detail</h6>
+
+                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="FPARate1" class="form-label"></label>
@@ -100,9 +127,6 @@
                             <span asp-validation-for="FPARate1" class="text-danger"></span>
                         </div>
                     </div>
-                </div>
-
-                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="FPAMonth1" class="form-label"></label>
@@ -112,7 +136,9 @@
                             <span asp-validation-for="FPAMonth1" class="text-danger"></span>
                         </div>
                     </div>
+                </div>
 
+                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="FPAYEAR1" class="form-label"></label>
@@ -122,9 +148,6 @@
                             <span asp-validation-for="FPAYEAR1" class="text-danger"></span>
                         </div>
                     </div>
-                </div>
-
-                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="FPARate2" class="form-label"></label>
@@ -132,7 +155,9 @@
                             <span asp-validation-for="FPARate2" class="text-danger"></span>
                         </div>
                     </div>
+                </div>
 
+                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="FPAMonth2" class="form-label"></label>
@@ -142,9 +167,6 @@
                             <span asp-validation-for="FPAMonth2" class="text-danger"></span>
                         </div>
                     </div>
-                </div>
-
-                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="FPAYEAR2" class="form-label"></label>
@@ -154,7 +176,9 @@
                             <span asp-validation-for="FPAYEAR2" class="text-danger"></span>
                         </div>
                     </div>
+                </div>
 
+                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="ReadingDate" class="form-label"></label>
@@ -162,22 +186,11 @@
                             <span asp-validation-for="ReadingDate" class="text-danger"></span>
                         </div>
                     </div>
-                </div>
-
-                <div class="row mb-2">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label asp-for="PaidDate" class="form-label"></label>
                             <input asp-for="PaidDate" class="form-control" type="date" />
                             <span asp-validation-for="PaidDate" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="ValidDate" class="form-label"></label>
-                            <input asp-for="ValidDate" class="form-control" type="date" />
-                            <span asp-validation-for="ValidDate" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
@@ -186,10 +199,11 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <label asp-for="History" class="form-label"></label>
-                            <textarea asp-for="History" class="form-control" rows="3"></textarea>
+                            <textarea asp-for="History" class="form-control operator-setup-history" rows="2"></textarea>
                             <span asp-validation-for="History" class="text-danger"></span>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 <div class="form-group">

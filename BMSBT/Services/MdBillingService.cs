@@ -49,6 +49,15 @@ public class MdBillingService : IMdBillingService
 
         string btNo = customer.BTNo ?? "";
 
+        var additionalChargeBtKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(btNo))
+            additionalChargeBtKeys.Add(btNo.Trim());
+        if (!string.IsNullOrWhiteSpace(customer.BTNo))
+            additionalChargeBtKeys.Add(customer.BTNo.Trim());
+        if (!string.IsNullOrWhiteSpace(customer.BTNoMaintenance))
+            additionalChargeBtKeys.Add(customer.BTNoMaintenance.Trim());
+        var additionalChargeKeyList = additionalChargeBtKeys.ToList();
+
         // ═══════════════════════════════════════════════════════════════
         // PHASE 2 – VERIFY PROCESS  (ResidentialBillLogic.md §2)
         // ═══════════════════════════════════════════════════════════════
@@ -100,10 +109,27 @@ public class MdBillingService : IMdBillingService
         decimal maintCharges = 0m;
         decimal taxAmount = 0m;
 
-        var tariff = await _db.MaintenanceTarrifs
-            .FirstOrDefaultAsync(t => t.Project == customer.Project
-                                   && t.PlotType == customer.PlotType
-                                   && t.Size == customer.Size, ct);
+        var categoryKey = customer.Category ?? customer.PlotType;
+        MaintenanceTarrif? tariff;
+        if (BlockIndicatesApartment(customer.Block))
+        {
+            var projectKey = customer.Project?.Trim() ?? string.Empty;
+            tariff = string.IsNullOrEmpty(projectKey)
+                ? null
+                : await _db.MaintenanceTarrifs
+                    .Where(t => t.Project != null && t.Category != null)
+                    .Where(t => t.Project!.Trim() == projectKey && t.Category!.Trim().ToLower() == "apartment")
+                    .OrderBy(t => t.Uid)
+                    .FirstOrDefaultAsync(ct);
+        }
+        else
+        {
+            tariff = await _db.MaintenanceTarrifs
+                .FirstOrDefaultAsync(t => t.Project == customer.Project
+                                       && t.Category == categoryKey
+                                       && t.Size == customer.Size, ct);
+        }
+
         if (tariff != null)
         {
             maintCharges = (decimal)tariff.Charges;
@@ -111,7 +137,9 @@ public class MdBillingService : IMdBillingService
         }
         else
         {
-            customer.BillStatusMaint = $"Tariff not found for {customer.Project} {customer.PlotType} {customer.Size}";
+            customer.BillStatusMaint = BlockIndicatesApartment(customer.Block)
+                ? $"Tariff not found for {customer.Project} Apartment (block indicates apartment)"
+                : $"Tariff not found for {customer.Project} {categoryKey} {customer.Size}";
         }
 
         // --- Step 4.7 – Fine ---
@@ -143,17 +171,24 @@ public class MdBillingService : IMdBillingService
             }
         }
 
-        // --- Step 4.9 – Water Charges ---
-        decimal waterCharges = await _db.AdditionalCharges
-            .Where(a => a.BTNo == btNo && a.ServiceType == "Maintenance" && a.ChargesName == "Water Charges")
-            .Select(a => a.ChargesAmount)
-            .FirstOrDefaultAsync(ct) ?? 0m;
-
-        // --- Step 4.13 – Other Charges ---
-        decimal otherCharges = await _db.AdditionalCharges
-            .Where(a => a.BTNo == btNo && a.ServiceType == "Maintenance" && a.ChargesName == "Other Charges")
-            .Select(a => a.ChargesAmount)
-            .FirstOrDefaultAsync(ct) ?? 0m;
+        // --- Step 4.9 / 4.13 – Water & Other (sum all AdditionalCharges rows, Maintenance, matching any customer BT number)
+        decimal waterCharges = 0m;
+        decimal otherCharges = 0m;
+        if (additionalChargeKeyList.Count > 0)
+        {
+            var additionalRows = await _db.AdditionalCharges
+                .Where(a => a.BTNo != null && additionalChargeKeyList.Contains(a.BTNo))
+                .ToListAsync(ct);
+            var maintenanceRows = additionalRows
+                .Where(a => string.Equals(a.ServiceType?.Trim(), "Maintenance", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            waterCharges = maintenanceRows
+                .Where(a => string.Equals(a.ChargesName?.Trim(), "Water Charges", StringComparison.OrdinalIgnoreCase))
+                .Sum(a => a.ChargesAmount ?? 0m);
+            otherCharges = maintenanceRows
+                .Where(a => string.Equals(a.ChargesName?.Trim(), "Other Charges", StringComparison.OrdinalIgnoreCase))
+                .Sum(a => a.ChargesAmount ?? 0m);
+        }
 
         // --- Step 4.12 – Arrears ---
         var (arrears, arrearsDebug) = GetArrears(previousBill);
@@ -288,6 +323,10 @@ public class MdBillingService : IMdBillingService
         int prevYear = idx == 0 ? year - 1 : year;
         return (Months[prevIdx], prevYear.ToString());
     }
+
+    private static bool BlockIndicatesApartment(string? block) =>
+        !string.IsNullOrWhiteSpace(block)
+        && block.Contains("apartment", StringComparison.OrdinalIgnoreCase);
 
     private static decimal ParseTaxValue(string? taxString)
     {
