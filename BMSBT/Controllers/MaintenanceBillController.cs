@@ -7,9 +7,9 @@ using DevExpress.XtraRichEdit.Import.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
-using System.Data.Entity;
 using System.Net.Http.Headers;
 using System.Security.Policy;
+using System.Text.Json;
 using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
@@ -41,6 +41,43 @@ namespace BMSBT.Controllers
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
             ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
             base.OnActionExecuting(context);
+        }
+
+        /// <summary>
+        /// Session "OperatorId" may be empty when User.EmployeeId is unset; fall back to Operator Setup keyed by username.
+        /// </summary>
+        private async Task<string?> ResolveOperatorIdFromSessionAsync()
+        {
+            var id = HttpContext.Session.GetString("OperatorId");
+            if (!string.IsNullOrWhiteSpace(id))
+                return id;
+
+            var detailJson = HttpContext.Session.GetString("OperatorSetupDetail");
+            if (!string.IsNullOrEmpty(detailJson))
+            {
+                try
+                {
+                    var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(detailJson);
+                    if (dict != null && dict.TryGetValue("OperatorId", out var oid) && !string.IsNullOrWhiteSpace(oid))
+                        return oid;
+                }
+                catch (JsonException)
+                {
+                    // ignore malformed session payload
+                }
+            }
+
+            var userName = HttpContext.Session.GetString("UserName");
+            if (!string.IsNullOrWhiteSpace(userName))
+            {
+                var setup = await _dbContext.OperatorsSetups
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(o => o.OperatorName == userName);
+                if (setup != null && !string.IsNullOrWhiteSpace(setup.OperatorID))
+                    return setup.OperatorID;
+            }
+
+            return null;
         }
 
         public IActionResult CustomerForm()
@@ -701,24 +738,32 @@ namespace BMSBT.Controllers
 
         public async Task<IActionResult> PaymentForm()
         {
-            string operatorId = HttpContext.Session.GetString("OperatorId");
+            var operatorId = await ResolveOperatorIdFromSessionAsync();
 
-            if (string.IsNullOrEmpty(operatorId))
+            if (string.IsNullOrWhiteSpace(operatorId))
             {
-                return new JsonResult(new { success = false, message = "Operator ID not found in session" });
+                TempData["ErrorMessage"] = "Operator ID not found. Add your user to Operator Setup or set Employee ID on the user profile, then log in again.";
+                return View(new BillViewModel());
             }
 
-           await _operatorService.InitializeAsync(operatorId);
-            var currentOperator = _operatorService.GetCurrentOperator();
-
-            var model = new BillViewModel
+            try
             {
-                BillingMonth = currentOperator.BillingMonth,
-                BillingYear = currentOperator.BillingYear
+                await _operatorService.InitializeAsync(operatorId);
+                var currentOperator = _operatorService.GetCurrentOperator();
 
-            };
+                var model = new BillViewModel
+                {
+                    BillingMonth = currentOperator.BillingMonth,
+                    BillingYear = currentOperator.BillingYear
+                };
 
-            return View(model);
+                return View(model);
+            }
+            catch (KeyNotFoundException)
+            {
+                TempData["ErrorMessage"] = "No operator setup row matches your Operator ID. Please update Operator Setup.";
+                return View(new BillViewModel());
+            }
         }
 
 

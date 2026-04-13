@@ -61,9 +61,7 @@ namespace BMSBT.Controllers
                 // Create session
                 HttpContext.Session.SetString("UserName", user.Username);
                 HttpContext.Session.SetString("Role", user.Role ?? "");
-                HttpContext.Session.SetString("OperatorId", user.EmployeeId ?? "");
                 HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString("hh:mm tt"));
-
 
                 // Fetch operator setup using OperatorName matched with UserName
                 var operatorSetup = _context.OperatorsSetups
@@ -82,7 +80,11 @@ namespace BMSBT.Controllers
                     HttpContext.Session.SetString("OperatorSetupDetail", JsonSerializer.Serialize(operatorSetupDetail));
                 }
 
-
+                // Prefer EmployeeId when set; otherwise use Operator Setup ID so billing flows see a valid operator
+                var resolvedOperatorId = !string.IsNullOrWhiteSpace(user.EmployeeId)
+                    ? user.EmployeeId
+                    : (operatorSetup?.OperatorID ?? "");
+                HttpContext.Session.SetString("OperatorId", resolvedOperatorId);
 
                 // Get operator details by OperatorId from session
                 var operatorId = HttpContext.Session.GetString("OperatorId");
@@ -181,10 +183,16 @@ namespace BMSBT.Controllers
             //  if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             if (user != null && user.PasswordHash == password)
             {
+                var operatorSetup = await _context.OperatorsSetups
+                    .FirstOrDefaultAsync(o => o.OperatorName == user.Username);
+                var resolvedOperatorId = !string.IsNullOrWhiteSpace(user.EmployeeId)
+                    ? user.EmployeeId
+                    : (operatorSetup?.OperatorID ?? "");
+
                 // Create session
                 HttpContext.Session.SetString("UserName", user.Username);
                 HttpContext.Session.SetString("Role", user.Role ?? "");
-                HttpContext.Session.SetString("OperatorId", user.EmployeeId ?? "");
+                HttpContext.Session.SetString("OperatorId", resolvedOperatorId);
                 HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString("hh:mm tt"));
 
                 var claims = new List<Claim>

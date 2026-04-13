@@ -165,16 +165,9 @@
                     </li>
 
                     <li>
-                        <a asp-controller="MaintenanceBill" asp-action="MaintTariff">
-                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
-                            Setup Rates
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="OperatorSetup" asp-action="Index">
-                            <i class="fas fa-id-badge" style="color: yellowgreen; font-size: 14px;"></i>
-                            Operator Setup
+                        <a asp-controller="MaintenanceNew" asp-action="Operations">
+                            <i class="fas fa-tasks" style="color: yellowgreen; font-size: 14px;"></i>
+                            Payment Status
                         </a>
                     </li>
 
@@ -196,14 +189,6 @@
                         <div class="collapse" id="twisteeSubMenuMaintenance">
                             <ul class="nav flex-column ml-3">
                                 <li>
-                                    <a asp-controller="MaintenanceNew" asp-action="MaintenanceBillsSearch">
-                                        <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
-                                        All Bills
-                                    </a>
-                                </li>
-
-
-                                <li>
                                     <a asp-controller="MaintenanceBill" asp-action="PaymentForm">
                                         <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
                                         Pay Bill(s)
@@ -214,20 +199,6 @@
                                     <a asp-controller="AdditionalCharges" asp-action="Index">
                                         <i class='fas fa-plus-circle' style="color: yellowgreen; font-size: 14px;"></i>
                                         Additional Charges
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a asp-controller="Adjustments" asp-action="Index">
-                                        <i class='fas fa-sliders-h' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Adjustments
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a asp-controller="MaintenanceNew" asp-action="Operations">
-                                        <i class="fas fa-tasks" style="color: yellowgreen; font-size: 14px;"></i>
-                                        Operations
                                     </a>
                                 </li>
                             </ul>
@@ -253,33 +224,15 @@
                         <div class="collapse" id="twisteeSubMenuSettingsMaint">
                             <ul class="nav flex-column ml-3">
                                 <li>
-                                    <a asp-controller="Reading" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Reading Sheet
+                                    <a asp-controller="OperatorSetup" asp-action="Index">
+                                        <i class="fas fa-id-badge" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Operator Setup
                                     </a>
                                 </li>
                                 <li>
-                                    <a asp-controller="Fine" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Fine
-                                    </a>
-                                </li>
-                                <li>
-                                    <a asp-controller="Setup" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Setups
-                                    </a>
-                                </li>
-                                <li>
-                                    <a asp-controller="Reports" asp-action="Index">
-                                        <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Reports
-                                    </a>
-                                </li>
-                                <li>
-                                    <a asp-controller="Audit" asp-action="Index">
-                                        <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Audit
+                                    <a asp-controller="MaintenanceBill" asp-action="MaintTariff">
+                                        <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Tariff Rates
                                     </a>
                                 </li>
                             </ul>

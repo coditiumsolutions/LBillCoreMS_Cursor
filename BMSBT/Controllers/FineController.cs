@@ -87,18 +87,25 @@ namespace BMSBT.Controllers
                 f.FineYear.ToString() == FineYear &&
                 f.FineService == FineService);
 
-            bool any = query.Any();
-            decimal total = any ? query.Sum(f => f.FineToCharge) : 0;
+            var fineRows = query
+                .AsNoTracking()
+                .ToList();
+
+            bool any = fineRows.Any();
+            decimal total = any ? fineRows.Sum(f => (decimal)f.FineToCharge) : 0;
 
             // Breakdown by Fine Type
-            Dictionary<string, decimal> breakdown = null;
+            Dictionary<string, decimal>? breakdown = null;
             if (any)
             {
-                breakdown = query
-                    .GroupBy(f => string.IsNullOrEmpty(f.FineType) ? "Other" : f.FineType)
+                breakdown = fineRows
+                    .GroupBy(
+                        f => string.IsNullOrWhiteSpace(f.FineType) ? "Other" : f.FineType.Trim(),
+                        StringComparer.OrdinalIgnoreCase)
                     .ToDictionary(
                         g => g.Key,
-                        g => g.Sum(x => x.FineToCharge)
+                        g => (decimal)g.Sum(x => x.FineToCharge),
+                        StringComparer.OrdinalIgnoreCase
                     );
             }
 

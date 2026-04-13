@@ -122,72 +122,17 @@
                     </li>
 
                     <li>
+                        <a asp-controller="Adjustments" asp-action="Index">
+                            <i class="fas fa-sliders-h" style="color: yellowgreen; font-size: 14px;"></i>
+                            Adjustments
+                        </a>
+                    </li>
+
+                    <li>
                         <a asp-controller="Fine" asp-action="Index">
                             <i class="fas fa-gavel" style="color: yellowgreen; font-size: 14px;"></i>
                             Fine
                         </a>
-                    </li>
-
-
-
-
-
-                  
-
-                    <li class="nav-item">
-                        <a class="nav-link d-flex justify-content-between align-items-center"
-                           data-toggle="collapse"
-                           href="#billOperationSubMenu"
-                           role="button"
-                           aria-expanded="false"
-                           aria-controls="billOperationSubMenu">
-                            <span>
-                                <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
-                                &nbsp; Bill Operations
-                            </span>
-                            <i class="fas fa-chevron-down twistee-caret"></i>
-                        </a>
-                        <div class="collapse" id="billOperationSubMenu">
-                            <ul class="nav flex-column ml-3">
-
-                                <li>
-                                    <a asp-controller="Fine" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Electricity Bills
-                                    </a>
-                                </li>
-
-
-                                <li>
-                                    <a asp-controller="Fine" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Maintenance Bills
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="ReadingSheet" asp-action="ReadingDetails">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Readings
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Tariff" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Tariff
-                                    </a>
-                                </li>
-
-
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Tax" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Taxes
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </div>
                     </li>
 
                     <li class="sidebar-nav-spacer" aria-hidden="true"></li>

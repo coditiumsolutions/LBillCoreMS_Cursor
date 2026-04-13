@@ -1,327 +1,393 @@
+@model BMSBT.Models.Fine
+
 @{
     ViewData["Title"] = "Edit Fine";
     Layout = "~/Views/Shared/_LayoutFine.cshtml";
 }
 
 <style>
-    /* Ensure consistent height/appearance for inputs and dropdowns on Edit page */
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
+
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-form-body {
+        padding: 1rem 1.25rem;
+    }
+
     input.form-control,
-    select.form-control {
-        height: 38px;
-        padding: .375rem .75rem;
-        line-height: 1.5;
+    select.form-control,
+    textarea.form-control {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
     }
 </style>
 
-@model BMSBT.Models.Fine
-
-<form asp-action="Edit" method="post">
-    <div class="container">
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        <input type="hidden" asp-for="FineID" />
-
-        <!-- Section 1: Enter BTNo -->
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Search Customer</h5>
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    <form asp-action="Edit" method="post" id="fineEditForm">
+        <div class="card cm-detail-card shadow-sm border-0">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+                <p class="cm-header-name mb-0">
+                    <i class="fas fa-edit mr-1 text-muted" aria-hidden="true"></i> Edit fine record
+                    <span class="cm-badge-soft ml-2">Fine ID @Model.FineID</span>
+                </p>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-2">Enter BT No (Search)</div>
-                    <div class="col-md-4">
-                        <input type="text" id="btnoInput" class="form-control" placeholder="Search BT No" />
-                    </div>
-                    <div class="col-md-2">Select System</div>
-                    <div class="col-md-4">
-                        <select id="projectSelect" class="form-control">
-                            <option value="">-- Select System --</option>
-                            <option value="Electricity">Electricity</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <button type="button" class="btn btn-info" onclick="fetchCustomer()">Search</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Section 2: Dropdown Fields -->
-        <div class="card mb-3">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Fine Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="FineMonth" class="form-label">Fine Month</label></div>
-                    <div class="col-md-4">
-                        <select asp-for="FineMonth" class="form-control">
-                            <option value="">-- Select Month --</option>
-                            <option>January</option>
-                            <option>February</option>
-                            <option>March</option>
-                            <option>April</option>
-                            <option>May</option>
-                            <option>June</option>
-                            <option>July</option>
-                            <option>August</option>
-                            <option>September</option>
-                            <option>October</option>
-                            <option>November</option>
-                            <option>December</option>
-                        </select>
-                        <span asp-validation-for="FineMonth" class="text-danger"></span>
-                    </div>
+            <div class="card-body cm-form-body border-top-0">
+                @Html.ValidationSummary(true, "", new { @class = "text-danger mb-2" })
+                <input type="hidden" asp-for="FineID" />
 
-                    <div class="col-md-2"><label asp-for="FineYear" class="form-label">Fine Year</label></div>
-                    <div class="col-md-4">
-                        <select asp-for="FineYear" class="form-control">
-                            <option value="">-- Select Year --</option>
-                            @{
-                                int startYear = 2020;
-                                int currentYear = DateTime.Now.Year;
-                                for (int i = startYear; i <= currentYear + 2; i++)
-                                {
-                                    <option value="@i" selected="@(Model.FineYear == i ? "selected" : null)">@i</option>
-                                }
-                            }
-                        </select>
-                        <span asp-validation-for="FineYear" class="text-danger"></span>
+                <div class="card cm-detail-card border-0 mb-3">
+                    <div class="card-header">
+                        <p class="cm-header-name mb-0">Search Customer</p>
+                    </div>
+                    <div class="card-body cm-form-body">
+                        <div class="form-row mb-2">
+                            <div class="col-md-2"><label class="font-weight-bold small text-muted mb-1">Enter BT No (Search)</label></div>
+                            <div class="col-md-4">
+                                <input type="text" id="btnoInput" class="form-control" placeholder="Search BT No" />
+                            </div>
+                            <div class="col-md-2"><label class="font-weight-bold small text-muted mb-1">Select System</label></div>
+                            <div class="col-md-4">
+                                <select id="projectSelect" class="form-control">
+                                    <option value="">-- Select System --</option>
+                                    <option value="Electricity">Electricity</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" onclick="fetchCustomer()">
+                            <i class="fas fa-search mr-1" aria-hidden="true"></i> Search
+                        </button>
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="Department" class="form-label">Department</label></div>
-                    <div class="col-md-4">
-                        <select asp-for="Department" class="form-control">
-                            <option value="">-- Select Department --</option>
-                            <option>Accounts</option>
-                            <option>Operations</option>
-                            <option>Security</option>
-                            <option>Maintenance</option>
-                            <option>Electricity</option>
-                            <option>Others</option>
-                        </select>
-                        <span asp-validation-for="Department" class="text-danger"></span>
+                <div class="card cm-detail-card border-0 mb-3">
+                    <div class="card-header">
+                        <p class="cm-header-name mb-0">Fine Information</p>
                     </div>
+                    <div class="card-body cm-form-body">
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="FineMonth" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <select asp-for="FineMonth" class="form-control">
+                                    <option value="">-- Select Month --</option>
+                                    <option>January</option><option>February</option><option>March</option><option>April</option>
+                                    <option>May</option><option>June</option><option>July</option><option>August</option>
+                                    <option>September</option><option>October</option><option>November</option><option>December</option>
+                                </select>
+                                <span asp-validation-for="FineMonth" class="text-danger"></span>
+                            </div>
 
-                    <div class="col-md-2"><label asp-for="FineType" class="form-label">Fine Type</label></div>
-                    <div class="col-md-4">
-                        <select asp-for="FineType" class="form-control">
-                            <option value="">-- Select Fine Type --</option>
-                            <option>Late Payment</option>
-                            <option>Violation</option>
-                            <option>Illegal Construction</option>
-                            <option>Non-Payment</option>
-                            <option>Overuse</option>
-                            <option>Other</option>
-                        </select>
-                        <span asp-validation-for="FineType" class="text-danger"></span>
-                    </div>
-                </div>
+                            <div class="col-md-2"><label asp-for="FineYear" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <select asp-for="FineYear" class="form-control">
+                                    <option value="">-- Select Year --</option>
+                                    @{
+                                        int startYear = 2020;
+                                        int currentYear = DateTime.Now.Year;
+                                        for (int i = startYear; i <= currentYear + 2; i++)
+                                        {
+                                            <option value="@i" selected="@(Model.FineYear == i ? "selected" : null)">@i</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="FineYear" class="text-danger"></span>
+                            </div>
+                        </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="FineCategory" class="form-label">Fine Category</label></div>
-                    <div class="col-md-4">
-                        <select asp-for="FineCategory" class="form-control">
-                            <option value="">-- Select Fine Category --</option>
-                            <option>Electricity</option>
-                            <option>Maintenance</option>
-                        </select>
-                        <span asp-validation-for="FineCategory" class="text-danger"></span>
-                    </div>
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="Department" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <select asp-for="Department" class="form-control">
+                                    <option value="">-- Select Department --</option>
+                                    <option>Accounts</option><option>Operations</option><option>Security</option>
+                                    <option>Maintenance</option><option>Electricity</option><option>Others</option>
+                                </select>
+                                <span asp-validation-for="Department" class="text-danger"></span>
+                            </div>
 
-                    <div class="col-md-2"><label asp-for="FineService" class="form-label">Fine Service</label></div>
-                    <div class="col-md-4">
-                        <select asp-for="FineService" class="form-control">
-                            <option value="">-- Select Fine Service --</option>
-                            <option>Electricity</option>
-                            <option>Maintenance</option>
-                        </select>
-                        <span asp-validation-for="FineService" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <div class="col-md-2"><label asp-for="FineType" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <select asp-for="FineType" class="form-control">
+                                    <option value="">-- Select Fine Type --</option>
+                                    <option>Late Payment</option><option>Violation</option><option>Illegal Construction</option>
+                                    <option>Non-Payment</option><option>Overuse</option><option>Other</option>
+                                </select>
+                                <span asp-validation-for="FineType" class="text-danger"></span>
+                            </div>
+                        </div>
 
-        <!-- Section 3: Remaining Fields -->
-        <div class="card mb-3">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Customer & Fine Details</h5>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="BTNo" class="form-label">BT No</label></div>
-                    <div class="col-md-4"><input asp-for="BTNo" id="BTNo" class="form-control" /></div>
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="FineCategory" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <select asp-for="FineCategory" class="form-control">
+                                    <option value="">-- Select Fine Category --</option>
+                                    <option>Electricity</option>
+                                    <option>Maintenance</option>
+                                </select>
+                                <span asp-validation-for="FineCategory" class="text-danger"></span>
+                            </div>
 
-                    <div class="col-md-2"><label asp-for="ProjectName" class="form-label">Project Name</label></div>
-                    <div class="col-md-4"><input asp-for="ProjectName" id="ProjectName" class="form-control" /></div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="CustomerName" class="form-label">Customer Name</label></div>
-                    <div class="col-md-4"><input asp-for="CustomerName" id="CustomerName" class="form-control" /></div>
-
-                    <div class="col-md-2"><label asp-for="Block" class="form-label">Block</label></div>
-                    <div class="col-md-4"><input asp-for="Block" id="Block" class="form-control" /></div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="Sector" class="form-label">Sector</label></div>
-                    <div class="col-md-4"><input asp-for="Sector" id="Sector" class="form-control" /></div>
-
-                    <div class="col-md-2"><label asp-for="DateFine" class="form-label">Fine Date</label></div>
-                    <div class="col-md-4">
-                        <input asp-for="DateFine" type="date" class="form-control" />
-                        <span asp-validation-for="DateFine" class="text-danger"></span>
+                            <div class="col-md-2"><label asp-for="FineService" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <select asp-for="FineService" class="form-control">
+                                    <option value="">-- Select Fine Service --</option>
+                                    <option>Electricity</option>
+                                    <option>Maintenance</option>
+                                </select>
+                                <span asp-validation-for="FineService" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-3"><label asp-for="FineAmount" class="form-label">Fine Amount</label></div>
-                    <div class="col-md-3">
-                        <input asp-for="FineAmount" id="FineAmount" type="number" step="1" class="form-control" />
-                        <span asp-validation-for="FineAmount" class="text-danger"></span>
+                <div class="card cm-detail-card border-0 mb-0">
+                    <div class="card-header">
+                        <p class="cm-header-name mb-0">Customer & Fine Details</p>
                     </div>
+                    <div class="card-body cm-form-body">
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="BTNo" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4"><input asp-for="BTNo" id="BTNo" class="form-control" readonly /></div>
 
-                    <div class="col-md-3"><label asp-for="WaivedAmount" class="form-label">Waived Amount</label></div>
-                    <div class="col-md-3">
-                        <input asp-for="WaivedAmount" id="WaivedAmount" type="number" step="1" class="form-control" />
-                        <span asp-validation-for="WaivedAmount" class="text-danger"></span>
+                            <div class="col-md-2"><label asp-for="ProjectName" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4"><input asp-for="ProjectName" id="ProjectName" class="form-control" readonly /></div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="CustomerName" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4"><input asp-for="CustomerName" id="CustomerName" class="form-control" readonly /></div>
+
+                            <div class="col-md-2"><label asp-for="Block" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4"><input asp-for="Block" id="Block" class="form-control" readonly /></div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="Sector" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4"><input asp-for="Sector" id="Sector" class="form-control" readonly /></div>
+
+                            <div class="col-md-2"><label asp-for="DateFine" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <input asp-for="DateFine" type="date" class="form-control" />
+                                <span asp-validation-for="DateFine" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-3"><label asp-for="FineAmount" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-3">
+                                <input asp-for="FineAmount" id="FineAmount" type="number" step="1" class="form-control" />
+                                <span asp-validation-for="FineAmount" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-3"><label asp-for="WaivedAmount" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-3">
+                                <input asp-for="WaivedAmount" id="WaivedAmount" type="number" step="1" class="form-control" />
+                                <span asp-validation-for="WaivedAmount" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-3"><label asp-for="AdjustmentAmount" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-3">
+                                <input asp-for="AdjustmentAmount" id="AdjustmentAmount" type="number" step="1" class="form-control" />
+                                <span asp-validation-for="AdjustmentAmount" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-3"><label asp-for="FineToCharge" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-3">
+                                <input asp-for="FineToCharge" id="FineToCharge" type="number" step="1" class="form-control" readonly />
+                                <span asp-validation-for="FineToCharge" class="text-danger"></span>
+                                <small class="text-muted">Auto-calculated: Fine Amount - Waived Amount + Adjustment Amount</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="FineEnteredBy" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4"><input asp-for="FineEnteredBy" class="form-control" readonly /></div>
+
+                            <div class="col-md-2"><label asp-for="FineEnterDate" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <input asp-for="FineEnterDate" type="date" class="form-control" />
+                                <span asp-validation-for="FineEnterDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="Comments" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-4">
+                                <input asp-for="Comments" class="form-control" />
+                                <span asp-validation-for="Comments" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row mb-3">
+                            <div class="col-md-2"><label asp-for="History" class="font-weight-bold small text-muted mb-1"></label></div>
+                            <div class="col-md-10"><textarea asp-for="History" class="form-control"></textarea></div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-3"><label asp-for="AdjustmentAmount" class="form-label">Adjustment Amount</label></div>
-                    <div class="col-md-3">
-                        <input asp-for="AdjustmentAmount" id="AdjustmentAmount" type="number" step="1" class="form-control" />
-                        <span asp-validation-for="AdjustmentAmount" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-3"><label asp-for="FineToCharge" class="form-label">Fine to Charge</label></div>
-                    <div class="col-md-3">
-                        <input asp-for="FineToCharge" id="FineToCharge" type="number" step="1" class="form-control" readonly />
-                        <span asp-validation-for="FineToCharge" class="text-danger"></span>
-                        <small class="text-muted">Auto-calculated: Fine Amount - Waived Amount + Adjustment Amount</small>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="FineEnteredBy" class="form-label">Fine Entered By</label></div>
-                    <div class="col-md-4">
-                        <input asp-for="FineEnteredBy" class="form-control" readonly />
-                    </div>
-
-                    <div class="col-md-2"><label asp-for="FineEnterDate" class="form-label">Fine Enter Date</label></div>
-                    <div class="col-md-4">
-                        <input asp-for="FineEnterDate" type="date" class="form-control" />
-                        <span asp-validation-for="FineEnterDate" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="Comments" class="form-label">Comments</label></div>
-                    <div class="col-md-4">
-                        <input asp-for="Comments" class="form-control" />
-                        <span asp-validation-for="Comments" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-2"><label asp-for="History" class="form-label">History</label></div>
-                    <div class="col-md-10"><textarea asp-for="History" class="form-control"></textarea></div>
                 </div>
             </div>
-        </div>
 
-        <!-- Submit -->
-        <div class="row mt-4">
-            <div class="col-md-12 text-center">
-                <button type="submit" class="btn btn-primary">Save Fine</button>
+            <div class="cm-card-footer-actions">
+                <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                    <i class="far fa-edit mr-1" aria-hidden="true"></i> Update fine details then save changes.
+                </small>
+                <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Fine edit actions">
+                    <a asp-action="Details" asp-route-id="@Model.FineID" class="btn btn-outline-secondary">
+                        <i class="fas fa-eye" aria-hidden="true"></i><span class="d-none d-sm-inline"> Detail</span>
+                    </a>
+                    <a asp-action="Index" class="btn btn-outline-dark">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline"> List</span>
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save" aria-hidden="true"></i><span class="d-none d-sm-inline"> Save</span>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-</form>
-
-<script>
-    function fetchCustomer() {
-        const btNo = document.getElementById("btnoInput").value.trim();
-        const project = document.getElementById("projectSelect").value;
-
-        if (!btNo || !project) {
-            alert("Please enter BT No and select System");
-            return;
-        }
-
-        fetch(`/Fine/GetCustomerByBTNo?btNo=${btNo}&project=${project}`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    alert(data.message || "Customer not found.");
-                    clearCustomerFields();
-                    return;
-                }
-
-                const model = data.model;
-                document.getElementById("ProjectName").value = model.projectName || "";
-                document.getElementById("CustomerName").value = model.customerName || "";
-                document.getElementById("Block").value = model.block || "";
-                document.getElementById("Sector").value = model.sector || "";
-                document.getElementById("BTNo").value = model.btNo || "";
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("An error occurred while fetching customer data.");
-                clearCustomerFields();
-            });
-    }
-
-    function clearCustomerFields() {
-        document.getElementById("ProjectName").value = "";
-        document.getElementById("CustomerName").value = "";
-        document.getElementById("Block").value = "";
-        document.getElementById("Sector").value = "";
-        document.getElementById("BTNo").value = "";
-
-        const monthSelect = document.querySelector('select[name="FineMonth"]');
-        if (monthSelect) monthSelect.value = "";
-
-        const yearSelect = document.querySelector('select[name="FineYear"]');
-        if (yearSelect) yearSelect.value = "";
-
-        const enteredByInput = document.querySelector('input[name="FineEnteredBy"]');
-        if (enteredByInput) enteredByInput.value = "";
-    }
-</script>
+    </form>
+</div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script>
+        function fetchCustomer() {
+            const btNo = document.getElementById("btnoInput").value.trim();
+            const project = document.getElementById("projectSelect").value;
+
+            if (!btNo || !project) {
+                alert("Please enter BT No and select System");
+                return;
+            }
+
+            fetch(`/Fine/GetCustomerByBTNo?btNo=${btNo}&project=${project}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert(data.message || "Customer not found.");
+                        clearCustomerFields();
+                        return;
+                    }
+
+                    const model = data.model;
+                    document.getElementById("ProjectName").value = model.projectName || "";
+                    document.getElementById("CustomerName").value = model.customerName || "";
+                    document.getElementById("Block").value = model.block || "";
+                    document.getElementById("Sector").value = model.sector || "";
+                    document.getElementById("BTNo").value = model.btNo || "";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred while fetching customer data.");
+                    clearCustomerFields();
+                });
+        }
+
+        function clearCustomerFields() {
+            document.getElementById("ProjectName").value = "";
+            document.getElementById("CustomerName").value = "";
+            document.getElementById("Block").value = "";
+            document.getElementById("Sector").value = "";
+            document.getElementById("BTNo").value = "";
+
+            const monthSelect = document.querySelector('select[name="FineMonth"]');
+            if (monthSelect) monthSelect.value = "";
+
+            const yearSelect = document.querySelector('select[name="FineYear"]');
+            if (yearSelect) yearSelect.value = "";
+
+            const enteredByInput = document.querySelector('input[name="FineEnteredBy"]');
+            if (enteredByInput) enteredByInput.value = "";
+        }
+
         $(document).ready(function () {
-            // Auto-calculate Fine to Charge = Fine Amount - Waived Amount + Adjustment Amount
             function calculateFineToCharge() {
                 var fineAmount = parseFloat($('#FineAmount').val()) || 0;
                 var waivedAmount = parseFloat($('#WaivedAmount').val()) || 0;
                 var adjustmentAmount = parseFloat($('#AdjustmentAmount').val()) || 0;
                 var fineToCharge = fineAmount - waivedAmount + adjustmentAmount;
-                
-                // Ensure non-negative value
+
                 if (fineToCharge < 0) {
                     fineToCharge = 0;
                 }
-                
+
                 $('#FineToCharge').val(fineToCharge);
             }
-            
-            // Calculate when Fine Amount, Waived Amount, or Adjustment Amount changes
+
             $('#FineAmount, #WaivedAmount, #AdjustmentAmount').on('input change', function() {
                 calculateFineToCharge();
             });
-            
-            // Initial calculation on page load
+
             calculateFineToCharge();
         });
     </script>
