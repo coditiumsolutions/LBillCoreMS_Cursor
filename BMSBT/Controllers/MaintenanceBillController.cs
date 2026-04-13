@@ -757,19 +757,149 @@ namespace BMSBT.Controllers
                     BillingYear = currentOperator.BillingYear
                 };
 
-                return View(model);
+                return View("PaymentForm", model);
             }
             catch (KeyNotFoundException)
             {
                 TempData["ErrorMessage"] = "No operator setup row matches your Operator ID. Please update Operator Setup.";
-                return View(new BillViewModel());
+                return View("PaymentForm", new BillViewModel());
             }
         }
 
+        /// <summary>GET alias for the pay / open-bill page (same as PaymentForm).</summary>
+        [HttpGet]
+        public Task<IActionResult> OpenBill() => PaymentForm();
 
+        /// <summary>AJAX: find a maintenance bill by tracking number, month, and year (any payment status).</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult LookupBill(string btno, string billingMonth, string billingYear)
+        {
+            if (string.IsNullOrWhiteSpace(btno))
+            {
+                return Json(new BillLookupResponse
+                {
+                    Found = false,
+                    Message = "Tracking number is required."
+                });
+            }
 
+            if (string.IsNullOrWhiteSpace(billingMonth))
+            {
+                return Json(new BillLookupResponse
+                {
+                    Found = false,
+                    Message = "Billing month is required."
+                });
+            }
 
+            if (string.IsNullOrWhiteSpace(billingYear))
+            {
+                return Json(new BillLookupResponse
+                {
+                    Found = false,
+                    Message = "Billing year is required."
+                });
+            }
 
+            try
+            {
+                var trimmedBt = btno.Trim();
+                var bill = _dbContext.MaintenanceBills
+                    .AsNoTracking()
+                    .FirstOrDefault(e =>
+                        e.Btno == trimmedBt &&
+                        e.BillingMonth == billingMonth &&
+                        e.BillingYear == billingYear);
+
+                if (bill == null)
+                {
+                    return Json(new BillLookupResponse
+                    {
+                        Found = false,
+                        Message = "No bill found for this Tracking No and Month"
+                    });
+                }
+
+                var amount = bill.BillAmountInDueDate
+                    ?? bill.MaintCharges
+                    ?? bill.BillAmountAfterDueDate
+                    ?? 0;
+
+                return Json(new BillLookupResponse
+                {
+                    Found = true,
+                    Uid = bill.Uid,
+                    Btno = bill.Btno,
+                    CustomerName = bill.CustomerName,
+                    BillingMonth = bill.BillingMonth,
+                    BillingYear = bill.BillingYear,
+                    Amount = amount,
+                    PaymentStatus = bill.PaymentStatus,
+                    ReferenceNumber = bill.CustomerNo
+                });
+            }
+            catch (Exception)
+            {
+                return Json(new BillLookupResponse
+                {
+                    Found = false,
+                    Message = "Unable to look up the bill. Please try again."
+                });
+            }
+        }
+
+        /// <summary>AJAX: update bill payment status using the status selected on the form (and optional bank when paid).</summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateBillPaymentStatus(int uid, string paymentStatus, string? bankBranch)
+        {
+            try
+            {
+                var bill = _dbContext.MaintenanceBills.FirstOrDefault(b => b.Uid == uid);
+                if (bill == null)
+                {
+                    return Json(new BillStatusUpdateResponse
+                    {
+                        Success = false,
+                        Message = "Bill not found."
+                    });
+                }
+
+                if (string.IsNullOrWhiteSpace(paymentStatus))
+                    paymentStatus = "Paid";
+
+                bill.PaymentStatus = paymentStatus.Trim();
+                if (bill.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase))
+                {
+                    bill.PaymentDate = DateOnly.FromDateTime(DateTime.Now);
+                    if (!string.IsNullOrWhiteSpace(bankBranch))
+                        bill.BankDetail = bankBranch.Trim();
+                }
+                else
+                {
+                    bill.PaymentDate = null;
+                }
+
+                bill.LastUpdated = DateTime.UtcNow;
+                _dbContext.SaveChanges();
+
+                return Json(new BillStatusUpdateResponse
+                {
+                    Success = true,
+                    Message = "Bill status updated successfully",
+                    PaymentStatus = bill.PaymentStatus
+                });
+            }
+            catch (Exception)
+            {
+                return Json(new BillStatusUpdateResponse
+                {
+                    Success = false,
+                    Message = "Unable to update status. Please try again."
+                });
+            }
+        }
 
 
 

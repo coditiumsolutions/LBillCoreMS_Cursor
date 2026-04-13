@@ -11,48 +11,73 @@
     </div>
     <div class="card-body">
         <form asp-action="OpenBill" asp-controller="MaintenanceBill" method="post">
-            <div class="row">
-                <div class="col-md-3">
-                    <label asp-for="BillingMonth">Billing Month</label>
-                    <input asp-for="BillingMonth" class="form-control" readonly />
+            <div class="form-row align-items-end">
+                <div class="form-group col-6 col-sm-4 col-md-2 col-lg-2 mb-2 mb-lg-0">
+                    <label asp-for="BillingMonth" class="small mb-1 d-block">Billing Month</label>
+                    <select asp-for="BillingMonth" class="form-control form-control-sm">
+                        <option value="">— Month —</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
                 </div>
-                <div class="col-md-3">
-                    <label asp-for="BillingYear">Billing Year</label>
-                    <input asp-for="BillingYear" class="form-control" readonly />
+                <div class="form-group col-6 col-sm-4 col-md-2 col-lg-2 mb-2 mb-lg-0">
+                    <label asp-for="BillingYear" class="small mb-1 d-block">Billing Year</label>
+                    <select asp-for="BillingYear" class="form-control form-control-sm">
+                        <option value="">— Year —</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
                 </div>
-
-                <div class="col-md-3">
-                    <label asp-for="PaidOn">Paid On</label>
-                    <input asp-for="PaidOn" type="date" class="form-control" />
+                <div class="form-group col-6 col-sm-4 col-md-3 col-lg-2 mb-2 mb-lg-0">
+                    <label asp-for="PaidOn" class="small mb-1 d-block">Paid On</label>
+                    <input asp-for="PaidOn" type="date" class="form-control form-control-sm" />
                 </div>
-                <div class="col-md-3">
-                    <label asp-for="PaymentType">Payment Type</label>
-                    <select asp-for="PaymentType" class="form-control">
+                <div class="form-group col-6 col-sm-4 col-md-2 col-lg-2 mb-2 mb-lg-0">
+                    <label asp-for="PaymentType" class="small mb-1 d-block">Payment Type</label>
+                    <select asp-for="PaymentType" class="form-control form-control-sm">
                         <option value="Paid">Paid</option>
                         <option value="Unpaid">Unpaid</option>
                     </select>
                 </div>
-            </div>
-
-            
-
-            <div class="row mt-3">
-                <div class="col-md-3">
-                    <label asp-for="BankBranch">Bank Branch</label>
-                    <select asp-for="BankBranch" class="form-control">
+                <div class="form-group col-12 col-sm-12 col-md-3 col-lg-4 mb-2 mb-lg-0">
+                    <label asp-for="BankBranch" class="small mb-1 d-block">Bank Branch</label>
+                    <select asp-for="BankBranch" class="form-control form-control-sm">
                         <option value="Allied Bank">Allied Bank</option>
                         <option value="XYZ Bank">XYZ Bank</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+            </div>
+
+            <div class="row mt-3 align-items-end">
+                <div class="col-md-4">
                     <label asp-for="Btno">Enter Tracking No.</label>
-                    <input asp-for="Btno" class="form-control" placeholder="BTO-10790" />
+                    <div class="input-group">
+                        <input asp-for="Btno" class="form-control" placeholder="BTO-10790" autocomplete="off" />
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-primary" id="btnLookupBill" title="Look up bill for selected month and year">
+                                <span class="lookup-btn-label">Find bill</span>
+                                <span class="spinner-border spinner-border-sm d-none ml-1" id="lookupSpinner" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-danger d-none" id="lookupClientError"></small>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label asp-for="ReferenceNumber">Reference Number</label>
                     <input asp-for="ReferenceNumber" class="form-control" readonly />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label asp-for="CustomerName">Customer Name</label>
                     <input asp-for="CustomerName" class="form-control" readonly />
                 </div>
@@ -63,8 +88,55 @@
             <div class="mt-4">
                 <button type="submit" name="submitAction" value="SearchBill" class="btn btn-success">Search Bill</button>
                 <button type="submit" name="submitAction" value="MarkPaid" class="btn btn-primary">Mark Paid</button>
+                <button type="submit" name="submitAction" value="MarkPaidWithSurcharge" class="btn btn-info">Mark Paid With Surcharge</button>
             </div>
         </form>
+
+        <!-- Bill preview / status (AJAX, does not replace form submit flow) -->
+        <div class="modal fade" id="billLookupModal" tabindex="-1" role="dialog" aria-labelledby="billLookupModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h5 class="modal-title" id="billLookupModalTitle">Bill details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="billLookupModalLoading" class="text-center py-4 d-none">
+                            <div class="spinner-border text-primary" role="status"><span class="sr-only">Loading…</span></div>
+                            <div class="mt-2 small text-muted">Searching…</div>
+                        </div>
+                        <div id="billLookupModalError" class="alert alert-warning d-none mb-0" role="alert"></div>
+                        <div id="billLookupModalBody" class="d-none">
+                            <input type="hidden" id="modalBillUid" value="" />
+                            <dl class="row small mb-2">
+                                <dt class="col-sm-4">BT No</dt>
+                                <dd class="col-sm-8" id="modalBtno"></dd>
+                                <dt class="col-sm-4">Owner</dt>
+                                <dd class="col-sm-8" id="modalOwner"></dd>
+                                <dt class="col-sm-4">Period</dt>
+                                <dd class="col-sm-8" id="modalPeriod"></dd>
+                                <dt class="col-sm-4">Amount</dt>
+                                <dd class="col-sm-8" id="modalAmount"></dd>
+                                <dt class="col-sm-4">Bill status</dt>
+                                <dd class="col-sm-8"><span class="badge badge-secondary" id="modalDbStatus"></span></dd>
+                            </dl>
+                            <p class="small text-muted mb-2">
+                                New status (from form): <strong id="modalFormStatusLabel"></strong>
+                            </p>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                <button type="button" class="btn btn-primary btn-sm" id="btnModalUpdateStatus">
+                                    <span class="update-label">Update status</span>
+                                    <span class="spinner-border spinner-border-sm d-none ml-1" id="updateSpinner" role="status" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -83,7 +155,263 @@
     document.querySelectorAll("button[name='submitAction']").forEach(button => {
         button.addEventListener("click", function () {
             var form = document.querySelector("form");
-            form.action = this.value === "MarkPaid" ? "/MaintenanceBill/MarkPaid" : "/MaintenanceBill/OpenBill";
+            var v = this.value;
+            if (v === "MarkPaid" || v === "MarkPaidWithSurcharge") {
+                form.action = "/MaintenanceBill/MarkPaid";
+            } else {
+                form.action = "/MaintenanceBill/OpenBill";
+            }
         });
     });
+
+    (function billLookupModal() {
+        var lookupUrl = '@Url.Action("LookupBill", "MaintenanceBill")';
+        var updateUrl = '@Url.Action("UpdateBillPaymentStatus", "MaintenanceBill")';
+        var form = document.querySelector("form");
+        var btnLookup = document.getElementById("btnLookupBill");
+        var lookupSpinner = document.getElementById("lookupSpinner");
+        var lookupClientError = document.getElementById("lookupClientError");
+        var $modal = window.jQuery && window.jQuery("#billLookupModal");
+        var modalLoading = document.getElementById("billLookupModalLoading");
+        var modalError = document.getElementById("billLookupModalError");
+        var modalBody = document.getElementById("billLookupModalBody");
+        var btnUpdate = document.getElementById("btnModalUpdateStatus");
+        var updateSpinner = document.getElementById("updateSpinner");
+
+        function getToken() {
+            var t = form && form.querySelector('input[name="__RequestVerificationToken"]');
+            return t ? t.value : "";
+        }
+
+        function getVal(name) {
+            var el = form && form.querySelector("[name=\"" + name + "\"]");
+            return el ? (el.value || "").trim() : "";
+        }
+
+        function setLookupLoading(on) {
+            if (!btnLookup) return;
+            btnLookup.disabled = on;
+            if (lookupSpinner) lookupSpinner.classList.toggle("d-none", !on);
+        }
+
+        function setUpdateLoading(on) {
+            if (!btnUpdate) return;
+            btnUpdate.disabled = on;
+            if (updateSpinner) updateSpinner.classList.toggle("d-none", !on);
+        }
+
+        function resetModalPanels() {
+            if (modalLoading) modalLoading.classList.add("d-none");
+            if (modalError) { modalError.classList.add("d-none"); modalError.textContent = ""; }
+            if (modalBody) modalBody.classList.add("d-none");
+        }
+
+        function showModalLoading() {
+            resetModalPanels();
+            if (modalLoading) modalLoading.classList.remove("d-none");
+            if ($modal && $modal.modal) $modal.modal("show");
+        }
+
+        function showModalError(msg) {
+            resetModalPanels();
+            if (modalError) {
+                modalError.textContent = msg || "Something went wrong.";
+                modalError.classList.remove("d-none");
+            }
+            if ($modal && $modal.modal) $modal.modal("show");
+        }
+
+        function refreshFormStatusLabel() {
+            var sel = form && form.querySelector('select[name="PaymentType"]');
+            var lab = document.getElementById("modalFormStatusLabel");
+            if (!lab || !sel) return;
+            var opt = sel.options[sel.selectedIndex];
+            lab.textContent = opt ? opt.text : "";
+        }
+
+        function fillModalSuccess(data) {
+            resetModalPanels();
+            if (modalBody) modalBody.classList.remove("d-none");
+            document.getElementById("modalBillUid").value = data.uid != null ? String(data.uid) : "";
+            document.getElementById("modalBtno").textContent = data.btno || "—";
+            document.getElementById("modalOwner").textContent = data.customerName || "—";
+            document.getElementById("modalPeriod").textContent =
+                (data.billingMonth || "—") + " " + (data.billingYear || "");
+            var amt = data.amount != null ? Number(data.amount) : 0;
+            document.getElementById("modalAmount").textContent = amt.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            document.getElementById("modalDbStatus").textContent = data.paymentStatus || "—";
+            refreshFormStatusLabel();
+
+            if (form) {
+                var refEl = form.querySelector('input[name="ReferenceNumber"]');
+                var nameEl = form.querySelector('input[name="CustomerName"]');
+                if (refEl && data.referenceNumber != null && data.referenceNumber !== "") refEl.value = data.referenceNumber;
+                if (nameEl && data.customerName != null && data.customerName !== "") nameEl.value = data.customerName;
+            }
+
+            if ($modal && $modal.modal) $modal.modal("show");
+        }
+
+        function runLookup() {
+            if (!form || !btnLookup) return;
+            if (lookupClientError) {
+                lookupClientError.classList.add("d-none");
+                lookupClientError.textContent = "";
+            }
+
+            var btno = getVal("Btno");
+            var month = getVal("BillingMonth");
+            var year = getVal("BillingYear");
+
+            function showClientErr(t) {
+                if (!lookupClientError) { alert(t); return; }
+                lookupClientError.textContent = t;
+                lookupClientError.classList.remove("d-none");
+            }
+
+            if (!btno) {
+                showClientErr("Please enter a tracking number.");
+                return;
+            }
+            if (!month) {
+                showClientErr("Please select billing month.");
+                return;
+            }
+            if (!year) {
+                showClientErr("Please select billing year.");
+                return;
+            }
+
+            var token = getToken();
+            if (!token) {
+                showClientErr("Security token missing. Refresh the page and try again.");
+                return;
+            }
+
+            showModalLoading();
+            setLookupLoading(true);
+
+            var body = new URLSearchParams();
+            body.append("__RequestVerificationToken", token);
+            body.append("btno", btno);
+            body.append("billingMonth", month);
+            body.append("billingYear", year);
+
+            fetch(lookupUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                body: body.toString()
+            })
+                .then(function (r) {
+                    if (!r.ok) throw new Error("Network error");
+                    return r.json();
+                })
+                .then(function (data) {
+                    var found = data.found === true || data.Found === true;
+                    if (!found) {
+                        var msg = data.message || data.Message || "No bill found for this Tracking No and Month";
+                        showModalError(msg);
+                        return;
+                    }
+                    fillModalSuccess({
+                        uid: data.uid != null ? data.uid : data.Uid,
+                        btno: data.btno != null ? data.btno : data.Btno,
+                        customerName: data.customerName != null ? data.customerName : data.CustomerName,
+                        billingMonth: data.billingMonth != null ? data.billingMonth : data.BillingMonth,
+                        billingYear: data.billingYear != null ? data.billingYear : data.BillingYear,
+                        amount: data.amount != null ? data.amount : data.Amount,
+                        paymentStatus: data.paymentStatus != null ? data.paymentStatus : data.PaymentStatus,
+                        referenceNumber: data.referenceNumber != null ? data.referenceNumber : data.ReferenceNumber
+                    });
+                })
+                .catch(function () {
+                    showModalError("Unable to look up the bill. Please try again.");
+                })
+                .finally(function () {
+                    setLookupLoading(false);
+                });
+        }
+
+        function runUpdateStatus() {
+            var uidStr = document.getElementById("modalBillUid").value;
+            var uid = parseInt(uidStr, 10);
+            if (!uid) {
+                Swal.fire({ icon: "error", title: "No bill loaded.", timer: 2500, showConfirmButton: false });
+                return;
+            }
+
+            var paymentStatus = getVal("PaymentType");
+            var bankBranch = getVal("BankBranch");
+            var token = getToken();
+            if (!token) {
+                Swal.fire({ icon: "error", title: "Security token missing. Refresh the page.", timer: 3000, showConfirmButton: false });
+                return;
+            }
+
+            setUpdateLoading(true);
+            var body = new URLSearchParams();
+            body.append("__RequestVerificationToken", token);
+            body.append("uid", String(uid));
+            body.append("paymentStatus", paymentStatus);
+            body.append("bankBranch", bankBranch);
+
+            fetch(updateUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                body: body.toString()
+            })
+                .then(function (r) {
+                    if (!r.ok) throw new Error("Network error");
+                    return r.json();
+                })
+                .then(function (data) {
+                    var ok = data.success === true || data.Success === true;
+                    if (!ok) {
+                        Swal.fire({ icon: "error", title: data.message || data.Message || "Update failed.", showConfirmButton: true });
+                        return;
+                    }
+                    var status = data.paymentStatus != null ? data.paymentStatus : (data.PaymentStatus || "");
+                    var successMsg = data.message != null ? data.message : (data.Message || "Bill status updated successfully");
+                    var sel = form.querySelector('select[name="PaymentType"]');
+                    if (sel) {
+                        var match = Array.prototype.slice.call(sel.options).some(function (o) {
+                            return o.value === status;
+                        });
+                        if (match) sel.value = status;
+                    }
+                    document.getElementById("modalDbStatus").textContent = status || "—";
+                    refreshFormStatusLabel();
+                    Swal.fire({ icon: "success", title: successMsg, showConfirmButton: true, timer: 3500 });
+                })
+                .catch(function () {
+                    Swal.fire({ icon: "error", title: "Unable to update status. Please try again.", showConfirmButton: true });
+                })
+                .finally(function () {
+                    setUpdateLoading(false);
+                });
+        }
+
+        if (btnLookup) btnLookup.addEventListener("click", runLookup);
+
+        var btnoInput = form && form.querySelector('input[name="Btno"]');
+        if (btnoInput) {
+            btnoInput.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    runLookup();
+                }
+            });
+        }
+
+        var payType = form && form.querySelector('select[name="PaymentType"]');
+        if (payType) payType.addEventListener("change", refreshFormStatusLabel);
+
+        if (btnUpdate) btnUpdate.addEventListener("click", runUpdateStatus);
+
+        if ($modal && $modal.on) {
+            $modal.on("hidden.bs.modal", function () {
+                resetModalPanels();
+            });
+        }
+    })();
 </script>
