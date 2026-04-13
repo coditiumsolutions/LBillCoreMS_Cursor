@@ -105,6 +105,16 @@ public static class MaintenanceBillDuplicateChecker
     }
 
     /// <summary>
+    /// Shown in <see cref="Models.CustomersMaintenance.BillGenerationStatus"/> after a successful insert for the period.
+    /// </summary>
+    public static string BuildGeneratedSuccessStatus(string? billingMonth, string? billingYear)
+    {
+        var displayMonth = ToDisplayMonth(billingMonth);
+        var y = string.IsNullOrWhiteSpace(billingYear) ? "" : billingYear.Trim();
+        return $"Generated {displayMonth} {y}".Trim();
+    }
+
+    /// <summary>
     /// Case-insensitive BT match after trim (cannot be expressed in a single EF-translatable predicate).
     /// </summary>
     private static bool BtnoMatchesAnyKey(string? dbBtno, IReadOnlyList<string> btKeys)

@@ -2,9 +2,10 @@
 @using System.Globalization
 @using X.PagedList
 @using X.PagedList.Mvc.Core
-@model IPagedList<BillDTO>
+@model IPagedList<BillDTO>?
 
 @{
+    ViewData["Title"] = "Print maintenance bills";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
     var bills = Model ?? new StaticPagedList<BillDTO>(Enumerable.Empty<BillDTO>(), 1, 1, 0);
     var groupedByProject = bills
@@ -16,63 +17,158 @@
         });
 }
 
-<div id="loadingOverlay" class="loading-overlay" style="display:none;">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Processing...</div>
-</div>
-
 <style>
-    .loading-overlay {
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        --cm-accent-soft: #e8f4fc;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
+
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-filter-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .cm-filter-body .form-control {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .cm-filter-body .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    #loadingOverlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
+        background-color: rgba(255, 255, 255, 0.82);
+        z-index: 2000;
+        display: none;
         align-items: center;
-        z-index: 9999;
+        justify-content: center;
+        flex-direction: column;
     }
 
-    .loading-spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #3498db;
+    #loadingOverlay .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e2e8f0;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        border-top-color: #2563eb;
+        animation: cm-print-spin 0.85s linear infinite;
     }
 
-    .loading-text {
-        color: #fff;
-        margin-top: 20px;
-        font-weight: bold;
+    #loadingOverlay .loading-text {
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 500;
     }
 
-    @@keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
+    @@keyframes cm-print-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
+
+    .cm-print-main-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .cm-print-main-table > thead > tr > th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 0.5rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        border-top: none;
+    }
+
+    .cm-print-main-table > tbody > tr > td {
+        padding: 0.5rem 0.5rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        font-size: 0.875rem;
     }
 
     .project-header {
-        background: #e3f2fd;
+        background: var(--cm-accent-soft) !important;
         cursor: pointer;
     }
 
+    .project-header > td {
+        font-weight: 600;
+        color: var(--cm-heading);
+    }
+
     .block-header {
-        background: #f5f5f5;
+        background: #f8fafc !important;
         cursor: pointer;
     }
 
     .category-header {
-        background: #f0f8ff;
+        background: #f1f5f9 !important;
         cursor: pointer;
     }
 
     .toggle-icon {
-        transition: transform .3s;
+        transition: transform 0.3s;
     }
 
     .rotate-icon {
@@ -84,228 +180,302 @@
         margin-bottom: 0;
     }
 
-    .search-panel {
-        margin: 15px 0;
+    .nested-table tbody tr:hover {
+        background: var(--cm-row-hover);
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
     }
 </style>
 
-@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
-{
-    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
-}
-@if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
-{
-    <div class="alert alert-success">@ViewBag.SuccessMessage</div>
-}
-
-<form id="filterForm" method="post" asp-action="PrintMMultiBills" asp-controller="MaintenanceNew">
-    <div class="row g-3">
-        <div class="col-md-3">
-            <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
-                <option value="">Select Project</option>
-                @foreach (var project in (List<string>)ViewBag.Projects)
-                {
-                    <option>@project</option>
-                }
-            </select>
-        </div>
-
-
-        <div class="col-md-3">
-            <select id="month" name="month" class="form-control" required>
-                <option value="">-- Month --</option>
-                @foreach (var name in CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
-                {
-                    <option>@name</option>
-                }
-            </select>
-        </div>
-
-
-
-    </div>
-    <div class="row" style="margin-top:20px">
-        <div class="col-md-3">
-            <select id="year" name="year" class="form-control" required>
-                <option value="">-- Year --</option>
-                @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
-                {
-                    <option>@y</option>
-                }
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select id="BlockDropdown" name="Block" class="form-control"><option value="">Select Block</option></select>
-        </div>
-        <div class="col-md-3">
-            <select id="Category" name="Category" class="form-control">
-                <option value="">Select Category</option>
-                <option value="Residential">Residential</option>
-                <option value="Commercial">Commercial</option>
-            </select>
-        </div>
-
-        <div class="col-md-2 d-flex align-items-end gap-2">
-            <button id="PrintButton" type="button" class="btn btn-primary flex-fill">Print</button>
-            @* <button id="PayRecordsButton" type="button" class="btn btn-success flex-fill">Pay</button> *@
-        </div>
-    </div>
-
-
-</form>
-
-<div class="search-panel">
-    <input id="searchInput" type="text" placeholder="Search..." class="form-control" style="width:100%;max-width:800px;" />
+<div id="loadingOverlay">
+    <div class="loading-spinner" role="status" aria-label="Loading"></div>
+    <div class="loading-text">Processing…</div>
 </div>
 
-<div class="table-responsive">
-    <table class="table" id="maintenanceTable">
-        <thead>
-            <tr>
-                <th></th>
-                <th><input type="checkbox" id="selectAll" /></th>
-                <th>Category</th>
-                <th>Customer Name</th>
-                <th>BT NO</th>
-                <th>Payment Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var pg in groupedByProject)
-            {
-                var pid = Guid.NewGuid().ToString();
-                <tr class="project-header" data-id="@pid">
-                    <td><i class="fas fa-chevron-right toggle-icon"></i></td>
-                    <td colspan="5">Project: @pg.Project</td>
-                </tr>
-                <tr class="project-content" data-parent="@pid" style="display:none;">
-                    <td colspan="6">
-                        @foreach (var bg in pg.Blocks)
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
+            @ViewBag.ErrorMessage
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage as string))
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
+            @ViewBag.SuccessMessage
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header">
+            <p class="cm-header-name mb-0">
+                <i class="fas fa-print mr-1 text-muted" aria-hidden="true"></i> Print maintenance bills
+                <span class="cm-badge-soft ml-2">Multi-select</span>
+            </p>
+        </div>
+        <div class="card-body cm-filter-body border-bottom-0">
+            <form id="filterForm" method="post" asp-action="PrintMMultiBills" asp-controller="MaintenanceNew">
+                <div class="form-row">
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="Project">Project</label>
+                        <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
+                            <option value="">Select project</option>
+                            @if (ViewBag.Projects is List<string> projectList)
+                            {
+                                @foreach (var project in projectList)
+                                {
+                                    <option value="@project">@project</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="month">Billing month</label>
+                        <select id="month" name="month" class="form-control" required>
+                            <option value="">— Month —</option>
+                            @foreach (var name in CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
+                            {
+                                <option>@name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="year">Year</label>
+                        <select id="year" name="year" class="form-control" required>
+                            <option value="">— Year —</option>
+                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
+                            {
+                                <option>@y</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row mt-2">
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="BlockDropdown">Block</label>
+                        <select id="BlockDropdown" name="Block" class="form-control">
+                            <option value="">Select block</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="Category">Category</label>
+                        <select id="Category" name="Category" class="form-control">
+                            <option value="">Select category</option>
+                            <option value="Residential">Residential</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-end mb-0">
+                        <button id="PrintButton" type="button" class="btn btn-primary btn-block">
+                            <i class="fas fa-file-pdf mr-1" aria-hidden="true"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="card-body p-0 border-top">
+            <div class="table-responsive cm-table-wrap mx-0 my-0 border-0 rounded-0">
+                <table class="table table-sm mb-0 cm-print-main-table" id="maintenanceTable">
+                    <thead>
+                        <tr>
+                            <th style="width:2rem;"></th>
+                            <th style="width:2.5rem;"><input type="checkbox" id="selectAll" title="Select visible" /></th>
+                            <th>Category</th>
+                            <th>Customer name</th>
+                            <th>BT no</th>
+                            <th>Payment status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pg in groupedByProject)
                         {
-                            var bid = Guid.NewGuid().ToString();
-                            <table class="nested-table">
-                                <tr class="block-header" data-id="@bid">
-                                    <td><i class="fas fa-chevron-right toggle-icon"></i></td>
-                                    <td>@bg.Key</td>
-                                </tr>
-                            </table>
-                            <div class="block-content" data-parent="@bid" style="display:none;">
-                                <table class="nested-table">
-                                    @foreach (var cg in bg.GroupBy(b => b.Category).OrderBy(c => c.Key))
+                            var pid = Guid.NewGuid().ToString();
+                            <tr class="project-header" data-id="@pid">
+                                <td><i class="fas fa-chevron-right toggle-icon" aria-hidden="true"></i></td>
+                                <td colspan="5">Project: @pg.Project</td>
+                            </tr>
+                            <tr class="project-content" data-parent="@pid" style="display:none;">
+                                <td colspan="6" class="p-2 bg-light">
+                                    @foreach (var bg in pg.Blocks)
                                     {
-                                        var cid = Guid.NewGuid().ToString();
-                                        <tr class="category-header" data-id="@cid">
-                                            <td><i class="fas fa-chevron-right toggle-icon"></i></td>
-                                            <td>Category: @cg.Key</td>
-                                        </tr>
-                                        <tr class="category-content" data-parent="@cid" style="display:none;">
-                                            <td colspan="2">
-                                                <table class="nested-table">
-                                                    @foreach (var bill in cg)
-                                                    {
-                                                        <tr>
-                                                            <td><input type="checkbox" class="record-checkbox" value="@bill.Uid" /></td>
-                                                            <td>@bill.Category</td>
-                                                            <td>@bill.CustomerName</td>
-                                                            <td>@bill.Btno</td>
-                                                            <td>@bill.PaymentStatus</td>
-                                                        </tr>
-                                                    }
-                                                </table>
-                                            </td>
-                                        </tr>
+                                        var bid = Guid.NewGuid().ToString();
+                                        <table class="nested-table mb-2">
+                                            <tr class="block-header" data-id="@bid">
+                                                <td style="width:2rem;"><i class="fas fa-chevron-right toggle-icon" aria-hidden="true"></i></td>
+                                                <td><strong>Block:</strong> @bg.Key</td>
+                                            </tr>
+                                        </table>
+                                        <div class="block-content pl-3 mb-3" data-parent="@bid" style="display:none;">
+                                            <table class="nested-table">
+                                                @foreach (var cg in bg.GroupBy(b => b.Category).OrderBy(c => c.Key))
+                                                {
+                                                    var cid = Guid.NewGuid().ToString();
+                                                    <tr class="category-header" data-id="@cid">
+                                                        <td style="width:2rem;"><i class="fas fa-chevron-right toggle-icon" aria-hidden="true"></i></td>
+                                                        <td>Category: @cg.Key</td>
+                                                    </tr>
+                                                    <tr class="category-content" data-parent="@cid" style="display:none;">
+                                                        <td colspan="2" class="p-0">
+                                                            <table class="nested-table table-sm mb-0">
+                                                                @foreach (var bill in cg)
+                                                                {
+                                                                    <tr>
+                                                                        <td style="width:2.5rem;"><input type="checkbox" class="record-checkbox" value="@bill.Uid" /></td>
+                                                                        <td>@bill.Category</td>
+                                                                        <td>@bill.CustomerName</td>
+                                                                        <td>@bill.Btno</td>
+                                                                        <td>@bill.PaymentStatus</td>
+                                                                    </tr>
+                                                                }
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </table>
+                                        </div>
                                     }
-                                </table>
-                            </div>
+                                </td>
+                            </tr>
                         }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-<div class="text-center">
-    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
+        @if (bills != null && bills.PageCount > 1)
+        {
+            <div class="px-3 py-2 border-top bg-white">
+                @Html.PagedListPager(bills, page => Url.Action("PrintMMultiBills", new { page }))
+            </div>
+        }
+
+        <div class="cm-card-footer-actions">
+            <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                <i class="fas fa-info-circle mr-1" aria-hidden="true"></i> Expand project → block → category to select bills.
+            </small>
+            <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Navigation">
+                <a class="btn btn-outline-dark"
+                   href="@Url.Action("CustomersMaintenance", "MaintenanceNew")"
+                   title="Back to customer grid">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline"> Grid</span>
+                </a>
+                <a class="btn btn-outline-secondary"
+                   href="@Url.Action("SearchBill", "MaintenanceNew")"
+                   title="Search bills">
+                    <i class="fas fa-search" aria-hidden="true"></i><span class="d-none d-sm-inline"> Bills</span>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
-            $(function(){
-              function toggleSection(selector, headerSel, contentSel) {
-                headerSel.click(function(){
-                  var id = $(this).data('id');
-                  $(this).find('.toggle-icon').toggleClass('rotate-icon');
-                  contentSel.filter(`[data-parent='${id}']`).toggle();
+        $(function () {
+            function toggleSection(headerSel, contentSel) {
+                headerSel.click(function () {
+                    var id = $(this).data('id');
+                    $(this).find('.toggle-icon').toggleClass('rotate-icon');
+                    contentSel.filter("[data-parent='" + id + "']").toggle();
                 });
-              }
-              toggleSection('project', $('.project-header'), $('.project-content'));
-              toggleSection('block', $('.block-header'), $('.block-content'));
-              toggleSection('category', $('.category-header'), $('.category-content'));
+            }
+            toggleSection($('.project-header'), $('.project-content'));
+            toggleSection($('.block-header'), $('.block-content'));
+            toggleSection($('.category-header'), $('.category-content'));
 
-              $('#selectAll').change(function(){ $('.record-checkbox:visible').prop('checked',this.checked); });
+            $('#selectAll').change(function () {
+                $('.record-checkbox:visible').prop('checked', this.checked);
+            });
 
-              $('#searchInput').on('input', function(){
-                var text = this.value.toLowerCase();
-                $('.project-header, .project-content, .block-header, .block-content, .category-header, .category-content').hide();
-                $('.record-checkbox').closest('tr').filter(function(){ return $(this).text().toLowerCase().includes(text); }).each(function(){
-                  $(this).show();
-                  $(this).parents('tr,div').filter('[data-id]').show();
+            function ajaxAction(url, payload, onSuccess) {
+                $('#loadingOverlay').css('display', 'flex');
+                $.ajax({ url: url, method: 'POST', contentType: 'application/json', data: JSON.stringify(payload) })
+                    .done(onSuccess)
+                    .fail(function (err) { alert('Error: ' + err.statusText); })
+                    .always(function () { $('#loadingOverlay').hide(); });
+            }
+
+            $('#PrintButton').click(function () {
+                var uids = $('.record-checkbox:checked').map(function (i, el) { return el.value; }).get();
+                var data = {
+                    uids: uids.join(','),
+                    category: $('#Category').val(),
+                    block: $('#BlockDropdown').val(),
+                    month: $('#month').val(),
+                    year: $('#year').val(),
+                    project: $('#Project').val()
+                };
+
+                $('#loadingOverlay').css('display', 'flex');
+
+                $.ajax({
+                    url: '/PrintMMultiBills',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    xhrFields: { responseType: 'blob' }
+                }).done(function (data, status, xhr) {
+                    var blob = new Blob([data], { type: 'application/pdf' });
+                    window.open(URL.createObjectURL(blob));
+                }).fail(function () {
+                    alert('Print failed');
+                }).always(function () {
+                    $('#loadingOverlay').hide();
                 });
-              });
+            });
 
-              function ajaxAction(url, payload, onSuccess) {
-                $('#loadingOverlay').show();
-                $.ajax({ url, method:'POST', contentType:'application/json', data: JSON.stringify(payload) })
-                  .done(onSuccess)
-                  .fail(err => alert('Error: '+err.statusText))
-                  .always(()=>$('#loadingOverlay').hide());
-              }
-
-                 $('#PrintButton').click(function(){
-        var uids = $('.record-checkbox:checked').map((i, el) => el.value).get();
-        var data = {
-            uids: uids.join(','),
-                    Category: $('#Category').val(),
-            block: $('#BlockDropdown').val(),
-            month: $('#month').val(),
-            year: $('#year').val(),
-            project: $('#Project').val()
-        };
-
-            $('#loadingOverlay').show(); // Show loading
-
-            $.ajax({
-                url: '/PrintMMultiBills',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                xhrFields: { responseType: 'blob' }
-            }).done((data, status, xhr) => {
-                var blob = new Blob([data], { type: 'application/pdf' });
-                window.open(URL.createObjectURL(blob));
-            }).fail(err => {
-                alert('Print failed');
-            }).always(() => {
-                $('#loadingOverlay').hide(); // Hide loading
+            $('#PayRecordsButton').click(function () {
+                var uids = $('.record-checkbox:checked').map(function (i, el) { return el.value; }).get();
+                ajaxAction('/EBillU/PayEMultiBill', uids, function (res) {
+                    alert(res.message || 'Paid');
+                    location.reload();
+                });
             });
         });
-        ;
 
-              $('#PayRecordsButton').click(function(){
-                var uids = $('.record-checkbox:checked').map((i,el)=>el.value).get();
-                // if(!uids.length){ return alert('Select bills to pay'); }
-                ajaxAction('/EBillU/PayEMultiBill', uids, res=>{ alert(res.message || 'Paid'); location.reload(); });
-              });
-            });
-
-            function loadSectorsAndBlocks(){
-              var project = $('#Project').val();
-              if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
-              $.getJSON('/GetSectorsAndBlocks',{project},data=>{
-                var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));
-                var blk=$('#BlockDropdown').empty().append('<option>Select Block</option>'); data.blocks.forEach(b=>blk.append(`<option>${b}</option>`));
-              });
+        function loadSectorsAndBlocks() {
+            var project = $('#Project').val();
+            if (!project) {
+                $('#BlockDropdown').empty().append('<option value=\"\">Select block</option>');
+                return;
             }
+            $.getJSON('/GetSectorsAndBlocks', { project: project }, function (data) {
+                var blk = $('#BlockDropdown').empty().append('<option value=\"\">Select block</option>');
+                if (data.blocks) {
+                    data.blocks.forEach(function (b) {
+                        blk.append($('<option></option>').text(b).val(b));
+                    });
+                }
+            });
+        }
     </script>
 }

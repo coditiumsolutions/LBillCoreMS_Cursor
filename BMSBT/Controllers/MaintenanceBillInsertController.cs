@@ -194,13 +194,18 @@ public class MaintenanceBillInsertController : ControllerBase
 
                         await _service.CreateAsync(dto, cancellationToken);
 
-                        // Update BillGenerationStatus in CustomersMaintenance table
-                        statusValue = $"{billingMonth}-{billingYear}";
+                        statusValue = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(billingMonth, billingYear);
                         customer.BillGenerationStatus = statusValue;
+                        customer.BillStatusMaint = "Unpaid";
                     }
                 }
 
-                updates.Add(new { uid = customer.Uid, status = statusValue });
+                updates.Add(new
+                {
+                    uid = customer.Uid,
+                    status = statusValue,
+                    billStatus = customer.BillStatusMaint ?? ""
+                });
             }
 
             // Save all customer status updates to the database

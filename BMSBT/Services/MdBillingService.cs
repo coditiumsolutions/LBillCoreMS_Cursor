@@ -130,17 +130,16 @@ public class MdBillingService : IMdBillingService
                                        && t.Size == customer.Size, ct);
         }
 
-        if (tariff != null)
+        if (tariff == null)
         {
-            maintCharges = (decimal)tariff.Charges;
-            taxAmount = ParseTaxValue(tariff.Tax);
-        }
-        else
-        {
-            customer.BillStatusMaint = BlockIndicatesApartment(customer.Block)
+            var msg = BlockIndicatesApartment(customer.Block)
                 ? $"Tariff not found for {customer.Project} Apartment (block indicates apartment)"
                 : $"Tariff not found for {customer.Project} {categoryKey} {customer.Size}";
+            return await UpdateAndSkip(customer, customerUid, msg, ct);
         }
+
+        maintCharges = (decimal)tariff.Charges;
+        taxAmount = ParseTaxValue(tariff.Tax);
 
         // --- Step 4.7 – Fine ---
         decimal fine = 0m;
@@ -258,9 +257,8 @@ public class MdBillingService : IMdBillingService
 
         _db.MaintenanceBills.Add(bill);
 
-        // Update customer status (§4 post-steps)
-        customer.BillGenerationStatus = $"{billingMonth}-{billingYear}";
-        customer.BillStatusMaint = $"Generated {billingMonth} {billingYear}";
+        customer.BillGenerationStatus = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(billingMonth, billingYear);
+        customer.BillStatusMaint = "Unpaid";
 
         await _db.SaveChangesAsync(ct);
 
@@ -268,7 +266,7 @@ public class MdBillingService : IMdBillingService
         {
             CustomerUid = customerUid,
             Generated = true,
-            Status = $"{billingMonth}-{billingYear}",
+            Status = customer.BillGenerationStatus,
             DebugInfo = arrearsDebug
         };
     }
@@ -347,7 +345,6 @@ public class MdBillingService : IMdBillingService
         CustomersMaintenance customer, int uid, string status, CancellationToken ct)
     {
         customer.BillGenerationStatus = status;
-        customer.BillStatusMaint = status;
         await _db.SaveChangesAsync(ct);
         return Skipped(uid, status);
     }

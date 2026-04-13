@@ -1,46 +1,227 @@
-﻿
-@model IEnumerable<BMSBT.Models.OperatorsSetup>
+﻿@model IEnumerable<BMSBT.Models.OperatorsSetup>
 
 @{
-    ViewData["Title"] = "Operator Setup List";
+    ViewData["Title"] = "Operator setup";
     Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+    var rows = Model ?? Enumerable.Empty<OperatorsSetup>();
 }
 
-<h3>Operator Setup List</h3>
+<style>
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
 
-<a asp-action="Create" class="btn btn-primary mb-3">Add New Operator</a>
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
 
-<table class="table table-bordered table-striped table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Operator ID</th>
-            <th>Operator Name</th>
-            <th>Billing Month</th>
-            <th>Billing Year</th>
-            <th>Bank Name</th>
-            <th>Issue Date</th>
-            <th>Due Date</th>
-            <th>FPA Rate</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.OperatorID</td>
-                <td>@item.OperatorName</td>
-                <td>@item.BillingMonth</td>
-                <td>@item.BillingYear</td>
-                <td>@item.BankName</td>
-                <td>@item.IssueDate?.ToString("yyyy-MM-dd")</td>
-                <td>@item.DueDate?.ToString("yyyy-MM-dd")</td>
-                <td>@item.FPARate1</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Uid" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
+
+    .cm-operator-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .cm-operator-table thead th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 0.5rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        border-top: none;
+        white-space: nowrap;
+    }
+
+    .cm-operator-table tbody td {
+        padding: 0.5rem 0.5rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    .cm-operator-table tbody tr:nth-child(even) {
+        background: var(--cm-row-odd);
+    }
+
+    .cm-operator-table tbody tr:hover {
+        background: var(--cm-row-hover) !important;
+    }
+
+    .cm-operator-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
+            @successMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string errMsg)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
+            @errMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <p class="cm-header-name mb-0">
+                <i class="fas fa-user-cog mr-1 text-muted" aria-hidden="true"></i> Operator setup
+                <span class="cm-badge-soft ml-2">@rows.Count() operator(s)</span>
+            </p>
+            <a asp-action="Create" class="btn btn-primary btn-sm mt-2 mt-md-0">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i> Add operator
+            </a>
+        </div>
+
+        <div class="card-body p-0 border-top">
+            <div class="table-responsive cm-table-wrap mx-md-2">
+                <table class="table table-sm mb-0 cm-operator-table">
+                    <thead>
+                        <tr>
+                            <th>Operator ID</th>
+                            <th>Operator name</th>
+                            <th>Billing month</th>
+                            <th>Billing year</th>
+                            <th>Bank name</th>
+                            <th>Issue date</th>
+                            <th>Due date</th>
+                            <th>FPA rate</th>
+                            <th style="width: 9rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in rows)
+                        {
+                            <tr>
+                                <td>@item.OperatorID</td>
+                                <td>@item.OperatorName</td>
+                                <td>@item.BillingMonth</td>
+                                <td>@item.BillingYear</td>
+                                <td>@item.BankName</td>
+                                <td>@item.IssueDate?.ToString("yyyy-MM-dd")</td>
+                                <td>@item.DueDate?.ToString("yyyy-MM-dd")</td>
+                                <td>@item.FPARate1</td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit" aria-hidden="true"></i><span class="d-none d-lg-inline"> Edit</span>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Uid" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="fas fa-trash-alt" aria-hidden="true"></i><span class="d-none d-lg-inline"> Delete</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!rows.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">No operators configured yet. Use Add operator to create one.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="cm-card-footer-actions">
+            <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                <i class="fas fa-info-circle mr-1" aria-hidden="true"></i> Billing month and year here are used when generating maintenance bills.
+            </small>
+            <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Related">
+                <a class="btn btn-outline-dark"
+                   asp-controller="MaintenanceNew" asp-action="CustomersMaintenance"
+                   title="Maintenance customers">
+                    <i class="fas fa-users" aria-hidden="true"></i><span class="d-none d-sm-inline"> Customers</span>
+                </a>
+                <a class="btn btn-outline-secondary"
+                   asp-controller="MaintenanceNew" asp-action="GenerateBill"
+                   title="Generate bills">
+                    <i class="fas fa-file-invoice" aria-hidden="true"></i><span class="d-none d-sm-inline"> Generate</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

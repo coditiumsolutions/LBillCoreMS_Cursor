@@ -1,101 +1,278 @@
 @model BMSBT.Models.CustomersMaintenance
 
 @{
-    ViewData["Title"] = "Edit Maintenance Customer";
+    ViewData["Title"] = "Edit Customer";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    ArgumentNullException.ThrowIfNull(Model);
+    var btMainTrim = Model.BTNoMaintenance?.Trim();
+    var btPrimaryTrim = Model.BTNo?.Trim();
+    var showMaintenanceBtRow = !string.IsNullOrEmpty(btMainTrim)
+        && !string.Equals(btMainTrim, btPrimaryTrim, StringComparison.OrdinalIgnoreCase);
 }
 
-<h3 class="text-center text-primary mb-4">Edit Maintenance Customer</h3>
+<style>
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
 
-<div class="container bg-light p-4 rounded shadow-sm">
-    <form asp-action="Edit" method="post">
-        <input type="hidden" asp-for="Uid" />
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
 
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Customer No</label>
-                <input type="text" class="form-control" asp-for="CustomerNo" readonly style="background-color: #e9ecef;" />
-            </div>
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">BT No</label>
-                <input type="text" class="form-control" asp-for="BTNo" readonly style="background-color: #e9ecef;" />
-            </div>
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Customer Name</label>
-                <input type="text" class="form-control" asp-for="CustomerName" />
-            </div>
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Father Name</label>
-                <input type="text" class="form-control" asp-for="FatherName" />
-            </div>
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">CNIC No</label>
-                <input type="text" class="form-control" asp-for="CNICNo" />
-            </div>
+    .cm-detail-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Mobile No</label>
-                <input type="text" class="form-control" asp-for="MobileNo" />
-            </div>
+    .cm-detail-table tbody th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        width: 18%;
+        vertical-align: middle;
+        text-align: left;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Project</label>
-                <input type="text" class="form-control" asp-for="Project" />
-            </div>
+    .cm-detail-table tbody td {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        background: var(--cm-row-even);
+        text-align: left;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">SubProject</label>
-                <input type="text" class="form-control" asp-for="SubProject" />
-            </div>
+    .cm-detail-table tbody tr:nth-child(even) td {
+        background: var(--cm-row-odd);
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Block</label>
-                <input type="text" class="form-control" asp-for="Block" />
-            </div>
+    .cm-detail-table tbody tr:nth-child(even) th {
+        background: #f1f5f9;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Sector</label>
-                <input type="text" class="form-control" asp-for="Sector" />
-            </div>
+    .cm-detail-table tbody tr:hover td,
+    .cm-detail-table tbody tr:hover th {
+        background: var(--cm-row-hover) !important;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Plot No</label>
-                <input type="text" class="form-control" asp-for="PloNo" />
-            </div>
+    .cm-detail-table tbody tr:last-child th,
+    .cm-detail-table tbody tr:last-child td {
+        border-bottom: none;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Plot Type</label>
-                <input type="text" class="form-control" asp-for="PlotType" />
-            </div>
+    .cm-detail-table .form-control {
+        font-size: 0.875rem;
+        border-radius: 6px;
+        min-height: calc(1.5em + 0.5rem + 2px);
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Category</label>
-                <input type="text" class="form-control" asp-for="Category" />
-            </div>
+    .cm-detail-table .form-control[readonly] {
+        background-color: #e9ecef;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Size</label>
-                <input type="text" class="form-control" asp-for="Size" />
-            </div>
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Tariff Name</label>
-                <input type="text" class="form-control" asp-for="TariffName" />
-            </div>
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
 
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Meter No</label>
-                <input type="text" class="form-control" asp-for="MeterNo" />
-            </div>
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
+    }
+</style>
+
+<div id="record-top" class="container-fluid cm-detail-page px-2 px-md-2">
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header">
+            <p class="cm-header-name">
+                @(string.IsNullOrWhiteSpace(Model.CustomerName) ? "—" : Model.CustomerName)
+                @if (!string.IsNullOrWhiteSpace(Model.BTNo))
+                {
+                    <span class="cm-badge-soft ml-2">BTNo @Model.BTNo</span>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.BTNoMaintenance))
+                {
+                    <span class="cm-badge-soft ml-2">BTNo @Model.BTNoMaintenance</span>
+                }
+                else if (Model.Uid > 0)
+                {
+                    <span class="cm-badge-soft ml-2">ID @Model.Uid</span>
+                }
+            </p>
         </div>
 
-        <div class="mt-4 text-center">
-            <button type="submit" class="btn btn-primary px-4">Save Changes</button>
-            <a href="@Url.Action("CustomersMaintenance", "MaintenanceNew")" class="btn btn-secondary px-4">Back to Grid</a>
-        </div>
-    </form>
+        <form asp-action="Edit" method="post" class="mb-0">
+            <input type="hidden" asp-for="Uid" />
+            @if (!showMaintenanceBtRow && !string.IsNullOrWhiteSpace(Model.BTNoMaintenance))
+            {
+                <input type="hidden" asp-for="BTNoMaintenance" />
+            }
+
+            <div class="card-body p-0">
+                <div asp-validation-summary="All" class="text-danger px-3 pt-3 small"></div>
+
+                <div class="table-responsive cm-table-wrap">
+                    <table class="cm-detail-table mb-0">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><i class="fas fa-hashtag text-muted mr-1" aria-hidden="true"></i>Customer No</th>
+                                <td><input type="text" class="form-control" asp-for="CustomerNo" readonly /></td>
+                                <th scope="row"><i class="fas fa-barcode text-muted mr-1" aria-hidden="true"></i>BT No</th>
+                                <td><input type="text" class="form-control" asp-for="BTNo" readonly /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-user text-muted mr-1" aria-hidden="true"></i>Customer Name</th>
+                                <td><input type="text" class="form-control" asp-for="CustomerName" /></td>
+                                <th scope="row"><i class="fas fa-male text-muted mr-1" aria-hidden="true"></i>Father Name</th>
+                                <td><input type="text" class="form-control" asp-for="FatherName" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-id-card text-muted mr-1" aria-hidden="true"></i>CNIC No</th>
+                                <td><input type="text" class="form-control" asp-for="CNICNo" /></td>
+                                <th scope="row"><i class="fas fa-mobile-alt text-muted mr-1" aria-hidden="true"></i>Mobile No</th>
+                                <td><input type="text" class="form-control" asp-for="MobileNo" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-building text-muted mr-1" aria-hidden="true"></i>Project</th>
+                                <td><input type="text" class="form-control" asp-for="Project" /></td>
+                                <th scope="row"><i class="fas fa-sitemap text-muted mr-1" aria-hidden="true"></i>SubProject</th>
+                                <td><input type="text" class="form-control" asp-for="SubProject" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-th-large text-muted mr-1" aria-hidden="true"></i>Block</th>
+                                <td><input type="text" class="form-control" asp-for="Block" /></td>
+                                <th scope="row"><i class="fas fa-map-marker-alt text-muted mr-1" aria-hidden="true"></i>Sector</th>
+                                <td><input type="text" class="form-control" asp-for="Sector" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-home text-muted mr-1" aria-hidden="true"></i>Plot No</th>
+                                <td><input type="text" class="form-control" asp-for="PloNo" /></td>
+                                <th scope="row"><i class="fas fa-vector-square text-muted mr-1" aria-hidden="true"></i>Plot Type</th>
+                                <td><input type="text" class="form-control" asp-for="PlotType" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-tags text-muted mr-1" aria-hidden="true"></i>Category</th>
+                                <td><input type="text" class="form-control" asp-for="Category" /></td>
+                                <th scope="row"><i class="fas fa-ruler-combined text-muted mr-1" aria-hidden="true"></i>Size</th>
+                                <td><input type="text" class="form-control" asp-for="Size" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-file-invoice-dollar text-muted mr-1" aria-hidden="true"></i>Tariff Name</th>
+                                <td><input type="text" class="form-control" asp-for="TariffName" /></td>
+                                <th scope="row"><i class="fas fa-tachometer-alt text-muted mr-1" aria-hidden="true"></i>Meter No</th>
+                                <td><input type="text" class="form-control" asp-for="MeterNo" /></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><i class="fas fa-city text-muted mr-1" aria-hidden="true"></i>City</th>
+                                <td><input type="text" class="form-control" asp-for="City" /></td>
+                                <th scope="row"><i class="fas fa-calendar-check text-muted mr-1" aria-hidden="true"></i>Installed On</th>
+                                <td><input type="text" class="form-control" asp-for="InstalledOn" /></td>
+                            </tr>
+                            @if (showMaintenanceBtRow)
+                            {
+                                <tr>
+                                    <th scope="row"><i class="fas fa-wrench text-muted mr-1" aria-hidden="true"></i>Maintenance BT No</th>
+                                    <td><input type="text" class="form-control" asp-for="BTNoMaintenance" /></td>
+                                    <th scope="row"><i class="fas fa-info-circle text-muted mr-1" aria-hidden="true"></i>Bill Status</th>
+                                    <td><input type="text" class="form-control" asp-for="BillStatusMaint" /></td>
+                                </tr>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <th scope="row"><i class="fas fa-info-circle text-muted mr-1" aria-hidden="true"></i>Bill Status</th>
+                                    <td colspan="3"><input type="text" class="form-control" asp-for="BillStatusMaint" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="cm-card-footer-actions">
+                <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                    <i class="fas fa-pen mr-1" aria-hidden="true"></i> Update fields and save, or return to the grid without saving.
+                </small>
+                <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Form actions">
+                    <button type="submit" class="btn btn-primary" title="Save changes">
+                        <i class="fas fa-save" aria-hidden="true"></i><span class="d-none d-sm-inline"> Save</span>
+                    </button>
+                    <a class="btn btn-outline-secondary"
+                       href="@Url.Action("Details", "CustomersMaintenance", new { id = Model.Uid })"
+                       title="Discard and view details">
+                        <i class="fas fa-times" aria-hidden="true"></i><span class="d-none d-sm-inline"> Cancel</span>
+                    </a>
+                    <a class="btn btn-outline-dark"
+                       href="@Url.Action("CustomersMaintenance", "MaintenanceNew")"
+                       title="Back to customer grid">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline"> Grid</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>

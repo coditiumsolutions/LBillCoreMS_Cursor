@@ -1,158 +1,386 @@
+@using System.Globalization
+
+@functions {
+    private static int IntBag(object? o) => o switch { int i => i, long l => (int)l, _ => 0 };
+
+    private static decimal DecBag(object? o) => o switch
+    {
+        decimal d => d,
+        double x => (decimal)x,
+        float f => (decimal)f,
+        int i => i,
+        long l => l,
+        _ => 0m
+    };
+}
+
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Maintenance overview";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    var selectedYear = ViewBag.SelectedYear as string ?? DateTime.Now.Year.ToString();
+    var selectedMonth = ViewBag.SelectedMonth as string ?? DateTime.Now.ToString("MMMM");
+
+    var totalBills = IntBag(ViewBag.TotalBills);
+    var totalAmountGenerated = DecBag(ViewBag.TotalAmountGenerated);
+    var paidCount = IntBag(ViewBag.PaidCount);
+    var paidAmount = DecBag(ViewBag.PaidAmount);
+    var surchargeCount = IntBag(ViewBag.SurchargeCount);
+    var surchargeAmount = DecBag(ViewBag.SurchargeAmount);
+    var partialCount = IntBag(ViewBag.PartialCount);
+    var partialAmount = DecBag(ViewBag.PartialAmount);
+    var unpaidBillsCount = IntBag(ViewBag.UnpaidBillsCount);
+    var billUnpaidAmount = DecBag(ViewBag.BillUnpaidAmount);
 }
 
 <style>
-    .report-table {
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
+
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-filter-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .cm-filter-body .form-control {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .cm-filter-body .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .cm-project-tile {
+        border: 1px solid var(--cm-border);
+        border-radius: 8px;
+        background: var(--cm-surface);
+        padding: 0.85rem 1rem;
+        height: 100%;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+
+    .cm-project-tile .tile-project {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin-bottom: 0.35rem;
+    }
+
+    .cm-project-tile .tile-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e40af;
+        line-height: 1.2;
+    }
+
+    .cm-project-tile .tile-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 0.15rem;
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
+
+    .cm-detail-table {
         width: 100%;
-        border-collapse: collapse;
-        background-color: white;
-        margin-top: 20px;
-    }
-
-        .report-table th,
-        .report-table td {
-            border: 1px solid #ccc;
-            padding: 12px 15px;
-            text-align: left;
-        }
-
-    .section-header {
-        background-color: #e8e8e8;
-        font-weight: bold;
-        color: #333;
-    }
-
-    .metric-row {
-        background-color: #f9f9f9;
-    }
-
-    .metric-name {
-        font-weight: 500;
-        color: #555;
-        width: 25%;
-    }
-
-    .metric-value {
-        font-weight: bold;
-        color: #1976d2;
-        text-align: right;
-        width: 25%;
-    }
-
-    .header-section {
-        background-color: #4a90c2;
-        color: white;
-        padding: 10px 15px;
         margin-bottom: 0;
-        border-radius: 5px 5px 0 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        border-collapse: collapse;
     }
 
-    .metric-note {
-        color: #666;
-        font-style: italic;
-        width: 25%;
+    .cm-detail-table tbody th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        width: 22%;
+        vertical-align: middle;
+        text-align: left;
     }
 
-    .metric-secondary {
-        font-weight: bold;
-        color: #1976d2;
+    .cm-detail-table tbody td {
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        background: var(--cm-row-even);
+        text-align: left;
+    }
+
+    .cm-detail-table tbody tr:nth-child(even) td {
+        background: var(--cm-row-odd);
+    }
+
+    .cm-detail-table tbody tr:nth-child(even) th {
+        background: #f1f5f9;
+    }
+
+    .cm-detail-table tbody tr:hover td,
+    .cm-detail-table tbody tr:hover th {
+        background: var(--cm-row-hover) !important;
+    }
+
+    .cm-detail-table tbody tr:last-child th,
+    .cm-detail-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cm-detail-table .cm-metric-note {
+        color: #64748b;
+        font-size: 0.8125rem;
+    }
+
+    .cm-detail-table .cm-amount {
+        font-weight: 600;
+        color: #0f172a;
         text-align: right;
-        width: 25%;
     }
 
-    .important-note {
-        color: #e53935 !important;
+    .cm-detail-table .cm-unpaid {
+        color: #b91c1c;
+        font-weight: 600;
+    }
+
+    .cm-section-label {
+        background: #e8f1ff;
+        color: #1e3a8a;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.45rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
         font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
     }
 
-    .amount {
-        color: #2e7d32;
-        font-weight: bold;
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
     }
-
 </style>
 
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
+            @successMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
 
-<div class="row-container">
-    <div class="row mb-4">
-        @if (ViewBag.ProjectCustomerCounts != null)
-        {
-            @foreach (var item in ViewBag.ProjectCustomerCounts)
-            {
-                <div class="col-md-3">
-                    <div class="card text-white bg-info mb-3">
-                        <div class="card-header">@item.Project</div>
-                        <div class="card-body">
-                            <h5 class="card-title">@item.Count</h5>
-                            <p class="card-text">Total Customers</p>
-                        </div>
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <p class="cm-header-name mb-0">
+                <i class="fas fa-tachometer-alt mr-1 text-muted" aria-hidden="true"></i> Maintenance overview
+                <span class="cm-badge-soft ml-2">@selectedMonth @selectedYear</span>
+            </p>
+        </div>
+        <div class="card-body cm-filter-body border-bottom-0">
+            <form method="get" asp-action="Index" asp-controller="MaintenanceNew" class="mb-0">
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="selectedMonth">Billing month</label>
+                        <select id="selectedMonth" name="selectedMonth" class="form-control">
+                            @foreach (var name in CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
+                            {
+                                if (string.Equals(name, selectedMonth, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@name" selected="selected">@name</option>
+                                }
+                                else
+                                {
+                                    <option value="@name">@name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="selectedYear">Year</label>
+                        <select id="selectedYear" name="selectedYear" class="form-control">
+                            @for (int y = DateTime.Now.Year + 1; y >= DateTime.Now.Year - 10; y--)
+                            {
+                                var ys = y.ToString();
+                                if (string.Equals(ys, selectedYear, StringComparison.Ordinal))
+                                {
+                                    <option value="@ys" selected="selected">@ys</option>
+                                }
+                                else
+                                {
+                                    <option value="@ys">@ys</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-0">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i> Apply
+                        </button>
                     </div>
                 </div>
-            }
+            </form>
+        </div>
+
+        @if (ViewBag.ProjectCustomerCounts != null)
+        {
+            <div class="card-body pt-0 border-top">
+                <p class="small font-weight-bold text-muted mb-2">Customers by project</p>
+                <div class="form-row">
+                    @foreach (var item in ViewBag.ProjectCustomerCounts)
+                    {
+                        <div class="col-6 col-md-4 col-lg-3 mb-2">
+                            <div class="cm-project-tile">
+                                <div class="tile-project">@(string.IsNullOrWhiteSpace(Convert.ToString(item.Project)) ? "—" : Convert.ToString(item.Project))</div>
+                                <div class="tile-count">@IntBag(item.Count).ToString("N0")</div>
+                                <div class="tile-label">Total customers</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
         }
     </div>
-</div>
 
-
-<div style="margin-top:20px;">
-    @if (!string.IsNullOrEmpty(ViewBag.SelectedYear as string) && !string.IsNullOrEmpty(ViewBag.SelectedMonth as string))
+    @if (!string.IsNullOrEmpty(selectedYear) && !string.IsNullOrEmpty(selectedMonth))
     {
-        <div class="header-section">
-            <div>
-                <h4 style="margin: 0;">Maintenance Billing Summary - @ViewBag.SelectedMonth @ViewBag.SelectedYear</h4>
+        <div class="card cm-detail-card shadow-sm border-0">
+            <div class="card-header">
+                <p class="cm-header-name mb-0">
+                    <i class="fas fa-file-invoice-dollar mr-1 text-muted" aria-hidden="true"></i> Billing summary
+                </p>
+            </div>
+            <div class="card-body p-0">
+                <div class="cm-section-label">Generated</div>
+                <div class="table-responsive cm-table-wrap border-0 mx-0 my-0">
+                    <table class="cm-detail-table mb-0">
+                        <tbody>
+                            <tr>
+                                <th scope="row"><i class="fas fa-file-alt text-muted mr-1" aria-hidden="true"></i>Bills generated</th>
+                                <td class="cm-amount">@totalBills.ToString("N0")</td>
+                                <th scope="row"><i class="fas fa-coins text-muted mr-1" aria-hidden="true"></i>Total current billing (Rs.)</th>
+                                <td class="cm-amount">@totalAmountGenerated.ToString("N0")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="cm-section-label">Payments</div>
+                <div class="table-responsive cm-table-wrap border-0 mx-0 my-0">
+                    <table class="cm-detail-table mb-0">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Paid (amount)</th>
+                                <td class="cm-amount">@paidAmount.ToString("N0")</td>
+                                <th scope="row" class="cm-metric-note">Paid (no. of bills)</th>
+                                <td class="cm-amount">@paidCount.ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Paid with surcharge (amount)</th>
+                                <td class="cm-amount">@surchargeAmount.ToString("N0")</td>
+                                <th scope="row" class="cm-metric-note">Surcharge (no. of bills)</th>
+                                <td class="cm-amount">@surchargeCount.ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Partially paid (amount)</th>
+                                <td class="cm-amount">@partialAmount.ToString("N0")</td>
+                                <th scope="row" class="cm-metric-note">Partial (no. of bills)</th>
+                                <td class="cm-amount">@partialCount.ToString("N0")</td>
+                            </tr>
+                            <tr>
+                                <th scope="row" class="cm-unpaid">Unpaid amount (Rs.)</th>
+                                <td class="cm-amount cm-unpaid">@billUnpaidAmount.ToString("N0")</td>
+                                <th scope="row" class="cm-metric-note cm-unpaid">Unpaid bills (number)</th>
+                                <td class="cm-amount cm-unpaid">@unpaidBillsCount.ToString("N0")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="cm-card-footer-actions">
+                <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                    <i class="far fa-calendar mr-1" aria-hidden="true"></i> Figures are for <strong>@selectedMonth @selectedYear</strong> maintenance bills.
+                </small>
+                <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Shortcuts">
+                    <a class="btn btn-outline-dark" asp-action="CustomersMaintenance" title="Customer grid">
+                        <i class="fas fa-users" aria-hidden="true"></i><span class="d-none d-sm-inline"> Grid</span>
+                    </a>
+                    <a class="btn btn-outline-secondary" asp-action="GenerateBill" title="Generate bills">
+                        <i class="fas fa-file-invoice" aria-hidden="true"></i><span class="d-none d-sm-inline"> Generate</span>
+                    </a>
+                    <a class="btn btn-outline-secondary" asp-action="SearchBill" title="Search bills">
+                        <i class="fas fa-search" aria-hidden="true"></i><span class="d-none d-sm-inline"> Bills</span>
+                    </a>
+                </div>
             </div>
         </div>
-        <table class="report-table" style="margin-top: 0;">
-            <!-- Generated Detail Section -->
-            <tr class="section-header">
-                <td colspan="4"><strong>Generated Detail</strong></td>
-            </tr>
-            <tr class="metric-row">
-                <td class="metric-name">Bills Generated</td>
-                <td class="metric-value">@((ViewBag.TotalBills as int?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note"></td>
-                <td class="metric-secondary"></td>
-            </tr>
-            <tr class="metric-row">
-                <td class="metric-name">Total Current Billing (Rs)</td>
-                <td class="metric-value amount">@((ViewBag.TotalAmountGenerated as decimal?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note"></td>
-                <td class="metric-secondary"></td>
-            </tr>
-
-            <!-- Payments Detail Section -->
-            <tr class="section-header">
-                <td colspan="4"><strong>Payments Detail</strong></td>
-            </tr>
-            <tr class="metric-row">
-                <td class="metric-name">Paid (Amount)</td>
-                <td class="metric-value amount">@((ViewBag.PaidAmount as decimal?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note">Paid (No Of Bills)</td>
-                <td class="metric-secondary">@((ViewBag.PaidCount as int?)?.ToString("N0") ?? "0")</td>
-            </tr>
-            <tr class="metric-row">
-                <td class="metric-name">Paid with Surcharge (Amount)</td>
-                <td class="metric-value amount">@((ViewBag.SurchargeAmount as decimal?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note">Surcharge (No Of Bills)</td>
-                <td class="metric-secondary">@((ViewBag.SurchargeCount as int?)?.ToString("N0") ?? "0")</td>
-            </tr>
-            <tr class="metric-row">
-                <td class="metric-name">Partially Paid (Amount)</td>
-                <td class="metric-value amount">@((ViewBag.PartialAmount as decimal?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note">Partial (No Of Bills)</td>
-                <td class="metric-secondary">@((ViewBag.PartialCount as int?)?.ToString("N0") ?? "0")</td>
-            </tr>
-            <tr class="metric-row">
-                <td class="metric-name important-note">Unpaid Amount (Rs)</td>
-                <td class="metric-value amount important-note">@((ViewBag.BillUnpaidAmount as decimal?)?.ToString("N0") ?? "0")</td>
-                <td class="metric-note important-note">Unpaid Bills (Number)</td>
-                <td class="metric-secondary important-note">@((ViewBag.UnpaidBillsCount as int?)?.ToString("N0") ?? "0")</td>
-            </tr>
-        </table>
     }
 </div>

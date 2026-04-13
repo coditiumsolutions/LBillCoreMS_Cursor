@@ -1,6 +1,6 @@
 @model IEnumerable<BMSBT.ViewModels.MaintSectorCustomersViewModel>
-@using System.Text.Json
 @{
+    ViewData["Title"] = "Generate maintenance bill";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
     var accordionId = "accordionSectors";
     int count = 0;
@@ -9,227 +9,504 @@
     var projects = ViewBag.Projects as List<string> ?? new List<string>();
     var selectedBillCategory = ViewBag.SelectedBillCategory as string ?? "Residential";
     var billingLogicMarkdown = ViewBag.BillingLogicMarkdown as string ?? "";
-    
-    // Get values from ViewBag populated by controller
     string operatorName = ViewBag.OperatorName as string ?? "";
     string billingMonth = ViewBag.BillingMonth as string ?? "";
     string billingYear = ViewBag.BillingYear as string ?? "";
 }
 
-<!-- Include Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-<!-- Optional: Loading overlay -->
 <style>
-    #loadingOverlay {
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
+
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-filter-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .cm-filter-body .form-control,
+    .cm-filter-body .custom-select {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .cm-filter-body .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0;
+    }
+
+    .cm-gen-table thead th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 0.5rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        border-top: none;
+    }
+
+    .cm-gen-table tbody td {
+        padding: 0.5rem 0.5rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    .cm-gen-table tbody tr:nth-child(even) {
+        background: var(--cm-row-odd);
+    }
+
+    .cm-gen-table tbody tr:hover {
+        background: var(--cm-row-hover) !important;
+    }
+
+    .cm-gen-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cm-accordion-gen .card {
+        border: 1px solid var(--cm-border);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+    }
+
+    .cm-accordion-gen .card-header {
+        padding: 0;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--cm-border);
+    }
+
+    .cm-accordion-gen .btn-link {
+        font-weight: 600;
+        color: var(--cm-heading);
+        text-decoration: none;
+        width: 100%;
+        text-align: left;
+        padding: 0.65rem 1rem;
+    }
+
+    .cm-accordion-gen .btn-link:hover {
+        color: #1e40af;
+        text-decoration: none;
+    }
+
+    .cm-accordion-gen .card-body {
+        padding: 0;
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
+    }
+
+    #loadingOverlayGen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(255, 255, 255, 0.7);
+        background-color: rgba(255, 255, 255, 0.82);
         z-index: 2000;
         display: none;
         align-items: center;
         justify-content: center;
+        flex-direction: column;
     }
 
-        #loadingOverlay .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
+    #loadingOverlayGen .loading-spinner-gen {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e2e8f0;
+        border-radius: 50%;
+        border-top-color: #2563eb;
+        animation: cm-gen-spin 0.85s linear infinite;
+    }
+
+    #loadingOverlayGen .loading-text-gen {
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    @@keyframes cm-gen-spin {
+        to { transform: rotate(360deg); }
+    }
 </style>
 
-<div id="loadingOverlay">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
+<div id="loadingOverlayGen">
+    <div class="loading-spinner-gen" role="status" aria-label="Loading"></div>
+    <div class="loading-text-gen">Working…</div>
 </div>
 
-<div class="mb-3">
-    <span class="fw-bold text-primary">Operator:</span> @operatorName |
-    <span class="fw-bold text-primary">Billing Month:</span> @billingMonth |
-    <span class="fw-bold text-primary">Billing Year:</span> @billingYear
-</div>
-
-<form method="get" asp-action="GenerateBill" asp-controller="MaintenanceNew">
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Project</label>
-            <select name="selectedProject" class="form-select" onchange="this.form.submit()">
-                <option value="">-- Select Project --</option>
-                @foreach (var project in projects)
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header">
+            <p class="cm-header-name mb-0">
+                <i class="fas fa-file-invoice mr-1 text-muted" aria-hidden="true"></i> Generate maintenance bill
+                @if (!string.IsNullOrWhiteSpace(selectedProject))
                 {
-                    <option value="@project" selected="@(project == selectedProject ? "selected" : null)">@project</option>
-
+                    <span class="cm-badge-soft ml-2">@selectedProject</span>
                 }
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label fw-bold">Bill Category</label>
-            <select name="selectedBillCategory" class="form-select">
-                <option value="Residential" selected="@(selectedBillCategory == "Residential" ? "selected" : null)">Residential</option>
-                <option value="Commercial" selected="@(selectedBillCategory == "Commercial" ? "selected" : null)">Commercial</option>
-                <option value="Apartment" selected="@(selectedBillCategory == "Apartment" ? "selected" : null)">Apartment</option>
-            </select>
-        </div>
-        @if (!string.IsNullOrEmpty(selectedProject))
-        {
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Search by BTNo:</label>
-                <input type="text" name="btNoSearch" value="@btNoSearch" class="form-control" placeholder="Enter BTNo..." />
+            </p>
+            <div class="mt-2 small text-muted">
+                @if (!string.IsNullOrWhiteSpace(operatorName))
+                {
+                    <span class="mr-3"><i class="fas fa-user-cog mr-1" aria-hidden="true"></i>@operatorName</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(billingMonth))
+                {
+                    <span class="mr-3"><i class="far fa-calendar-alt mr-1" aria-hidden="true"></i>Month @billingMonth</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(billingYear))
+                {
+                    <span><i class="far fa-calendar mr-1" aria-hidden="true"></i>Year @billingYear</span>
+                }
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
-        }
-    </div>
-    <div class="mb-3">
-        <button id="generateMBillButton" type="button" class="btn btn-outline-primary" style="width:170px">
-            Generate MBill
-        </button>
-    </div>
-</form>
+        </div>
 
-@if (!string.IsNullOrWhiteSpace(billingLogicMarkdown))
-{
-    <div class="mb-3">
-        <label class="form-label fw-bold">Loaded Billing Logic (.md)</label>
-        <textarea class="form-control" rows="12" readonly>@billingLogicMarkdown</textarea>
-    </div>
-}
-
-<div class="accordion" id="@accordionId">
-    @foreach (var group in Model)
-    {
-        var collapseId = $"collapse_{count}";
-        var headingId = $"heading_{count}";
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="@headingId">
-                <button class="accordion-button collapsed" type="button"
-                        data-bs-toggle="collapse" data-bs-target="#@collapseId"
-                        aria-expanded="false" aria-controls="@collapseId">
-                    Block: @group.Block <span class="ms-3 text-muted">(Total: @group.Customers.Count)</span>
-                </button>
-            </h2>
-            <div id="@collapseId" class="accordion-collapse collapse"
-                 aria-labelledby="@headingId" data-bs-parent="#@accordionId">
-                <div class="accordion-body p-0">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th><input type="checkbox" onclick="toggleGroupCheckboxes(this, '@collapseId')" /></th>
-                                <th>BT Number</th>
-                                <th>Customer Name</th>
-                                <th>Project</th>
-                                <th>Category</th>
-                                <th>Block</th>
-                                <th>House no</th>
-                                <th>Size</th>
-                                <th>Bill Status</th>
-                                <th>Gen Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var customer in group.Customers)
+        <div class="card-body cm-filter-body border-bottom-0">
+            <form method="get" asp-action="GenerateBill" asp-controller="MaintenanceNew">
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="selectedProject">Project</label>
+                        <select name="selectedProject" id="selectedProject" class="form-control" onchange="this.form.submit()">
+                            <option value="">— Select project —</option>
+                            @foreach (var project in projects)
                             {
-                                <tr ondblclick="window.location.href='@Url.Action("ViewCustomer", "SGCustomers", new { id = customer.Uid })'" style="cursor: pointer;">
-                                    <td>
-                                        <input type="checkbox" name="selectedCustomers"
-                                               value="@customer.Uid"
-                                               class="record-checkbox checkbox-@collapseId" />
-                                    </td>
-                                    <td>@customer.BTNo</td>
-                                    <td>@customer.CustomerName</td>
-                                    <td>@customer.Project</td>
-                                    <td>@customer.Category</td>
-                                    <td>@customer.Block</td>
-                                    <td>@customer.PloNo</td>
-                                    <td>@customer.Size</td>
-                                    <td>@customer.BillStatusMaint</td>
-                                    <td>@customer.BillGenerationStatus</td>
-                                </tr>
+                                if (project == selectedProject)
+                                {
+                                    <option value="@project" selected="selected">@project</option>
+                                }
+                                else
+                                {
+                                    <option value="@project">@project</option>
+                                }
                             }
-                        </tbody>
-                    </table>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="selectedBillCategory">Bill category</label>
+                        <select name="selectedBillCategory" id="selectedBillCategory" class="form-control">
+                            @if (selectedBillCategory == "Residential")
+                            {
+                                <option value="Residential" selected="selected">Residential</option>
+                            }
+                            else
+                            {
+                                <option value="Residential">Residential</option>
+                            }
+                            @if (selectedBillCategory == "Commercial")
+                            {
+                                <option value="Commercial" selected="selected">Commercial</option>
+                            }
+                            else
+                            {
+                                <option value="Commercial">Commercial</option>
+                            }
+                            @if (selectedBillCategory == "Apartment")
+                            {
+                                <option value="Apartment" selected="selected">Apartment</option>
+                            }
+                            else
+                            {
+                                <option value="Apartment">Apartment</option>
+                            }
+                        </select>
+                    </div>
+                    @if (!string.IsNullOrEmpty(selectedProject))
+                    {
+                        <div class="form-group col-md-3 mb-2 mb-md-0">
+                            <label class="font-weight-bold small text-muted mb-1" for="btNoSearch">Search by BTNo</label>
+                            <input type="text" name="btNoSearch" id="btNoSearch" value="@btNoSearch" class="form-control" placeholder="Enter BTNo…" />
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end mb-0">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-search mr-1" aria-hidden="true"></i>Search
+                            </button>
+                        </div>
+                    }
                 </div>
+                <div class="mt-3 d-flex flex-wrap align-items-center">
+                    <button id="generateMBillButton" type="button" class="btn btn-outline-primary">
+                        <i class="fas fa-cogs mr-1" aria-hidden="true"></i> Generate MBill
+                    </button>
+                    <small class="text-muted ml-md-3 mt-2 mt-md-0">Select rows in the grid below, then run Generate MBill.</small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(billingLogicMarkdown))
+    {
+        <div class="card cm-detail-card shadow-sm border-0">
+            <div class="card-header">
+                <p class="cm-header-name mb-0">
+                    <i class="fas fa-book mr-1 text-muted" aria-hidden="true"></i> Loaded billing logic (.md)
+                </p>
+            </div>
+            <div class="card-body p-0">
+                <textarea class="form-control border-0 rounded-0" rows="12" readonly style="font-size: 0.8125rem;">@billingLogicMarkdown</textarea>
             </div>
         </div>
-        count++;
     }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <p class="cm-header-name mb-0">
+                <i class="fas fa-th-list mr-1 text-muted" aria-hidden="true"></i> Customers by block
+            </p>
+            @if (Model != null && Model.Any())
+            {
+                <span class="small text-muted">@Model.Sum(g => g.Customers.Count) record(s)</span>
+            }
+        </div>
+        <div class="card-body p-3">
+            @if (Model == null || !Model.Any())
+            {
+                <p class="text-muted mb-0 small">Choose a project to load customers. Use Search to filter by BTNo.</p>
+            }
+            else
+            {
+                <div class="accordion cm-accordion-gen" id="@accordionId">
+                    @foreach (var group in Model)
+                    {
+                        var collapseId = $"collapse_{count}";
+                        var headingId = $"heading_{count}";
+                        <div class="card">
+                            <div class="card-header" id="@headingId">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button"
+                                            data-toggle="collapse" data-target="#@collapseId"
+                                            aria-expanded="false" aria-controls="@collapseId">
+                                        <i class="fas fa-chevron-right mr-2 small text-muted collapse-caret-gen" aria-hidden="true"></i>
+                                        Block <strong>@group.Block</strong>
+                                        <span class="text-muted font-weight-normal ml-2">(@group.Customers.Count)</span>
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="@collapseId" class="collapse" aria-labelledby="@headingId" data-parent="#@accordionId">
+                                <div class="card-body">
+                                    <div class="table-responsive cm-table-wrap">
+                                        <table class="table table-sm mb-0 cm-gen-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width:2.5rem;">
+                                                        <input type="checkbox" title="Select all in block" onclick="toggleGroupCheckboxes(this, '@collapseId')" />
+                                                    </th>
+                                                    <th>BT number</th>
+                                                    <th>Customer name</th>
+                                                    <th>Project</th>
+                                                    <th>Category</th>
+                                                    <th>Block</th>
+                                                    <th>House no</th>
+                                                    <th>Size</th>
+                                                    <th>Bill status</th>
+                                                    <th>Gen status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var customer in group.Customers)
+                                                {
+                                                    <tr ondblclick="window.location.href='@Url.Action("ViewCustomer", "SGCustomers", new { id = customer.Uid })'" style="cursor: pointer;">
+                                                        <td>
+                                                            <input type="checkbox" name="selectedCustomers"
+                                                                   value="@customer.Uid"
+                                                                   class="record-checkbox checkbox-@collapseId" />
+                                                        </td>
+                                                        <td>@customer.BTNo</td>
+                                                        <td>@customer.CustomerName</td>
+                                                        <td>@customer.Project</td>
+                                                        <td>@customer.Category</td>
+                                                        <td>@customer.Block</td>
+                                                        <td>@customer.PloNo</td>
+                                                        <td>@customer.Size</td>
+                                                        <td>@customer.BillStatusMaint</td>
+                                                        <td>@customer.BillGenerationStatus</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        count++;
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="cm-card-footer-actions">
+            <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                <i class="fas fa-info-circle mr-1" aria-hidden="true"></i> Double-click a row to open customer view.
+            </small>
+            <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Navigation">
+                <a class="btn btn-outline-dark"
+                   href="@Url.Action("CustomersMaintenance", "MaintenanceNew")"
+                   title="Back to customer grid">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline"> Grid</span>
+                </a>
+                <a class="btn btn-outline-secondary"
+                   href="@Url.Action("SearchBill", "MaintenanceNew")"
+                   title="Search bills">
+                    <i class="fas fa-search" aria-hidden="true"></i><span class="d-none d-sm-inline"> Bills</span>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Include jQuery and Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"
-        integrity="sha256-/xUj+3OJ+Y3TSLRmXX2mY+6pLDcXul5/6p1w5IBXtk=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    function toggleGroupCheckboxes(source, groupId) {
-        var selector = '.checkbox-' + groupId;
-        var checked = source.checked;
-        document.querySelectorAll(selector).forEach(cb => cb.checked = checked);
-    }
-
-    $(document).ready(function () {
-        function getSelectedIds() {
-            return $('.record-checkbox:checked').map(function () {
-                return +this.value;
-            }).get();
+@section Scripts {
+    <script>
+        function toggleGroupCheckboxes(source, groupId) {
+            var selector = '.checkbox-' + groupId;
+            var checked = source.checked;
+            document.querySelectorAll(selector).forEach(function (cb) { cb.checked = checked; });
         }
 
-        // Generate MBill using default 15-values logic via isolated insert API
-        $('#generateMBillButton').click(function () {
-            var selectedIds = getSelectedIds();
+        $(document).ready(function () {
+            $('.cm-accordion-gen .collapse').on('show.bs.collapse', function () {
+                $(this).prev('.card-header').find('.collapse-caret-gen').removeClass('fa-chevron-right').addClass('fa-chevron-down');
+            });
+            $('.cm-accordion-gen .collapse').on('hide.bs.collapse', function () {
+                $(this).prev('.card-header').find('.collapse-caret-gen').removeClass('fa-chevron-down').addClass('fa-chevron-right');
+            });
 
-            if (!selectedIds.length) {
-                alert('No records selected.');
-                return;
+            function getSelectedIds() {
+                return $('.record-checkbox:checked').map(function () {
+                    return +this.value;
+                }).get();
             }
 
-            $('#loadingOverlay').show();
+            $('#generateMBillButton').on('click', function () {
+                var selectedIds = getSelectedIds();
 
-            $.ajax({
-                url: '/api/MaintenanceBillInsert/from-customers',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(selectedIds),
-                success: function (response) {
-                    $('#loadingOverlay').hide();
-                    if (response && response.success) {
-                        // Update the "Gen Status" column for the selected rows based on server response
-                        if (response.updates && response.updates.length > 0) {
-                            response.updates.forEach(function (update) {
-                                var checkbox = $('.record-checkbox[value="' + update.uid + '"]');
-                                var row = checkbox.closest('tr');
-                                row.find('td:last').text(update.status);
-                                checkbox.prop('checked', false);
-                            });
-                        }
-                        alert(response.message || 'MBills process completed.');
-                    } else {
-                        alert('MBill generation completed, but response was unexpected.');
-                    }
-                },
-                error: function (xhr) {
-                    $('#loadingOverlay').hide();
-                    if (xhr.status === 403) {
-                        alert('Unauthorized!');
-                        window.location.href = '@Url.Action("AccessDenied", "Login")';
-                    } else {
-                        var errorMsg = 'An error occurred while generating MBills.';
-                        if (xhr.responseJSON && xhr.responseMsg) {
-                             errorMsg = xhr.responseJSON.message;
-                        } else if (xhr.responseText) {
-                            try {
-                                var res = JSON.parse(xhr.responseText);
-                                if (res.message) errorMsg = res.message;
-                            } catch(e) {}
-                        }
-                        alert(errorMsg);
-                    }
+                if (!selectedIds.length) {
+                    alert('No records selected.');
+                    return;
                 }
+
+                $('#loadingOverlayGen').css('display', 'flex');
+
+                $.ajax({
+                    url: '/api/MaintenanceBillInsert/from-customers',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(selectedIds),
+                    success: function (response) {
+                        $('#loadingOverlayGen').hide();
+                        if (response && response.success) {
+                            if (response.updates && response.updates.length > 0) {
+                                response.updates.forEach(function (update) {
+                                    var checkbox = $('.record-checkbox[value="' + update.uid + '"]');
+                                    var row = checkbox.closest('tr');
+                                    var tds = row.find('td');
+                                    if (typeof update.billStatus !== 'undefined' && update.billStatus !== null) {
+                                        tds.eq(tds.length - 2).text(update.billStatus);
+                                    }
+                                    tds.eq(tds.length - 1).text(update.status || '');
+                                    checkbox.prop('checked', false);
+                                });
+                            }
+                            alert(response.message || 'MBills process completed.');
+                        } else {
+                            alert('MBill generation completed, but response was unexpected.');
+                        }
+                    },
+                    error: function (xhr) {
+                        $('#loadingOverlayGen').hide();
+                        if (xhr.status === 403) {
+                            alert('Unauthorized!');
+                            window.location.href = '@Url.Action("AccessDenied", "Login")';
+                        } else {
+                            var errorMsg = 'An error occurred while generating MBills.';
+                            if (xhr.responseJSON && xhr.responseMsg) {
+                                errorMsg = xhr.responseJSON.message;
+                            } else if (xhr.responseText) {
+                                try {
+                                    var res = JSON.parse(xhr.responseText);
+                                    if (res.message) errorMsg = res.message;
+                                } catch (e) { }
+                            }
+                            alert(errorMsg);
+                        }
+                    }
+                });
             });
         });
-    });
-</script> 
+    </script>
+}

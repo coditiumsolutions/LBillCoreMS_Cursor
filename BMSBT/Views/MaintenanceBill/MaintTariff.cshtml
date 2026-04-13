@@ -3,102 +3,318 @@
 @model IPagedList<BMSBT.Models.MaintenanceTarrif>
 
 @{
-    ViewData["Title"] = "Maintenance Charges";
+    ViewData["Title"] = "Maintenance tariffs";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+    var selectedProject = ViewBag.SelectedProject as string;
+    var selectedCategory = ViewBag.SelectedCategory as string;
+    var projects = ViewBag.Projects as IEnumerable<string> ?? Enumerable.Empty<string>();
+    var categories = ViewBag.Categories as IEnumerable<string> ?? Enumerable.Empty<string>();
 }
 
+<style>
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
 
-<!-- Create New Button -->
-<div class="row mb-3">
-    <div class="col-md-12">
-        <a asp-action="CreateTariff" class="btn btn-primary">Create New</a>
-    </div>
-</div>
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
 
-<!-- Search Panel -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="get" asp-action="MaintTariff">
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Project</label>
-                    <select name="project" class="form-control">
-                        <option value="">-- All Projects --</option>
-                        @foreach (var p in ViewBag.Projects)
-                        {
-                            <option value="@p" selected="@(p == ViewBag.SelectedProject ? "selected" : null)">@p</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Category</label>
-                    <select name="category" class="form-control">
-                        <option value="">-- All Categories --</option>
-                        @foreach (var c in ViewBag.Categories)
-                        {
-                            <option value="@c" selected="@(c == ViewBag.SelectedCategory ? "selected" : null)">@c</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary mr-2">Search</button>
-                    <a asp-action="MaintTariff" class="btn btn-secondary">Reset</a>
-                </div>
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-filter-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .cm-filter-body .form-control {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .cm-filter-body .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
+
+    .cm-tariff-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .cm-tariff-table thead th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        border-top: none;
+    }
+
+    .cm-tariff-table tbody td {
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    .cm-tariff-table tbody tr:nth-child(even) {
+        background: var(--cm-row-odd);
+    }
+
+    .cm-tariff-table tbody tr:hover {
+        background: var(--cm-row-hover) !important;
+    }
+
+    .cm-tariff-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
+    }
+
+    .cm-tariff-pager {
+        padding: 0.65rem 1rem;
+        border-top: 1px solid var(--cm-border);
+        background: #fff;
+        display: flex;
+        justify-content: center;
+    }
+</style>
+
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
+            @successMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string errMsg)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
+            @errMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <div>
+                <p class="cm-header-name mb-0">
+                    <i class="fas fa-file-invoice-dollar mr-1 text-muted" aria-hidden="true"></i> Maintenance tariffs
+                    @if (!string.IsNullOrWhiteSpace(selectedProject))
+                    {
+                        <span class="cm-badge-soft ml-2">@selectedProject</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(selectedCategory))
+                    {
+                        <span class="cm-badge-soft ml-2">@selectedCategory</span>
+                    }
+                </p>
             </div>
-        </form>
+            <a asp-action="CreateTariff" class="btn btn-primary btn-sm mt-2 mt-md-0">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i> Create new
+            </a>
+        </div>
+
+        <div class="card-body cm-filter-body border-bottom-0">
+            <form method="get" asp-action="MaintTariff">
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="filterProject">Project</label>
+                        <select id="filterProject" name="project" class="form-control">
+                            <option value="">— All projects —</option>
+                            @foreach (var p in projects)
+                            {
+                                if (string.Equals(p, selectedProject, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@p" selected="selected">@p</option>
+                                }
+                                else
+                                {
+                                    <option value="@p">@p</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="filterCategory">Category</label>
+                        <select id="filterCategory" name="category" class="form-control">
+                            <option value="">— All categories —</option>
+                            @foreach (var c in categories)
+                            {
+                                if (string.Equals(c, selectedCategory, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <option value="@c" selected="selected">@c</option>
+                                }
+                                else
+                                {
+                                    <option value="@c">@c</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4 d-flex align-items-end mb-0 flex-wrap">
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                            <i class="fas fa-search mr-1" aria-hidden="true"></i> Search
+                        </button>
+                        <a asp-action="MaintTariff" class="btn btn-outline-secondary mb-2 mb-md-0">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0 border-top">
+            <div class="table-responsive cm-table-wrap mx-md-2">
+                <table id="maintenanceTable" class="table table-sm mb-0 cm-tariff-table">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th>Category</th>
+                            <th>Size</th>
+                            <th>Charges</th>
+                            <th>Tax</th>
+                            <th style="width: 6rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr data-id="@item.Uid">
+                                <td>@item.Project</td>
+                                <td>@item.Category</td>
+                                <td>@item.Size</td>
+                                <td>@item.Charges</td>
+                                <td>@item.Tax</td>
+                                <td>
+                                    <a asp-action="EditTariff" asp-route-id="@item.Uid" class="btn btn-sm btn-outline-primary" title="Edit tariff">
+                                        <i class="fas fa-edit" aria-hidden="true"></i><span class="d-none d-sm-inline"> Edit</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No records found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (Model != null && Model.PageCount > 1)
+        {
+            <div class="cm-tariff-pager">
+                @Html.PagedListPager(Model, page => Url.Action("MaintTariff", new { page, project = ViewBag.SelectedProject, category = ViewBag.SelectedCategory }),
+                    new PagedListRenderOptions
+                    {
+                        DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+                        DisplayLinkToLastPage = PagedListDisplayMode.Always,
+                        DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                        DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                        DisplayPageCountAndCurrentLocation = true,
+                        UlElementClasses = new[] { "pagination", "mb-0" },
+                        LiElementClasses = new[] { "page-item" },
+                        PageClasses = new[] { "page-link" }
+                    })
+            </div>
+        }
+
+        <div class="cm-card-footer-actions">
+            <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                <i class="fas fa-info-circle mr-1" aria-hidden="true"></i> Tariffs drive maintenance bill amounts by project, category, and size.
+            </small>
+            <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Navigation">
+                <a class="btn btn-outline-dark"
+                   href="@Url.Action("CustomersMaintenance", "MaintenanceNew")"
+                   title="Customer grid">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i><span class="d-none d-sm-inline"> Grid</span>
+                </a>
+                <a class="btn btn-outline-secondary"
+                   href="@Url.Action("GenerateBill", "MaintenanceNew")"
+                   title="Generate bills">
+                    <i class="fas fa-file-invoice" aria-hidden="true"></i><span class="d-none d-sm-inline"> Generate</span>
+                </a>
+            </div>
+        </div>
     </div>
-</div>
-
-<!-- Maintenance Tariffs Table -->
-<div class="table-responsive">
-    <table id="maintenanceTable" class="table table-striped">
-        <thead>
-            <tr>
-                <th>Project</th>
-                <th>Category</th>
-                <th>Size</th>
-                <th>Charges</th>
-                <th>Tax</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr data-id="@item.Uid">
-                    <td>@item.Project</td>
-                    <td>@item.Category</td>
-                    <td>@item.Size</td>
-                    <td>@item.Charges</td>
-                    <td>@item.Tax</td>
-                    <td>
-                        <!-- Edit Button -->
-                        <a asp-action="EditTariff" asp-route-id="@item.Uid" class="btn btn-sm btn-success">Edit</a>
-                    </td>
-                </tr>
-            }
-            @if (!Model.Any())
-            {
-                <tr>
-                    <td colspan="6" class="text-center">No records found.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<div class="d-flex justify-content-center">
-    @Html.PagedListPager(Model, page => Url.Action("MaintTariff", new { page, project = ViewBag.SelectedProject, category = ViewBag.SelectedCategory }), 
-        new X.PagedList.Mvc.Core.PagedListRenderOptions {
-            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
-            DisplayLinkToLastPage = PagedListDisplayMode.Always,
-            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
-            DisplayLinkToNextPage = PagedListDisplayMode.Always,
-            DisplayPageCountAndCurrentLocation = true,
-            UlElementClasses = new[] { "pagination" },
-            LiElementClasses = new[] { "page-item" },
-            PageClasses = new[] { "page-link" }
-        })
 </div>
 
 @section Scripts {

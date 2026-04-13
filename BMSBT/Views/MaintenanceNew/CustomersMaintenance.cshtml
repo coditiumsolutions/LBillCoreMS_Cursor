@@ -5,44 +5,171 @@
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
 }
 
-<h3>Customers</h3>
+<style>
+    /* Aligned with Views/CustomersMaintenance/Details.cshtml */
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
 
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="form-row">
-            <div class="form-group col-md-4">
-                <label for="projectFilter">Project</label>
-                <select id="projectFilter" class="form-control">
-                    <option value="">-- All Projects --</option>
-                    @foreach (var project in Model.Projects)
-                    {
-                        <option value="@project">@project</option>
-                    }
-                </select>
-            </div>
-            <div class="form-group col-md-4">
-                <label for="blockFilter">Block</label>
-                <select id="blockFilter" class="form-control">
-                    <option value="">-- All Blocks --</option>
-                    @foreach (var block in Model.Blocks)
-                    {
-                        <option value="@block">@block</option>
-                    }
-                </select>
-            </div>
-            <div class="form-group col-md-3">
-                <label for="btnoSearch">BTNo</label>
-                <input type="text" id="btnoSearch" class="form-control" placeholder="Search by BTNo" />
-            </div>
-            <div class="form-group col-md-1 d-flex align-items-end">
-                <button type="button" id="btnSearch" class="btn btn-primary btn-block">Search</button>
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-detail-card .card-body.cm-filter-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
+
+    .cm-detail-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .cm-detail-table.cm-customers-grid-table thead th {
+        background: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        white-space: nowrap;
+    }
+
+    .cm-detail-table.cm-customers-grid-table tbody td {
+        padding: 0.55rem 0.75rem;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        background: var(--cm-row-even);
+        text-align: left;
+    }
+
+    .cm-detail-table.cm-customers-grid-table tbody tr:nth-child(even) td {
+        background: var(--cm-row-odd);
+    }
+
+    .cm-detail-table.cm-customers-grid-table tbody tr:hover td {
+        background: var(--cm-row-hover) !important;
+    }
+
+    .cm-detail-table.cm-customers-grid-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cm-grid-pager {
+        padding: 0.75rem 1rem 1rem;
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+    }
+
+    .cm-filter-body .form-control {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .cm-filter-body .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <p class="cm-header-name mb-1 mb-md-0">
+                <i class="fas fa-users text-muted mr-2" aria-hidden="true"></i>Customers
+                <span class="cm-badge-soft ml-2">Maintenance</span>
+            </p>
+            <small class="text-muted mb-0 d-none d-md-block">
+                <i class="fas fa-mouse-pointer mr-1" aria-hidden="true"></i> Double-click a row to open customer details.
+            </small>
+        </div>
+
+        <div class="card-body cm-filter-body border-bottom">
+            <div class="form-row">
+                <div class="form-group col-md-4 mb-md-0">
+                    <label for="projectFilter" class="font-weight-bold text-secondary small text-uppercase">Project</label>
+                    <select id="projectFilter" class="form-control">
+                        <option value="">-- All Projects --</option>
+                        @foreach (var project in Model.Projects)
+                        {
+                            <option value="@project">@project</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-4 mb-md-0">
+                    <label for="blockFilter" class="font-weight-bold text-secondary small text-uppercase">Block</label>
+                    <select id="blockFilter" class="form-control">
+                        <option value="">-- All Blocks --</option>
+                        @foreach (var block in Model.Blocks)
+                        {
+                            <option value="@block">@block</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-3 mb-md-0">
+                    <label for="btnoSearch" class="font-weight-bold text-secondary small text-uppercase">BT No</label>
+                    <input type="text" id="btnoSearch" class="form-control" placeholder="Search by BT No" autocomplete="off" />
+                </div>
+                <div class="form-group col-md-1 mb-0 d-flex align-items-end">
+                    <button type="button" id="btnSearch" class="btn btn-primary btn-block">
+                        <i class="fas fa-search mr-1" aria-hidden="true"></i>Search
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<div id="gridContainer">
-    @await Html.PartialAsync("_MaintenanceCustomersGrid", Model.Customers)
+        <div class="card-body p-0" id="gridContainer">
+            @await Html.PartialAsync("_MaintenanceCustomersGrid", Model.Customers)
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -69,7 +196,6 @@
                 var block = $('#blockFilter').val();
                 var btno = $('#btnoSearch').val();
 
-                // Save search state
                 var searchState = {
                     project: project,
                     block: block,
@@ -94,7 +220,6 @@
                 loadCustomers(1);
             });
 
-            // Handle pagination clicks via AJAX
             $(document).on('click', '.pagination a', function (e) {
                 e.preventDefault();
                 var href = $(this).attr('href');
@@ -105,7 +230,6 @@
                 }
             });
 
-            // Double-click event handler for viewing customer details
             $(document).on('dblclick', '#customersTable tbody tr', function () {
                 var customerId = $(this).data('id');
                 if (customerId) {
@@ -113,15 +237,14 @@
                 }
             });
 
-            // Restore search state if it exists
             var savedState = sessionStorage.getItem('maintCustomerSearchState');
             if (savedState) {
                 var state = JSON.parse(savedState);
                 $('#projectFilter').val(state.project);
                 $('#btnoSearch').val(state.btno);
-                
+
                 if (state.project) {
-                    loadBlocks(state.project, state.block).then(function() {
+                    loadBlocks(state.project, state.block).then(function () {
                         loadCustomers(state.page || 1);
                     });
                 } else {

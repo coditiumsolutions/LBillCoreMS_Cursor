@@ -167,38 +167,55 @@ namespace BMSBT.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            var entity = await _context.CustomersMaintenance.FindAsync(id);
+            if (entity == null)
             {
-                try
-                {
-                    // Get the original record to preserve CustomerNo and BTNo
-                    var originalCustomer = await _context.CustomersMaintenance.FindAsync(id);
-                    if (originalCustomer == null)
-                    {
-                        return NotFound();
-                    }
-
-                    // Preserve the original CustomerNo and BTNo values (read-only fields)
-                    customer.CustomerNo = originalCustomer.CustomerNo;
-                    customer.BTNo = originalCustomer.BTNo;
-
-                    _context.Update(customer);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CustomerExists(customer.Uid))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            return View(customer);
+
+            // Copy editable fields onto the tracked entity so unposted columns (e.g. BillGenerationStatus)
+            // are not overwritten with nulls, which happened with Update(customer) + incomplete binding.
+            entity.CustomerName = customer.CustomerName;
+            entity.FatherName = customer.FatherName;
+            entity.CNICNo = customer.CNICNo;
+            entity.MobileNo = customer.MobileNo;
+            entity.Project = customer.Project;
+            entity.SubProject = customer.SubProject;
+            entity.Block = customer.Block;
+            entity.Sector = customer.Sector;
+            entity.PloNo = customer.PloNo;
+            entity.PlotType = customer.PlotType;
+            entity.Category = customer.Category;
+            entity.Size = customer.Size;
+            entity.TariffName = customer.TariffName;
+            entity.MeterNo = customer.MeterNo;
+            entity.City = customer.City;
+            entity.InstalledOn = customer.InstalledOn;
+            entity.BTNoMaintenance = customer.BTNoMaintenance ?? entity.BTNoMaintenance;
+            entity.BillStatusMaint = customer.BillStatusMaint;
+
+            ModelState.Clear();
+            if (!TryValidateModel(entity))
+            {
+                return View(entity);
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CustomerExists(entity.Uid))
+                {
+                    return NotFound();
+                }
+
+                throw;
+            }
+
+            TempData["SuccessMessage"] = "The record has been saved successfully.";
+            return RedirectToAction(nameof(Details), new { id = entity.Uid });
         }
 
         // GET: CustomersMaintenance/Delete/5

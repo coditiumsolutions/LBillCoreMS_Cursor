@@ -37,8 +37,7 @@ namespace BMSBT.BillServices
             {
                 var duplicateMsg = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(
                     currentBillingMonth, currentBillingYear);
-                customer.BillGenerationStatus = duplicateMsg;
-                UpdateGeneratedMonthYear(customer, duplicateMsg);
+                PersistCustomerGenerationStatus(customer, duplicateMsg);
                 return $"Bill already generated for customer {customer.CustomerName}.";
             }
 
@@ -46,7 +45,7 @@ namespace BMSBT.BillServices
             var tariff = GetTarrifDetails(customer, currentBillingMonth, currentBillingYear);
             if (tariff == null)
             {
-                UpdateGeneratedMonthYear(customer, $"Tariff not found for {customer.Project} {customer.Category ?? customer.PlotType} {customer.Size}");
+                PersistCustomerGenerationStatus(customer, $"Tariff not found for {customer.Project} {customer.Category ?? customer.PlotType} {customer.Size}");
                 return $"Tariff not found for customer {customer.CustomerName}.";
             }
 
@@ -59,7 +58,7 @@ namespace BMSBT.BillServices
             {
                 if (!IsNewCustomer(customer))
                 {
-                    UpdateGeneratedMonthYear(customer, $"Previous bill not found. Previous Month: {previousMonth}");
+                    PersistCustomerGenerationStatus(customer, $"Previous bill not found. Previous Month: {previousMonth}");
                     return $"Previous bill not found for customer {customer.BTNo}.";
                 }
             }
@@ -81,10 +80,11 @@ namespace BMSBT.BillServices
             // Assign an invoice number and update the status
             AssignInvoiceNo(newBill);
 
-            // Update BillGenerationStatus with Month-Year
-            customer.BillGenerationStatus = $"{currentBillingMonth}-{currentBillingYear}";
-
-            UpdateGeneratedMonthYear(customer, $"Bill created for {currentBillingMonth} {currentBillingYear}");
+            customer.BillGenerationStatus = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(
+                currentBillingMonth, currentBillingYear);
+            customer.BillStatusMaint = "Unpaid";
+            _dbContext.Update(customer);
+            _dbContext.SaveChanges();
 
             return $"Bill created successfully for customer {customer.CustomerName}.";
         }
@@ -345,9 +345,12 @@ namespace BMSBT.BillServices
 
 
 
-        private void UpdateGeneratedMonthYear(CustomersMaintenance customer, string message)
+        /// <summary>
+        /// Writes generation / pipeline messages to BillGenerationStatus only (not BillStatusMaint).
+        /// </summary>
+        private void PersistCustomerGenerationStatus(CustomersMaintenance customer, string generationMessage)
         {
-            customer.BillStatusMaint = message;
+            customer.BillGenerationStatus = generationMessage;
             _dbContext.Update(customer);
             _dbContext.SaveChanges();
         }

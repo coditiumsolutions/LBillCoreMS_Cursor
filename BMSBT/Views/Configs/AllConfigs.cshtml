@@ -1,41 +1,183 @@
 @model BMSBT.Models.ConfigurationListViewModel
 
 @{
-    ViewData["Title"] = "All Configurations";
+    ViewData["Title"] = "Configuration values";
     Layout = "~/Views/Shared/_LayoutSetup.cshtml";
+    var rows = (Model?.Configurations ?? Enumerable.Empty<Configuration>()).ToList();
+    var total = Model != null ? Model.TotalRecords : rows.Count;
 }
 
-<div class="container-fluid">
-    <div class="card">
-        <div class="card-header">
-            <h4>All Configurations</h4>
-        </div>
-        <div class="card-body">
-            <!-- Action Buttons -->
-            <div class="row mb-3">
-                <div class="col-md-12 text-right">
-                    <a asp-action="Create" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Create New
-                    </a>
-                </div>
-            </div>
+<style>
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        --cm-row-odd: #fafbfc;
+        --cm-row-even: #ffffff;
+        --cm-row-hover: #eef6ff;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
 
-            <!-- DataTables Grid -->
-            <div class="table-responsive">
-                <table id="configurationsGrid" class="table table-striped table-bordered table-hover" style="width:100%">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>UID</th>
-                            <th>Config ID</th>
-                            <th>Config Key</th>
-                            <th>Config Value</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Configurations != null && Model.Configurations.Any())
-                        {
-                            @foreach (var item in Model.Configurations)
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-table-wrap {
+        border-radius: 6px;
+        border: 1px solid var(--cm-border);
+        overflow: hidden;
+        margin: 0.5rem 0.75rem 0.75rem;
+    }
+
+    .cm-config-grid {
+        width: 100% !important;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .cm-config-grid thead th {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.65rem 0.75rem !important;
+        border-bottom: 1px solid var(--cm-border) !important;
+        vertical-align: middle;
+        border-top: none !important;
+    }
+
+    .cm-config-grid tbody td {
+        padding: 0.5rem 0.75rem !important;
+        border-bottom: 1px solid var(--cm-border);
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    .cm-config-grid tbody tr:nth-child(even) {
+        background: var(--cm-row-odd);
+    }
+
+    .cm-config-grid tbody tr:hover {
+        background: var(--cm-row-hover) !important;
+    }
+
+    .cm-config-dt-wrap .dataTables_filter label,
+    .cm-config-dt-wrap .dataTables_length label {
+        font-size: 0.875rem;
+        color: #475569;
+    }
+
+    .cm-config-dt-wrap .dataTables_wrapper .dataTables_paginate .paginate_button {
+        border-radius: 4px;
+    }
+
+    .cm-card-footer-actions {
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+        padding: 0.65rem 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cm-card-footer-actions .btn-group-actions .btn i {
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (TempData["SuccessMessage"] is string successMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-2" role="alert">
+            @successMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string errMsg)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-2" role="alert">
+            @errMsg
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <p class="cm-header-name mb-0">
+                <i class="fas fa-sliders-h mr-1 text-muted" aria-hidden="true"></i> Configuration values
+                <span class="cm-badge-soft ml-2">@total.ToString("N0") row(s)</span>
+            </p>
+            <a asp-action="Create" class="btn btn-primary btn-sm mt-2 mt-md-0">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i> Create new
+            </a>
+        </div>
+
+        <div class="card-body p-0 border-top">
+            <div class="cm-config-dt-wrap px-2 py-3">
+                <div class="table-responsive cm-table-wrap mx-md-2">
+                    <table id="configurationsGrid" class="table table-sm table-bordered mb-0 cm-config-grid" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>UID</th>
+                                <th>Config ID</th>
+                                <th>Config key</th>
+                                <th>Config value</th>
+                                <th style="min-width: 12rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in rows)
                             {
                                 <tr>
                                     <td>@item.Uid</td>
@@ -43,21 +185,35 @@
                                     <td>@Html.DisplayFor(modelItem => item.ConfigKey)</td>
                                     <td>@Html.DisplayFor(modelItem => item.ConfigValue)</td>
                                     <td>
-                                        <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-sm btn-primary" title="Edit Configuration">
-                                            <i class="fas fa-edit"></i> Edit
+                                        <a asp-action="Edit" asp-route-id="@item.Uid" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit" aria-hidden="true"></i><span class="d-none d-lg-inline"> Edit</span>
                                         </a>
-                                        <a asp-action="Details" asp-route-id="@item.Uid" class="btn btn-sm btn-info" title="View Details">
-                                            <i class="fas fa-info-circle"></i> Details
+                                        <a asp-action="Details" asp-route-id="@item.Uid" class="btn btn-sm btn-outline-secondary" title="Details">
+                                            <i class="fas fa-info-circle" aria-hidden="true"></i><span class="d-none d-lg-inline"> Details</span>
                                         </a>
-                                        <a asp-action="Delete" asp-route-id="@item.Uid" class="btn btn-sm btn-danger" title="Delete Configuration">
-                                            <i class="fas fa-trash"></i> Delete
+                                        <a asp-action="Delete" asp-route-id="@item.Uid" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash-alt" aria-hidden="true"></i><span class="d-none d-lg-inline"> Delete</span>
                                         </a>
                                     </td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="cm-card-footer-actions">
+            <small class="text-muted mb-0 d-none d-sm-block pr-2">
+                <i class="fas fa-info-circle mr-1" aria-hidden="true"></i> Use the grid search and paging to find keys such as Project, Bank, or Sector.
+            </small>
+            <div class="btn-group-actions btn-group flex-wrap justify-content-end" role="group" aria-label="Related">
+                <a class="btn btn-outline-dark" asp-controller="OperatorSetup" asp-action="Index" title="Operator setup">
+                    <i class="fas fa-user-cog" aria-hidden="true"></i><span class="d-none d-sm-inline"> Operators</span>
+                </a>
+                <a class="btn btn-outline-secondary" asp-controller="Configs" asp-action="Index" title="Configs home">
+                    <i class="fas fa-home" aria-hidden="true"></i><span class="d-none d-sm-inline"> Config home</span>
+                </a>
             </div>
         </div>
     </div>
@@ -67,33 +223,29 @@
     <script>
         $(document).ready(function () {
             $('#configurationsGrid').DataTable({
-                "order": [[0, "desc"]], // Sort by UID descending by default
-                "pageLength": 10,
-                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                "responsive": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "paging": true,
-                "language": {
-                    "search": "Search:",
-                    "lengthMenu": "Show _MENU_ entries",
-                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                    "infoEmpty": "Showing 0 to 0 of 0 entries",
-                    "infoFiltered": "(filtered from _MAX_ total entries)",
-                    "paginate": {
-                        "first": "First",
-                        "last": "Last",
-                        "next": "Next",
-                        "previous": "Previous"
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                responsive: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                paging: true,
+                language: {
+                    search: 'Search:',
+                    lengthMenu: 'Show _MENU_ entries',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                    infoEmpty: 'Showing 0 to 0 of 0 entries',
+                    infoFiltered: '(filtered from _MAX_ total entries)',
+                    paginate: {
+                        first: 'First',
+                        last: 'Last',
+                        next: 'Next',
+                        previous: 'Previous'
                     }
                 },
-                "columnDefs": [
-                    {
-                        "targets": [4], // Actions column
-                        "orderable": false,
-                        "searchable": false
-                    }
+                columnDefs: [
+                    { targets: [4], orderable: false, searchable: false }
                 ]
             });
         });
