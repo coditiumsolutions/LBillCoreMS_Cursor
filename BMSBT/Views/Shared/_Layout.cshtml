@@ -46,6 +46,13 @@
             font-size: 16px; /* Reduce font size */
             font-weight: normal;
         }
+
+        .sidebar-nav-spacer {
+            height: 1.25rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 
 </head>
@@ -114,6 +121,13 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a asp-controller="Fine" asp-action="Index">
+                            <i class="fas fa-gavel" style="color: yellowgreen; font-size: 14px;"></i>
+                            Fine
+                        </a>
+                    </li>
+
 
 
 
@@ -175,6 +189,9 @@
                             </ul>
                         </div>
                     </li>
+
+                    <li class="sidebar-nav-spacer" aria-hidden="true"></li>
+                    <li class="sidebar-nav-spacer" aria-hidden="true"></li>
 
                     <li>
                         <a asp-controller="Login" asp-action="Logout"

@@ -62,15 +62,15 @@ public class MdBillingService : IMdBillingService
         // PHASE 2 – VERIFY PROCESS  (ResidentialBillLogic.md §2)
         // ═══════════════════════════════════════════════════════════════
 
-        // Step 2.1 – Duplicate Bill Check
-        bool duplicate = await _db.MaintenanceBills
-            .AnyAsync(b => b.Btno == btNo
-                        && b.BillingMonth == billingMonth
-                        && b.BillingYear == billingYear, ct);
-        // Duplicate-bill guard disabled for testing – allows regenerating
-        //if (duplicate)
-        //    return await UpdateAndSkip(customer, customerUid,
-        //        $"Bill Already Generated-{billingYear}-{billingMonth}", ct);
+        // Step 2.1 – Duplicate Bill Check (BTNo / BTNoMaintenance × billing month/year variants)
+        var duplicateBtKeys = MaintenanceBillDuplicateChecker.CollectCustomerBtKeys(customer);
+        bool duplicate = await MaintenanceBillDuplicateChecker.BillExistsAsync(
+            _db, duplicateBtKeys, billingMonth, billingYear, ct);
+        if (duplicate)
+        {
+            var msg = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(billingMonth, billingYear);
+            return await UpdateAndSkip(customer, customerUid, msg, ct);
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // PHASE 3 – PREVIOUS BILL LOOKUP  (§3)

@@ -1,5 +1,6 @@
 using BMSBT.Models;
 using BMSBT.Models.MyObjects;
+using BMSBT.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,10 +32,13 @@ namespace BMSBT.BillServices
             if (customer == null)
                 return $"Customer with ID {customerId} not found.";
 
-            // Check if the bill has already been generated
+            // Check if the bill has already been generated (same BT + billing month/year as generation period)
             if (IsBillAlreadyGenerated(customer, currentBillingMonth, currentBillingYear))
             {
-                UpdateGeneratedMonthYear(customer, $"Bill already generated for {previousMonth} {previousYear}");
+                var duplicateMsg = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(
+                    currentBillingMonth, currentBillingYear);
+                customer.BillGenerationStatus = duplicateMsg;
+                UpdateGeneratedMonthYear(customer, duplicateMsg);
                 return $"Bill already generated for customer {customer.CustomerName}.";
             }
 
@@ -196,8 +200,8 @@ namespace BMSBT.BillServices
 
         private bool IsBillAlreadyGenerated(CustomersMaintenance customer, string month, string year)
         {
-            return _dbContext.MaintenanceBills.Any(b =>
-                b.Btno == customer.BTNo && b.BillingMonth == month && b.BillingYear == year);
+            var keys = MaintenanceBillDuplicateChecker.CollectCustomerBtKeys(customer);
+            return MaintenanceBillDuplicateChecker.BillExists(_dbContext, keys, month, year);
         }
 
         private static bool IsPaidStatus(string? paymentStatus)

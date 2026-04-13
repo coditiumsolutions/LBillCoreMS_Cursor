@@ -154,41 +154,50 @@ public class MaintenanceBillInsertController : ControllerBase
 
                 if (shouldGenerate)
                 {
-                    var additionalBtNos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    if (!string.IsNullOrWhiteSpace(customer.BTNo))
-                        additionalBtNos.Add(customer.BTNo.Trim());
-                    if (!string.IsNullOrWhiteSpace(customer.BTNoMaintenance))
-                        additionalBtNos.Add(customer.BTNoMaintenance.Trim());
-
-                    var dto = new MaintenanceBillCreateDto
+                    var btKeysForDuplicate = MaintenanceBillDuplicateChecker.CollectCustomerBtKeys(customer);
+                    if (MaintenanceBillDuplicateChecker.BillExists(_dbContext, btKeysForDuplicate, billingMonth, billingYear))
                     {
-                        CustomerNo = customer.CustomerNo ?? string.Empty,
-                        CustomerName = customer.CustomerName ?? string.Empty,
-                        BTNo = btNoForLookup,
-                        BtNosForAdditionalChargeLookup = additionalBtNos.ToList(),
-                        PlotStatus = customer.PlotType,
-                        MeterNo = customer.MeterNo,
+                        statusValue = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(billingMonth, billingYear);
+                        customer.BillGenerationStatus = statusValue;
+                    }
+                    else
+                    {
+                        var additionalBtNos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        if (!string.IsNullOrWhiteSpace(customer.BTNo))
+                            additionalBtNos.Add(customer.BTNo.Trim());
+                        if (!string.IsNullOrWhiteSpace(customer.BTNoMaintenance))
+                            additionalBtNos.Add(customer.BTNoMaintenance.Trim());
 
-                        // Tariff matching attributes (required for tariff lookup)
-                        Project = customer.Project,
-                        Category = customer.Category ?? customer.PlotType,
-                        Size = customer.Size,
-                        Block = customer.Block,
+                        var dto = new MaintenanceBillCreateDto
+                        {
+                            CustomerNo = customer.CustomerNo ?? string.Empty,
+                            CustomerName = customer.CustomerName ?? string.Empty,
+                            BTNo = btNoForLookup,
+                            BtNosForAdditionalChargeLookup = additionalBtNos.ToList(),
+                            PlotStatus = customer.PlotType,
+                            MeterNo = customer.MeterNo,
 
-                        // Billing period and dates
-                        BillingMonth = billingMonth,
-                        BillingYear = billingYear,
-                        BillingDate = billingDate,
-                        IssueDate = issueDate,
-                        DueDate = dueDate,
-                        ValidDate = validDate
-                    };
+                            // Tariff matching attributes (required for tariff lookup)
+                            Project = customer.Project,
+                            Category = customer.Category ?? customer.PlotType,
+                            Size = customer.Size,
+                            Block = customer.Block,
 
-                    await _service.CreateAsync(dto, cancellationToken);
+                            // Billing period and dates
+                            BillingMonth = billingMonth,
+                            BillingYear = billingYear,
+                            BillingDate = billingDate,
+                            IssueDate = issueDate,
+                            DueDate = dueDate,
+                            ValidDate = validDate
+                        };
 
-                    // Update BillGenerationStatus in CustomersMaintenance table
-                    statusValue = $"{billingMonth}-{billingYear}";
-                    customer.BillGenerationStatus = statusValue;
+                        await _service.CreateAsync(dto, cancellationToken);
+
+                        // Update BillGenerationStatus in CustomersMaintenance table
+                        statusValue = $"{billingMonth}-{billingYear}";
+                        customer.BillGenerationStatus = statusValue;
+                    }
                 }
 
                 updates.Add(new { uid = customer.Uid, status = statusValue });
