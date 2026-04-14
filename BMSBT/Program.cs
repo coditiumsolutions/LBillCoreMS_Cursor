@@ -48,6 +48,7 @@ builder.Services.AddScoped<ICurrentOperatorService, CurrentOperatorService>();
 
 builder.Services.AddScoped<IOperatorService, OperatorService>();  // Register the OperatorService
 builder.Services.AddScoped<SessionHelper>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // Maintenance bills insert service (isolated from MaintenanceNew UI)
 builder.Services.AddScoped<IMaintenanceBillInsertService, MaintenanceBillInsertService>();

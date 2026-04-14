@@ -9,6 +9,7 @@ using BMSBT.Models;
 using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using BMSBT.BillServices;
+using BMSBT.Services;
 using Microsoft.AspNetCore.Identity;
 using System.Text.Json; // Required at the top
 
@@ -18,11 +19,13 @@ namespace BMSBT.Controllers
     {
         private readonly BmsbtContext _context;
         private readonly ICurrentOperatorService _operatorService;
-        public LoginController(BmsbtContext context, ICurrentOperatorService operatorService)
+        private readonly IAuditLogService _auditLogService;
+
+        public LoginController(BmsbtContext context, ICurrentOperatorService operatorService, IAuditLogService auditLogService)
         {
             _context = context;
             _operatorService = operatorService;
-            _operatorService = operatorService;
+            _auditLogService = auditLogService;
         }
         MaintenanceBill m = new MaintenanceBill();
 
@@ -115,6 +118,19 @@ namespace BMSBT.Controllers
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
+                await _auditLogService.LogAsync(
+                    "Users",
+                    "LOGIN",
+                    user.Uid.ToString(),
+                    null,
+                    new
+                    {
+                        user.Username,
+                        user.Role,
+                        LoginAt = DateTime.Now
+                    },
+                    "Authentication");
+
 
 
 
@@ -206,6 +222,18 @@ namespace BMSBT.Controllers
                 // Await SignInAsync for asynchronous operation
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
+                await _auditLogService.LogAsync(
+                    "Users",
+                    "LOGIN",
+                    user.Uid.ToString(),
+                    null,
+                    new
+                    {
+                        user.Username,
+                        user.Role,
+                        LoginAt = DateTime.Now
+                    },
+                    "Authentication");
 
                 return RedirectToAction("Index", "Home");
             }

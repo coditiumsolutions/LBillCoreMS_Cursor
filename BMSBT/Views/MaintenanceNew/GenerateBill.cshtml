@@ -454,6 +454,9 @@
 
             $('#generateMBillButton').on('click', function () {
                 var selectedIds = getSelectedIds();
+                var selectedProject = $('#selectedProject').val() || '';
+                var btNoSearch = $('#btNoSearch').val() || '';
+                var billCategory = $('#selectedBillCategory').val() || '';
 
                 if (!selectedIds.length) {
                     alert('No records selected.');
@@ -466,7 +469,12 @@
                     url: '/api/MaintenanceBillInsert/from-customers',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify(selectedIds),
+                    data: JSON.stringify({
+                        customerUids: selectedIds,
+                        selectedProject: selectedProject,
+                        btNoSearch: btNoSearch,
+                        billCategory: billCategory
+                    }),
                     success: function (response) {
                         $('#loadingOverlayGen').hide();
                         if (response && response.success) {

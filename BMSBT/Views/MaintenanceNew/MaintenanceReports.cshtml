@@ -1,0 +1,244 @@
+@model BMSBT.ViewModels.MaintenanceSummaryReportViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Reports";
+    Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
+}
+
+<style>
+    .cm-detail-page {
+        --cm-surface: #ffffff;
+        --cm-heading: #0f172a;
+        --cm-border: #e2e8f0;
+        font-size: 0.9375rem;
+        line-height: 1.45;
+        color: #334155;
+        padding-top: 0.35rem;
+        padding-bottom: 1rem;
+    }
+
+    .cm-detail-card {
+        background: var(--cm-surface);
+        border: 1px solid var(--cm-border);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    .cm-detail-card .card-header {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid var(--cm-border);
+        padding: 0.5rem 1rem;
+    }
+
+    .cm-detail-card .card-header .cm-header-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--cm-heading);
+        margin: 0;
+    }
+
+    .cm-badge-soft {
+        display: inline-block;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: #e8f1ff;
+        color: #1e40af;
+        vertical-align: middle;
+    }
+
+    .cm-filter-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .cm-filter-body .form-control {
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .cm-report-metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem 1.25rem 1.25rem;
+        background: #f8fafc;
+        border-top: 1px solid var(--cm-border);
+    }
+
+    .cm-report-metric {
+        flex: 1 1 200px;
+        background: #fff;
+        border: 1px solid var(--cm-border);
+        border-radius: 8px;
+        padding: 1rem 1.15rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .cm-report-metric .label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 0.35rem;
+    }
+
+    .cm-report-metric .value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e40af;
+        line-height: 1.2;
+    }
+</style>
+
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @ViewBag.ErrorMessage
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <p class="cm-header-name mb-1 mb-md-0">
+                <i class="fas fa-chart-pie text-muted mr-2" aria-hidden="true"></i>Reports
+                <span class="cm-badge-soft ml-2">Maintenance</span>
+            </p>
+        </div>
+
+        <div class="card-body cm-filter-body border-bottom">
+            <form asp-controller="MaintenanceNew" asp-action="MaintenanceReports" method="post" id="reportForm"
+                  data-restore-project="@Model.SelectedProject"
+                  data-restore-block="@(Model.SelectedBlock ?? "")">
+                <div class="form-row">
+                    <div class="form-group col-md-3 mb-md-0">
+                        <label asp-for="SelectedProject" class="font-weight-bold text-secondary small text-uppercase d-block">Project</label>
+                        <select asp-for="SelectedProject" id="reportProject" class="form-control">
+                            <option value="">— Select project —</option>
+                            @foreach (var p in Model.Projects)
+                            {
+                                <option value="@p">@p</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mb-md-0">
+                        <label asp-for="SelectedBlock" class="font-weight-bold text-secondary small text-uppercase d-block">Block</label>
+                        <select asp-for="SelectedBlock" id="reportBlock" class="form-control">
+                            <option value="">— All blocks —</option>
+                            @foreach (var b in Model.Blocks)
+                            {
+                                <option value="@b">@b</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-md-0">
+                        <label asp-for="SelectedYear" class="font-weight-bold text-secondary small text-uppercase d-block">Year</label>
+                        <select asp-for="SelectedYear" id="reportYear" class="form-control">
+                            <option value="">— Year —</option>
+                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-md-0">
+                        <label asp-for="SelectedMonth" class="font-weight-bold text-secondary small text-uppercase d-block">Month</label>
+                        <select asp-for="SelectedMonth" id="reportMonth" class="form-control">
+                            <option value="">— Month —</option>
+                            @foreach (var monthName in CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
+                            {
+                                <option value="@monthName">@monthName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-0 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-file-alt mr-1" aria-hidden="true"></i>Generate
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        @if (Model.HasResults)
+        {
+            <div class="cm-report-metrics">
+                <div class="cm-report-metric">
+                    <div class="label">Total Customer</div>
+                    <div class="value">@Model.TotalCustomers.ToString("N0")</div>
+                </div>
+                <div class="cm-report-metric">
+                    <div class="label">Total Bill Generated</div>
+                    <div class="value">@Model.TotalBillsGenerated.ToString("N0")</div>
+                </div>
+                <div class="cm-report-metric">
+                    <div class="label">Paid Bills</div>
+                    <div class="value">@Model.PaidBillsCount.ToString("N0")</div>
+                </div>
+                <div class="cm-report-metric">
+                    <div class="label">Unpaid Bills</div>
+                    <div class="value">@Model.UnpaidBillsCount.ToString("N0")</div>
+                </div>
+            </div>
+            <div class="px-3 pb-3 small text-muted">
+                Filters:
+                <strong>@Model.SelectedProject</strong>
+                @if (!string.IsNullOrWhiteSpace(Model.SelectedBlock))
+                {
+                    <span> · Block <strong>@Model.SelectedBlock</strong></span>
+                }
+                else
+                {
+                    <span> · All blocks</span>
+                }
+                <span> · <strong>@Model.SelectedMonth</strong> <strong>@Model.SelectedYear</strong></span>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function loadReportBlocks(project, selectedBlock) {
+                return $.get('@Url.Action("GetBlocksByProject", "MaintenanceNew")',
+                    { project: project },
+                    function (data) {
+                        var $block = $('#reportBlock');
+                        $block.empty();
+                        $block.append($('<option>').val('').text('— All blocks —'));
+                        $.each(data, function (i, b) {
+                            $block.append($('<option>').val(b).text(b));
+                        });
+                        if (selectedBlock) {
+                            $block.val(selectedBlock);
+                        }
+                    });
+            }
+
+            $('#reportProject').change(function () {
+                var project = $(this).val();
+                if (project) {
+                    loadReportBlocks(project, null);
+                } else {
+                    $('#reportBlock').empty().append($('<option>').val('').text('— All blocks —'));
+                }
+            });
+
+            (function () {
+                var proj = $('#reportForm').attr('data-restore-project') || '';
+                var blk = $('#reportForm').attr('data-restore-block') || '';
+                if (proj) {
+                    loadReportBlocks(proj, blk);
+                }
+            })();
+        });
+    </script>
+}

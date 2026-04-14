@@ -270,7 +270,28 @@
         <div class="card-body cm-filter-body border-bottom">
             <form id="searchForm" method="post" action="@Url.Action("SearchBill", "MaintenanceNew")">
                 <div class="form-row">
-                    <div class="form-group col-md-3 mb-md-0">
+                    <div class="form-group col-md-2 mb-md-0">
+                        <label for="project" class="font-weight-bold text-secondary small text-uppercase d-block">Project</label>
+                        <select id="project" name="project" class="form-control">
+                            <option value="">— Select project —</option>
+                            @{
+                                var projectList = ViewBag.Projects as List<string> ?? new List<string>();
+                                var selectedProject = ViewBag.SelectedProject as string;
+                            }
+                            @foreach (var proj in projectList)
+                            {
+                                if (string.Equals(proj, selectedProject, StringComparison.Ordinal))
+                                {
+                                    <option value="@proj" selected="selected">@proj</option>
+                                }
+                                else
+                                {
+                                    <option value="@proj">@proj</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-md-0">
                         <label for="month" class="font-weight-bold text-secondary small text-uppercase d-block">Month</label>
                         <select id="month" name="month" class="form-control">
                             <option value="">-- Choose Month --</option>
@@ -282,7 +303,7 @@
                             }
                         </select>
                     </div>
-                    <div class="form-group col-md-3 mb-md-0">
+                    <div class="form-group col-md-2 mb-md-0">
                         <label for="year" class="font-weight-bold text-secondary small text-uppercase d-block">Year</label>
                         <select id="year" name="year" class="form-control">
                             <option value="">-- Choose Year --</option>
@@ -294,11 +315,11 @@
                             }
                         </select>
                     </div>
-                    <div class="form-group col-md-3 mb-md-0">
+                    <div class="form-group col-md-2 mb-md-0">
                         <label for="btno" class="font-weight-bold text-secondary small text-uppercase d-block">BT No</label>
                         <input type="text" id="btno" name="btno" class="form-control" placeholder="Enter BT No" value="@ViewBag.SelectedBtNo" autocomplete="off" />
                     </div>
-                    <div class="form-group col-md-3 mb-0 d-flex align-items-end">
+                    <div class="form-group col-md-4 mb-0 d-flex align-items-end">
                         <div class="w-100 d-flex">
                             <button type="submit" class="btn btn-primary flex-fill mr-2">
                                 <i class="fas fa-search mr-1" aria-hidden="true"></i>Search
@@ -329,6 +350,13 @@
                 @if (!string.IsNullOrEmpty(sbt))
                 {
                     <span> (BT No <strong>@sbt</strong>)</span>
+                }
+                @{
+                    var sp = ViewBag.SelectedProject as string;
+                }
+                @if (!string.IsNullOrWhiteSpace(sp))
+                {
+                    <span> · Project <strong>@sp</strong></span>
                 }
             </div>
         }
@@ -378,6 +406,7 @@
                                                     </td>
                                                     <td colspan="10">
                                                         <strong>Block:</strong> @blockGroup.Key
+                                                        <span class="text-muted font-weight-normal ml-2">(@blockGroup.Count())</span>
                                                     </td>
                                                 </tr>
                                             </table>
@@ -469,8 +498,11 @@
                 $('#month').val(state.month);
                 $('#year').val(state.year);
                 $('#btno').val(state.btno);
+                if (state.project) {
+                    $('#project').val(state.project);
+                }
 
-                if (state.month && state.year || state.btno) {
+                if (state.month && state.year || state.btno || state.project) {
                     $('#searchForm').submit();
                 }
             }
@@ -479,7 +511,8 @@
                 var state = {
                     month: $('#month').val(),
                     year: $('#year').val(),
-                    btno: $('#btno').val()
+                    btno: $('#btno').val(),
+                    project: $('#project').val()
                 };
                 sessionStorage.setItem('maintenanceSearchState', JSON.stringify(state));
             });

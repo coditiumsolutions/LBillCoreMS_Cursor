@@ -1,5 +1,6 @@
 using BMSBT.Models;
 using BMSBT.Roles;
+using BMSBT.Services;
 using BMSBT.ViewModels;
 using DevExpress.ClipboardSource.SpreadsheetML;
 using DevExpress.CodeParser;
@@ -16,10 +17,12 @@ namespace BMSBT.Controllers
     public class CustomersController : Controller
     {
         private readonly BmsbtContext _context;
-        public CustomersController(BmsbtContext context)
+        private readonly IAuditLogService _auditLogService;
+
+        public CustomersController(BmsbtContext context, IAuditLogService auditLogService)
         {
             _context = context;
-
+            _auditLogService = auditLogService;
         }
 
 
@@ -380,13 +383,15 @@ namespace BMSBT.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(CustomersDetail customer)
+        public async Task<IActionResult> Edit(CustomersDetail customer)
         {
             if (ModelState.IsValid)
             {
                 var existingCustomer = _context.CustomersDetails.Find(customer.Uid);
                 if (existingCustomer != null)
                 {
+                    var oldSnapshot = CreateCustomerSnapshot(existingCustomer);
+
                     // Update fields manually
                    // existingCustomer.Btno = customer.Btno;
                     existingCustomer.CustomerName = customer.CustomerName;
@@ -399,12 +404,75 @@ namespace BMSBT.Controllers
                     existingCustomer.SubProject = customer.SubProject;
                     existingCustomer.TariffName = customer.TariffName;
 
-                    _context.Update(existingCustomer);
-                    _context.SaveChanges();
+                    var newSnapshot = CreateCustomerSnapshot(existingCustomer);
+                    var (oldData, newData) = BuildDiff(oldSnapshot, newSnapshot);
+
+                    HttpContext.Items["SkipEfAudit"] = true;
+                    try
+                    {
+                        _context.Update(existingCustomer);
+                        await _context.SaveChangesAsync();
+                    }
+                    finally
+                    {
+                        HttpContext.Items.Remove("SkipEfAudit");
+                    }
+
+                    if (oldData.Count > 0)
+                    {
+                        await _auditLogService.LogAsync(
+                            "Customer",
+                            "UPDATE",
+                            string.IsNullOrWhiteSpace(existingCustomer.Btno) ? existingCustomer.Uid.ToString() : existingCustomer.Btno,
+                            oldData,
+                            newData,
+                            "Customer Management");
+                    }
+
                     return RedirectToAction("SearchAll");
                 }
             }
             return View(customer);
+        }
+
+        private static Dictionary<string, object?> CreateCustomerSnapshot(CustomersDetail customer)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["CustomerName"] = customer.CustomerName,
+                ["Project"] = customer.Project,
+                ["Block"] = customer.Block,
+                ["Sector"] = customer.Sector,
+                ["PloNo"] = customer.PloNo,
+                ["Category"] = customer.Category,
+                ["CustomerNo"] = customer.CustomerNo,
+                ["SubProject"] = customer.SubProject,
+                ["TariffName"] = customer.TariffName
+            };
+        }
+
+        private static (Dictionary<string, object?> oldData, Dictionary<string, object?> newData) BuildDiff(
+            IReadOnlyDictionary<string, object?> oldValues,
+            IReadOnlyDictionary<string, object?> newValues)
+        {
+            var oldData = new Dictionary<string, object?>();
+            var newData = new Dictionary<string, object?>();
+
+            foreach (var key in oldValues.Keys)
+            {
+                oldValues.TryGetValue(key, out var oldValue);
+                newValues.TryGetValue(key, out var newValue);
+
+                if (Equals(oldValue, newValue))
+                {
+                    continue;
+                }
+
+                oldData[key] = oldValue;
+                newData[key] = newValue;
+            }
+
+            return (oldData, newData);
         }
 
 

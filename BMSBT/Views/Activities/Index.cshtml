@@ -1,0 +1,57 @@
+@{
+    ViewData["Title"] = "Activities";
+    Layout = "~/Views/Shared/_LayoutActivities.cshtml";
+}
+
+<style>
+    .activities-page .activities-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+        height: 100%;
+    }
+
+    .activities-page .activities-title {
+        color: #142141;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .activities-page .activities-subtitle {
+        color: #64748b;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container-fluid activities-page">
+    <div class="row mt-2">
+        <div class="col-12">
+            <h4 class="activities-title">Activities Module</h4>
+            <p class="activities-subtitle">Central place for reports, logs, and audit activities.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card activities-card p-3">
+                <h5 class="activities-title">Reports</h5>
+                <p>Open reporting dashboards and exports from one place.</p>
+                <a asp-controller="Reports" asp-action="Index" class="btn btn-success">Open Reports</a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card activities-card p-3">
+                <h5 class="activities-title">Audit</h5>
+                <p>Open audit entries and verification records.</p>
+                <a asp-controller="Audit" asp-action="Index" class="btn btn-success">Open Audit</a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card activities-card p-3">
+                <h5 class="activities-title">Logs</h5>
+                <p>View and filter activity logs by date and operation.</p>
+                <a asp-controller="Activities" asp-action="HistoryLogs" class="btn btn-success">Open History &amp; Logs</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -19,6 +19,9 @@
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
     var selectedYear = ViewBag.SelectedYear as string ?? DateTime.Now.Year.ToString();
     var selectedMonth = ViewBag.SelectedMonth as string ?? DateTime.Now.ToString("MMMM");
+    var totalCustomers = IntBag(ViewBag.TotalCustomers);
+    var paidCustomersCount = IntBag(ViewBag.PaidCustomersCount);
+    var unpaidCustomersCount = IntBag(ViewBag.UnpaidCustomersCount);
 
     var totalBills = IntBag(ViewBag.TotalBills);
     var totalAmountGenerated = DecBag(ViewBag.TotalAmountGenerated);
@@ -121,6 +124,31 @@
         font-size: 0.75rem;
         color: #64748b;
         margin-top: 0.15rem;
+    }
+
+    .cm-summary-tile {
+        border: 1px solid var(--cm-border);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0.95rem 1rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        height: 100%;
+    }
+
+    .cm-summary-tile .tile-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .cm-summary-tile .tile-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
     }
 
     .cm-table-wrap {
@@ -267,7 +295,7 @@
                     <div class="form-group col-md-2 mb-2 mb-md-0">
                         <label class="font-weight-bold small text-muted mb-1" for="selectedYear">Year</label>
                         <select id="selectedYear" name="selectedYear" class="form-control">
-                            @for (int y = DateTime.Now.Year + 1; y >= DateTime.Now.Year - 10; y--)
+                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
                             {
                                 var ys = y.ToString();
                                 if (string.Equals(ys, selectedYear, StringComparison.Ordinal))
@@ -288,6 +316,35 @@
                     </div>
                 </div>
             </form>
+        </div>
+        <div class="card-body pt-0 border-top">
+            <p class="small font-weight-bold text-muted mb-2">Summary</p>
+            <div class="form-row">
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="cm-summary-tile">
+                        <div class="tile-title">Total Customers</div>
+                        <div class="tile-value">@totalCustomers.ToString("N0")</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="cm-summary-tile">
+                        <div class="tile-title">Total Bills Generated</div>
+                        <div class="tile-value">@totalBills.ToString("N0")</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="cm-summary-tile">
+                        <div class="tile-title">Paid Customers</div>
+                        <div class="tile-value">@paidCustomersCount.ToString("N0")</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <div class="cm-summary-tile">
+                        <div class="tile-title">Unpaid Customers</div>
+                        <div class="tile-value">@unpaidCustomersCount.ToString("N0")</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         @if (ViewBag.ProjectCustomerCounts != null)

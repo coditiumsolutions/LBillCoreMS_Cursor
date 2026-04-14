@@ -2,17 +2,19 @@
 @using X.PagedList
 @model IPagedList<BMSBT.Models.CustomersMaintenance>
 
+<div id="maintCustomerTotalMeta" class="d-none" data-total="@Model.TotalItemCount" aria-hidden="true"></div>
+
 <div class="table-responsive cm-table-wrap mx-2 my-2 mb-0">
     <table class="cm-detail-table cm-customers-grid-table mb-0" id="customersTable">
         <thead>
             <tr>
                 <th scope="col"><i class="fas fa-barcode text-muted mr-1" aria-hidden="true"></i>BT No</th>
                 <th scope="col"><i class="fas fa-user text-muted mr-1" aria-hidden="true"></i>Customer Name</th>
-                <th scope="col"><i class="fas fa-building text-muted mr-1" aria-hidden="true"></i>Project</th>
+                <th scope="col"><i class="fas fa-home text-muted mr-1" aria-hidden="true"></i>Plot No</th>
                 <th scope="col"><i class="fas fa-th-large text-muted mr-1" aria-hidden="true"></i>Block</th>
                 <th scope="col"><i class="fas fa-tags text-muted mr-1" aria-hidden="true"></i>Category</th>
                 <th scope="col"><i class="fas fa-ruler-combined text-muted mr-1" aria-hidden="true"></i>Size</th>
-                <th scope="col"><i class="fas fa-home text-muted mr-1" aria-hidden="true"></i>Plot No</th>
+                <th scope="col"><i class="fas fa-building text-muted mr-1" aria-hidden="true"></i>Project</th>
             </tr>
         </thead>
         <tbody>
@@ -21,11 +23,11 @@
                 <tr data-id="@item.Uid" style="cursor: pointer;" title="Double-click for details">
                     <td>@item.BTNo</td>
                     <td>@item.CustomerName</td>
-                    <td>@item.Project</td>
+                    <td>@item.PloNo</td>
                     <td>@item.Block</td>
                     <td>@item.Category</td>
                     <td>@item.Size</td>
-                    <td>@item.PloNo</td>
+                    <td>@item.Project</td>
                 </tr>
             }
             @if (!Model.Any())

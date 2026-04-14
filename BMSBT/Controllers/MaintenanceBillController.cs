@@ -3,6 +3,7 @@ using BMSBT.DTO;
 using BMSBT.Models;
 using BMSBT.Requests;
 using BMSBT.Roles;
+using BMSBT.Services;
 using DevExpress.XtraRichEdit.Import.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,16 +25,17 @@ namespace BMSBT.Controllers
         //private readonly OperatorDetailsService _operatorDetailsService;
         private readonly ICurrentOperatorService _operatorService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IAuditLogService _auditLogService;
 
 
 
-        public MaintenanceBillController(IHttpClientFactory httpClientFactory, BmsbtContext dbContext, ICurrentOperatorService operatorService)
+        public MaintenanceBillController(IHttpClientFactory httpClientFactory, BmsbtContext dbContext, ICurrentOperatorService operatorService, IAuditLogService auditLogService)
         {
             _dbContext = dbContext;
             MaintenanceFunctions = new MaintenanceFunctions(_dbContext);
             _operatorService = operatorService;
             _httpClientFactory = httpClientFactory;
-
+            _auditLogService = auditLogService;
         }
 
         public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
@@ -397,14 +399,48 @@ namespace BMSBT.Controllers
 
 
             var results = new List<string>();
+            var generatedBtNos = new List<string>();
 
-            // Generate bills for each selected customer ID
-            foreach (var customerId in request.SelectedIds)
+            HttpContext.Items["SkipEfAudit"] = true;
+            try
             {
-                // Call the function to generate the bill for each customer
-                var result = MaintenanceFunctions.GenerateBillForCustomer(customerId, billingMonth, billingYear, previousMonth, previousYear, IssueDate, DueDate);
-                results.Add(result);
+                // Generate bills for each selected customer ID
+                foreach (var customerId in request.SelectedIds)
+                {
+                    var customer = _dbContext.CustomersDetails.FirstOrDefault(c => c.Uid == customerId);
+                    if (customer != null && !string.IsNullOrWhiteSpace(customer.Btno))
+                    {
+                        generatedBtNos.Add(customer.Btno.Trim());
+                    }
+
+                    // Call the function to generate the bill for each customer
+                    var result = MaintenanceFunctions.GenerateBillForCustomer(customerId, billingMonth, billingYear, previousMonth, previousYear, IssueDate, DueDate);
+                    results.Add(result);
+                }
             }
+            finally
+            {
+                HttpContext.Items.Remove("SkipEfAudit");
+            }
+
+            await _auditLogService.LogAsync(
+                "Bills",
+                "INSERT",
+                generatedBtNos.Count > 0 ? string.Join(",", generatedBtNos.Take(25)) : (request.Project ?? "Bulk"),
+                null,
+                new
+                {
+                    Action = "BulkBillGeneration",
+                    GeneratedCount = generatedBtNos.Count,
+                    RequestedCount = request.SelectedIds?.Count ?? 0,
+                    SelectedProject = request.Project,
+                    SelectedMonth = request.Month,
+                    SelectedYear = request.Year,
+                    BillingMonth = billingMonth,
+                    BillingYear = billingYear,
+                    ChangedBy = HttpContext.Session.GetString("UserName") ?? "System"
+                },
+                "Billing");
 
             // Return a success message with the generated results
             return Json(new { success = true, message = "Results generated successfully!", results });
@@ -1065,13 +1101,15 @@ namespace BMSBT.Controllers
         
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditMBill(MaintenanceBill model)
+        public async Task<ActionResult> EditMBill(MaintenanceBill model)
         {
             var billToUpdate = _dbContext.MaintenanceBills.FirstOrDefault(b => b.Uid == model.Uid);
             if (billToUpdate == null)
             {
                 return NotFound("Bill not found");
             }
+
+            var oldSnapshot = CreateBillSnapshot(billToUpdate);
 
             // Update all properties
             billToUpdate.InvoiceNo = model.InvoiceNo;
@@ -1096,10 +1134,81 @@ namespace BMSBT.Controllers
             billToUpdate.BillSurcharge = model.BillSurcharge;
             billToUpdate.BillAmountAfterDueDate = model.BillAmountAfterDueDate;
 
+            var newSnapshot = CreateBillSnapshot(billToUpdate);
+            var (oldData, newData) = BuildDiff(oldSnapshot, newSnapshot);
 
-            _dbContext.SaveChanges();
+            HttpContext.Items["SkipEfAudit"] = true;
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            finally
+            {
+                HttpContext.Items.Remove("SkipEfAudit");
+            }
+
+            if (oldData.Count > 0)
+            {
+                await _auditLogService.LogAsync(
+                    "Bills",
+                    "UPDATE",
+                    string.IsNullOrWhiteSpace(billToUpdate.Btno) ? billToUpdate.Uid.ToString() : billToUpdate.Btno,
+                    oldData,
+                    newData,
+                    "Billing");
+            }
+
             ViewBag.Message = "Bill Update Sucessfully";
             return View(model);
+        }
+
+        private static Dictionary<string, object?> CreateBillSnapshot(MaintenanceBill bill)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["InvoiceNo"] = bill.InvoiceNo,
+                ["CustomerNo"] = bill.CustomerNo,
+                ["CustomerName"] = bill.CustomerName,
+                ["Btno"] = bill.Btno,
+                ["BillingMonth"] = bill.BillingMonth,
+                ["BillingYear"] = bill.BillingYear,
+                ["BillingDate"] = bill.BillingDate?.ToString("yyyy-MM-dd"),
+                ["DueDate"] = bill.DueDate?.ToString("yyyy-MM-dd"),
+                ["IssueDate"] = bill.IssueDate?.ToString("yyyy-MM-dd"),
+                ["ValidDate"] = bill.ValidDate?.ToString("yyyy-MM-dd"),
+                ["MeterNo"] = bill.MeterNo,
+                ["PaymentStatus"] = bill.PaymentStatus,
+                ["PaymentDate"] = bill.PaymentDate?.ToString("yyyy-MM-dd"),
+                ["PaymentMethod"] = bill.PaymentMethod,
+                ["BankDetail"] = bill.BankDetail,
+                ["BillAmountInDueDate"] = bill.BillAmountInDueDate,
+                ["BillSurcharge"] = bill.BillSurcharge,
+                ["BillAmountAfterDueDate"] = bill.BillAmountAfterDueDate
+            };
+        }
+
+        private static (Dictionary<string, object?> oldData, Dictionary<string, object?> newData) BuildDiff(
+            IReadOnlyDictionary<string, object?> oldValues,
+            IReadOnlyDictionary<string, object?> newValues)
+        {
+            var oldData = new Dictionary<string, object?>();
+            var newData = new Dictionary<string, object?>();
+
+            foreach (var key in oldValues.Keys)
+            {
+                oldValues.TryGetValue(key, out var oldValue);
+                newValues.TryGetValue(key, out var newValue);
+
+                if (Equals(oldValue, newValue))
+                {
+                    continue;
+                }
+
+                oldData[key] = oldValue;
+                newData[key] = newValue;
+            }
+
+            return (oldData, newData);
         }
 
         public class PrintBillRequest

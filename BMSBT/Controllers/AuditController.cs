@@ -71,6 +71,54 @@ namespace BMSBT.Controllers
             return View(pagedData);
         }
 
+        public IActionResult AuditLogs(string? tableName, string? operation, int? page)
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            SetUserContext();
+
+            var query = _context.AuditLogs
+                .AsNoTracking()
+                .OrderByDescending(a => a.ChangedAt)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(tableName))
+            {
+                query = query.Where(a => a.TableName == tableName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(operation))
+            {
+                query = query.Where(a => a.Operation == operation);
+            }
+
+            ViewBag.TableNames = _context.AuditLogs
+                .AsNoTracking()
+                .Select(a => a.TableName)
+                .Where(t => !string.IsNullOrEmpty(t))
+                .Distinct()
+                .OrderBy(t => t)
+                .ToList();
+            ViewBag.SelectedTableName = tableName;
+
+            ViewBag.Operations = _context.AuditLogs
+                .AsNoTracking()
+                .Select(a => a.Operation)
+                .Where(o => !string.IsNullOrEmpty(o))
+                .Distinct()
+                .OrderBy(o => o)
+                .ToList();
+            ViewBag.SelectedOperation = operation;
+
+            const int pageSize = 30;
+            var pageNumber = page ?? 1;
+
+            return View(query.ToPagedList(pageNumber, pageSize));
+        }
+
         public IActionResult AI()
         {
             if (HttpContext.Session.GetString("UserName") == null)

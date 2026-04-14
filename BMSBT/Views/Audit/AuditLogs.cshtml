@@ -1,0 +1,155 @@
+@using System.Text
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BMSBT.Models.AuditLog>
+
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "~/Views/Shared/_LayoutAudit.cshtml";
+
+    string EncodeBase64(string data)
+    {
+        if (string.IsNullOrEmpty(data)) return "";
+        var bytes = Encoding.UTF8.GetBytes(data);
+        return Convert.ToBase64String(bytes);
+    }
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold">System Audit Logs</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="AuditLogs" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Table Name</label>
+                    <select name="tableName" class="form-control">
+                        <option value="">-- All --</option>
+                        @foreach (var table in (IEnumerable<string>)ViewBag.TableNames)
+                        {
+                            <option value="@table" selected="@(table == (string)ViewBag.SelectedTableName)">@table</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Operation</label>
+                    <select name="operation" class="form-control">
+                        <option value="">-- All --</option>
+                        @foreach (var op in (IEnumerable<string>)ViewBag.Operations)
+                        {
+                            <option value="@op" selected="@(op == (string)ViewBag.SelectedOperation)">@op</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary mr-2">Filter</button>
+                    <a asp-action="AuditLogs" class="btn btn-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm table-striped">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Changed At</th>
+                        <th>Table</th>
+                        <th>Operation</th>
+                        <th>Record Id</th>
+                        <th>Changed By</th>
+                        <th>Module</th>
+                        <th>IP</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.ChangedAt.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                                <td>@item.TableName</td>
+                                <td><span class="badge badge-info">@item.Operation</span></td>
+                                <td>@item.RecordId</td>
+                                <td>@item.ChangedBy</td>
+                                <td>@item.ModuleName</td>
+                                <td>@item.IPAddress</td>
+                                <td>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-toggle="modal"
+                                            data-target="#auditDetailsModal"
+                                            data-old="@EncodeBase64(item.OldData ?? "")"
+                                            data-new="@EncodeBase64(item.NewData ?? "")">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center">No audit logs found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-center mt-3">
+            @Html.PagedListPager(Model, p => Url.Action("AuditLogs", new { page = p, tableName = ViewBag.SelectedTableName, operation = ViewBag.SelectedOperation }))
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="auditDetailsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Audit Details</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Old Data</h6>
+                        <pre id="oldJson" class="bg-light p-2 border"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">New Data</h6>
+                        <pre id="newJson" class="bg-light p-2 border"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#auditDetailsModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var oldEncoded = button.data('old') || '';
+        var newEncoded = button.data('new') || '';
+        var oldJson = decodeBase64(oldEncoded);
+        var newJson = decodeBase64(newEncoded);
+
+        $('#oldJson').text(formatJson(oldJson));
+        $('#newJson').text(formatJson(newJson));
+    });
+
+    function decodeBase64(input) {
+        if (!input) return '';
+        try { return atob(input); } catch (e) { return input; }
+    }
+
+    function formatJson(input) {
+        if (!input) return 'No data';
+        try { return JSON.stringify(JSON.parse(input), null, 2); }
+        catch (e) { return input; }
+    }
+</script>

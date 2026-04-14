@@ -16,15 +16,18 @@ public class MaintenanceBillInsertController : ControllerBase
     private readonly IMaintenanceBillInsertService _service;
     private readonly IMdBillingService _mdBillingService;
     private readonly BmsbtContext _dbContext;
+    private readonly IAuditLogService _auditLogService;
 
     public MaintenanceBillInsertController(
         IMaintenanceBillInsertService service,
         IMdBillingService mdBillingService,
-        BmsbtContext dbContext)
+        BmsbtContext dbContext,
+        IAuditLogService auditLogService)
     {
         _service = service;
         _mdBillingService = mdBillingService;
         _dbContext = dbContext;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -59,10 +62,11 @@ public class MaintenanceBillInsertController : ControllerBase
     /// Uses BillingMonth/BillingYear from OperatorsSetup where OperatorName = 'Shahid'.
     /// </summary>
     [HttpPost("from-customers")]
-    public async Task<IActionResult> CreateFromCustomerSelection([FromBody] int[] customerUids, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateFromCustomerSelection([FromBody] MaintenanceBulkGenerateRequest request, CancellationToken cancellationToken)
     {
         try
         {
+            var customerUids = request.CustomerUids;
             if (customerUids == null || customerUids.Length == 0)
             {
                 return BadRequest(new { success = false, message = "No customers selected." });
@@ -97,119 +101,158 @@ public class MaintenanceBillInsertController : ControllerBase
             }
 
             var updates = new List<object>();
+            var generatedBtNos = new List<string>();
 
-            foreach (var customer in customers)
+            HttpContext.Items["SkipEfAudit"] = true;
+            try
             {
-                string btNoForLookup = customer.BTNoMaintenance ?? customer.BTNo;
-                string statusValue = "";
-                bool shouldGenerate = false;
-
-                // 1. Calculate Last Month
-                var (lastMonth, lastYear) = GetPreviousMonthYear(billingMonth, billingYear);
-                
-                // 2. Check if Last Month Bill exists
-                var lastMonthBillExists = _dbContext.MaintenanceBills.Any(b => 
-                    b.Btno == btNoForLookup && 
-                    b.BillingMonth == lastMonth && 
-                    b.BillingYear == lastYear);
-
-                if (lastMonthBillExists)
+                foreach (var customer in customers)
                 {
-                    // Normal flow: Last month exists, generate current month
-                    shouldGenerate = true;
-                }
-                else
-                {
-                    // 3. Last Month NOT found, check previous 3 months (before the last month)
-                    var olderMonths = GetPreviousMonths(lastMonth, lastYear, 3);
-                    bool anyOlderBillExists = false;
+                    string btNoForLookup = customer.BTNoMaintenance ?? customer.BTNo;
+                    string statusValue = "";
+                    bool shouldGenerate = false;
 
-                    foreach (var m in olderMonths)
-                    {
-                        if (_dbContext.MaintenanceBills.Any(b => 
-                            b.Btno == btNoForLookup && 
-                            b.BillingMonth == m.month && 
-                            b.BillingYear == m.year))
-                        {
-                            anyOlderBillExists = true;
-                            break;
-                        }
-                    }
+                    // 1. Calculate Last Month
+                    var (lastMonth, lastYear) = GetPreviousMonthYear(billingMonth, billingYear);
 
-                    if (!anyOlderBillExists)
+                    // 2. Check if Last Month Bill exists
+                    var lastMonthBillExists = _dbContext.MaintenanceBills.Any(b =>
+                        b.Btno == btNoForLookup &&
+                        b.BillingMonth == lastMonth &&
+                        b.BillingYear == lastYear);
+
+                    if (lastMonthBillExists)
                     {
-                        // Case: ZERO bills found in the last 4 months (Last month + 3 months before it)
-                        // Result: Generate current month bill
+                        // Normal flow: Last month exists, generate current month
                         shouldGenerate = true;
                     }
                     else
                     {
-                        // Case: Last month missing BUT older bills exist
-                        // Result: Skip generation, update status
-                        statusValue = "Last Bill Not Exist";
-                        customer.BillGenerationStatus = statusValue;
-                        shouldGenerate = false;
-                    }
-                }
+                        // 3. Last Month NOT found, check previous 3 months (before the last month)
+                        var olderMonths = GetPreviousMonths(lastMonth, lastYear, 3);
+                        bool anyOlderBillExists = false;
 
-                if (shouldGenerate)
-                {
-                    var btKeysForDuplicate = MaintenanceBillDuplicateChecker.CollectCustomerBtKeys(customer);
-                    if (MaintenanceBillDuplicateChecker.BillExists(_dbContext, btKeysForDuplicate, billingMonth, billingYear))
-                    {
-                        statusValue = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(billingMonth, billingYear);
-                        customer.BillGenerationStatus = statusValue;
-                    }
-                    else
-                    {
-                        var additionalBtNos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                        if (!string.IsNullOrWhiteSpace(customer.BTNo))
-                            additionalBtNos.Add(customer.BTNo.Trim());
-                        if (!string.IsNullOrWhiteSpace(customer.BTNoMaintenance))
-                            additionalBtNos.Add(customer.BTNoMaintenance.Trim());
-
-                        var dto = new MaintenanceBillCreateDto
+                        foreach (var m in olderMonths)
                         {
-                            CustomerNo = customer.CustomerNo ?? string.Empty,
-                            CustomerName = customer.CustomerName ?? string.Empty,
-                            BTNo = btNoForLookup,
-                            BtNosForAdditionalChargeLookup = additionalBtNos.ToList(),
-                            PlotStatus = customer.PlotType,
-                            MeterNo = customer.MeterNo,
+                            if (_dbContext.MaintenanceBills.Any(b =>
+                                b.Btno == btNoForLookup &&
+                                b.BillingMonth == m.month &&
+                                b.BillingYear == m.year))
+                            {
+                                anyOlderBillExists = true;
+                                break;
+                            }
+                        }
 
-                            // Tariff matching attributes (required for tariff lookup)
-                            Project = customer.Project,
-                            Category = customer.Category ?? customer.PlotType,
-                            Size = customer.Size,
-                            Block = customer.Block,
-
-                            // Billing period and dates
-                            BillingMonth = billingMonth,
-                            BillingYear = billingYear,
-                            BillingDate = billingDate,
-                            IssueDate = issueDate,
-                            DueDate = dueDate,
-                            ValidDate = validDate
-                        };
-
-                        await _service.CreateAsync(dto, cancellationToken);
-
-                        statusValue = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(billingMonth, billingYear);
-                        customer.BillGenerationStatus = statusValue;
-                        customer.BillStatusMaint = "Unpaid";
+                        if (!anyOlderBillExists)
+                        {
+                            // Case: ZERO bills found in the last 4 months (Last month + 3 months before it)
+                            // Result: Generate current month bill
+                            shouldGenerate = true;
+                        }
+                        else
+                        {
+                            // Case: Last month missing BUT older bills exist
+                            // Result: Skip generation, update status
+                            statusValue = "Last Bill Not Exist";
+                            customer.BillGenerationStatus = statusValue;
+                            shouldGenerate = false;
+                        }
                     }
+
+                    if (shouldGenerate)
+                    {
+                        var btKeysForDuplicate = MaintenanceBillDuplicateChecker.CollectCustomerBtKeys(customer);
+                        if (MaintenanceBillDuplicateChecker.BillExists(_dbContext, btKeysForDuplicate, billingMonth, billingYear))
+                        {
+                            statusValue = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(billingMonth, billingYear);
+                            customer.BillGenerationStatus = statusValue;
+                        }
+                        else
+                        {
+                            var additionalBtNos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                            if (!string.IsNullOrWhiteSpace(customer.BTNo))
+                                additionalBtNos.Add(customer.BTNo.Trim());
+                            if (!string.IsNullOrWhiteSpace(customer.BTNoMaintenance))
+                                additionalBtNos.Add(customer.BTNoMaintenance.Trim());
+
+                            var dto = new MaintenanceBillCreateDto
+                            {
+                                CustomerNo = customer.CustomerNo ?? string.Empty,
+                                CustomerName = customer.CustomerName ?? string.Empty,
+                                BTNo = btNoForLookup,
+                                BtNosForAdditionalChargeLookup = additionalBtNos.ToList(),
+                                PlotStatus = customer.PlotType,
+                                MeterNo = customer.MeterNo,
+
+                                // Tariff matching attributes (required for tariff lookup)
+                                Project = customer.Project,
+                                Category = customer.Category ?? customer.PlotType,
+                                Size = customer.Size,
+                                Block = customer.Block,
+
+                                // Billing period and dates
+                                BillingMonth = billingMonth,
+                                BillingYear = billingYear,
+                                BillingDate = billingDate,
+                                IssueDate = issueDate,
+                                DueDate = dueDate,
+                                ValidDate = validDate
+                            };
+
+                            await _service.CreateAsync(dto, cancellationToken);
+
+                            statusValue = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(billingMonth, billingYear);
+                            customer.BillGenerationStatus = statusValue;
+                            customer.BillStatusMaint = "Unpaid";
+
+                            if (!string.IsNullOrWhiteSpace(btNoForLookup))
+                            {
+                                generatedBtNos.Add(btNoForLookup.Trim());
+                            }
+                        }
+                    }
+
+                    updates.Add(new
+                    {
+                        uid = customer.Uid,
+                        status = statusValue,
+                        billStatus = customer.BillStatusMaint ?? ""
+                    });
                 }
 
-                updates.Add(new
-                {
-                    uid = customer.Uid,
-                    status = statusValue,
-                    billStatus = customer.BillStatusMaint ?? ""
-                });
+                // Save all customer status updates to the database
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            finally
+            {
+                HttpContext.Items.Remove("SkipEfAudit");
             }
 
-            // Save all customer status updates to the database
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            var generatedCount = generatedBtNos.Count;
+            var btNoSearchValue = string.IsNullOrWhiteSpace(request.BtNoSearch) ? "All" : request.BtNoSearch.Trim();
+            var selectedProjectValue = string.IsNullOrWhiteSpace(request.SelectedProject) ? "All" : request.SelectedProject.Trim();
+            var billCategoryValue = string.IsNullOrWhiteSpace(request.BillCategory) ? "Residential" : request.BillCategory.Trim();
+            var changedBy = HttpContext.Session.GetString("UserName") ?? "System";
+
+            await _auditLogService.LogAsync(
+                "Bills",
+                "INSERT",
+                generatedCount > 0 ? string.Join(",", generatedBtNos.Take(25)) : btNoSearchValue,
+                null,
+                new
+                {
+                    Action = "BulkBillGeneration",
+                    GeneratedCount = generatedCount,
+                    RequestedCount = customerUids.Length,
+                    SelectedProject = selectedProjectValue,
+                    BillCategory = billCategoryValue,
+                    BtNoSearch = btNoSearchValue,
+                    BillingMonth = billingMonth,
+                    BillingYear = billingYear,
+                    ChangedBy = changedBy
+                },
+                "Billing");
 
             return Ok(new { success = true, message = $"Maintenance bills process completed for {billingMonth} {billingYear}.", updates });
         }
@@ -294,6 +337,14 @@ public class MaintenanceBillInsertController : ControllerBase
     {
         public int[] CustomerUids { get; set; } = Array.Empty<int>();
         public string? OperatorName { get; set; }
+    }
+
+    public class MaintenanceBulkGenerateRequest
+    {
+        public int[] CustomerUids { get; set; } = Array.Empty<int>();
+        public string? SelectedProject { get; set; }
+        public string? BtNoSearch { get; set; }
+        public string? BillCategory { get; set; }
     }
 
     /// <summary>

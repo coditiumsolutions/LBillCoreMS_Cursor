@@ -1,13 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using BMSBT.DTO;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BMSBT.Models;
 
 public partial class BmsbtContext : DbContext
 {
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+    private bool _isSavingAudit;
+
     public BmsbtContext()
     {
     }
@@ -15,6 +22,12 @@ public partial class BmsbtContext : DbContext
     public BmsbtContext(DbContextOptions<BmsbtContext> options)
         : base(options)
     {
+    }
+
+    public BmsbtContext(DbContextOptions<BmsbtContext> options, IHttpContextAccessor httpContextAccessor)
+        : base(options)
+    {
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public DbSet<TwoMonthOutstandingBill> TwoMonthOutstandingBills { get; set; }
@@ -533,4 +546,245 @@ public partial class BmsbtContext : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+    public override int SaveChanges()
+    {
+        return SaveChangesAsync().GetAwaiter().GetResult();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        return SaveChangesAsync(acceptAllChangesOnSuccess).GetAwaiter().GetResult();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return SaveChangesAsync(true, cancellationToken);
+    }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        if (_isSavingAudit || ShouldSkipEfAudit())
+        {
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        var pendingAuditEntries = BuildPendingAuditEntries();
+        var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        if (pendingAuditEntries.Count > 0)
+        {
+            await PersistAuditEntriesSafelyAsync(pendingAuditEntries, cancellationToken);
+        }
+
+        return result;
+    }
+
+    private bool ShouldSkipEfAudit()
+    {
+        var httpContext = _httpContextAccessor?.HttpContext;
+        if (httpContext?.Items == null)
+        {
+            return false;
+        }
+
+        return httpContext.Items.TryGetValue("SkipEfAudit", out var skipValue)
+               && skipValue is bool shouldSkip
+               && shouldSkip;
+    }
+
+    private List<PendingAuditEntry> BuildPendingAuditEntries()
+    {
+        ChangeTracker.DetectChanges();
+
+        var auditEntries = new List<PendingAuditEntry>();
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is AuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
+            {
+                continue;
+            }
+
+            if (entry.Metadata.IsOwned())
+            {
+                continue;
+            }
+
+            if (entry.State != EntityState.Added && entry.State != EntityState.Modified && entry.State != EntityState.Deleted)
+            {
+                continue;
+            }
+
+            var tableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name;
+            if (entry.State == EntityState.Added && tableName.Equals("MaintenanceBills", StringComparison.OrdinalIgnoreCase))
+            {
+                // Bulk bill creation can be very large; handled through one summarized log entry.
+                continue;
+            }
+
+            var oldValues = new Dictionary<string, object?>();
+            var newValues = new Dictionary<string, object?>();
+
+            foreach (var property in entry.Properties)
+            {
+                if (property.Metadata.IsPrimaryKey())
+                {
+                    continue;
+                }
+
+                var propertyName = property.Metadata.Name;
+                var originalValue = NormalizeValue(property.OriginalValue);
+                var currentValue = NormalizeValue(property.CurrentValue);
+
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        if (currentValue != null)
+                        {
+                            newValues[propertyName] = currentValue;
+                        }
+                        break;
+                    case EntityState.Deleted:
+                        if (originalValue != null)
+                        {
+                            oldValues[propertyName] = originalValue;
+                        }
+                        break;
+                    case EntityState.Modified:
+                        if (!property.IsModified || Equals(originalValue, currentValue))
+                        {
+                            continue;
+                        }
+
+                        oldValues[propertyName] = originalValue;
+                        newValues[propertyName] = currentValue;
+                        break;
+                }
+            }
+
+            if (entry.State == EntityState.Modified && oldValues.Count == 0 && newValues.Count == 0)
+            {
+                continue;
+            }
+
+            auditEntries.Add(new PendingAuditEntry
+            {
+                Entry = entry,
+                TableName = tableName,
+                Operation = GetOperation(entry.State),
+                RecordId = GetRecordId(entry),
+                OldData = oldValues.Count == 0 ? null : oldValues,
+                NewData = newValues.Count == 0 ? null : newValues
+            });
+        }
+
+        return auditEntries;
+    }
+
+    private static object? NormalizeValue(object? value)
+    {
+        return value switch
+        {
+            DateOnly dateOnly => dateOnly.ToString("yyyy-MM-dd"),
+            TimeOnly timeOnly => timeOnly.ToString("HH:mm:ss"),
+            DateTime dateTime => dateTime.ToString("O"),
+            _ => value
+        };
+    }
+
+    private static string GetOperation(EntityState state)
+    {
+        return state switch
+        {
+            EntityState.Added => "INSERT",
+            EntityState.Modified => "UPDATE",
+            EntityState.Deleted => "DELETE",
+            _ => "UNKNOWN"
+        };
+    }
+
+    private static string? GetRecordId(EntityEntry entry)
+    {
+        // Prefer business identifiers where available, especially BTNo/Btno used across billing flows.
+        var btNoValue = TryGetPropertyValue(entry, "BTNo") ?? TryGetPropertyValue(entry, "Btno");
+        if (!string.IsNullOrWhiteSpace(btNoValue))
+        {
+            return btNoValue;
+        }
+
+        var primaryKey = entry.Metadata.FindPrimaryKey();
+        if (primaryKey == null)
+        {
+            return null;
+        }
+
+        var keyValues = primaryKey.Properties
+            .Select(pk => entry.Property(pk.Name))
+            .Select(p => p.CurrentValue ?? p.OriginalValue)
+            .Where(v => v != null)
+            .Select(v => v!.ToString())
+            .Where(v => !string.IsNullOrWhiteSpace(v));
+
+        return string.Join(",", keyValues!);
+    }
+
+    private static string? TryGetPropertyValue(EntityEntry entry, string propertyName)
+    {
+        var prop = entry.Properties.FirstOrDefault(p => p.Metadata.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+        if (prop == null)
+        {
+            return null;
+        }
+
+        var value = prop.CurrentValue ?? prop.OriginalValue;
+        return value?.ToString();
+    }
+
+    private async Task PersistAuditEntriesSafelyAsync(List<PendingAuditEntry> pendingEntries, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _isSavingAudit = true;
+
+            var currentUser = _httpContextAccessor?.HttpContext?.User?.Identity?.Name
+                              ?? _httpContextAccessor?.HttpContext?.Session.GetString("UserName")
+                              ?? "System";
+            var ipAddress = _httpContextAccessor?.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            var changedAt = DateTime.Now;
+
+            var logs = pendingEntries.Select(a => new AuditLog
+            {
+                TableName = a.TableName,
+                Operation = a.Operation,
+                RecordId = a.RecordId ?? GetRecordId(a.Entry),
+                OldData = a.OldData == null ? null : JsonSerializer.Serialize(a.OldData),
+                NewData = a.NewData == null ? null : JsonSerializer.Serialize(a.NewData),
+                ModuleName = a.TableName,
+                ChangedBy = currentUser,
+                ChangedAt = changedAt,
+                IPAddress = ipAddress
+            }).ToList();
+
+            AuditLogs.AddRange(logs);
+            await base.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            // Audit failures must never break primary business operations.
+        }
+        finally
+        {
+            _isSavingAudit = false;
+        }
+    }
+
+    private sealed class PendingAuditEntry
+    {
+        public required EntityEntry Entry { get; set; }
+        public required string TableName { get; set; }
+        public required string Operation { get; set; }
+        public string? RecordId { get; set; }
+        public Dictionary<string, object?>? OldData { get; set; }
+        public Dictionary<string, object?>? NewData { get; set; }
+    }
 }

@@ -105,9 +105,22 @@ namespace BMSBT.Controllers
                 b.PaymentStatus == "Paid with surcharge").ToList();
             var partialBills = billsData.Where(b => b.PaymentStatus == "paritally paid" || b.PaymentStatus == "Partially Paid" || b.PaymentStatus == "partially paid").ToList();
             var unpaidBills = billsData.Where(b => b.PaymentStatus == "unpaid" || b.PaymentStatus == "Unpaid" || string.IsNullOrEmpty(b.PaymentStatus)).ToList();
+            var paidCustomersCount = paidBills
+                .Where(b => !string.IsNullOrWhiteSpace(b.Btno))
+                .Select(b => b.Btno!.Trim())
+                .Distinct()
+                .Count();
+            var unpaidCustomersCount = unpaidBills
+                .Where(b => !string.IsNullOrWhiteSpace(b.Btno))
+                .Select(b => b.Btno!.Trim())
+                .Distinct()
+                .Count();
 
+            ViewBag.TotalCustomers = _dbContext.CustomersMaintenance.Count();
             ViewBag.TotalBills = totalBills;
             ViewBag.TotalAmountGenerated = totalAmountGenerated;
+            ViewBag.PaidCustomersCount = paidCustomersCount;
+            ViewBag.UnpaidCustomersCount = unpaidCustomersCount;
 
             ViewBag.PaidCount = paidBills.Count;
             ViewBag.PaidAmount = paidBills.Sum(b => b.BillAmountInDueDate ?? 0);
@@ -124,6 +137,94 @@ namespace BMSBT.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult MaintenanceReports()
+        {
+            var vm = new MaintenanceSummaryReportViewModel
+            {
+                Projects = GetMaintenanceReportProjects(),
+                Blocks = new List<string>()
+            };
+            return View("MaintenanceReports", vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MaintenanceReports(MaintenanceSummaryReportViewModel model)
+        {
+            model.Projects = GetMaintenanceReportProjects();
+            model.Blocks = GetMaintenanceReportBlocks(model.SelectedProject);
+
+            if (string.IsNullOrWhiteSpace(model.SelectedProject)
+                || string.IsNullOrWhiteSpace(model.SelectedYear)
+                || string.IsNullOrWhiteSpace(model.SelectedMonth))
+            {
+                ViewBag.ErrorMessage = "Please select Project, Year, and Month. Block is optional (leave empty for all blocks in the project).";
+                return View("MaintenanceReports", model);
+            }
+
+            var projectTrim = model.SelectedProject.Trim();
+
+            var customersQuery = _dbContext.CustomersMaintenance
+                .AsNoTracking()
+                .Where(c => c.Project.Trim() == projectTrim);
+            if (!string.IsNullOrWhiteSpace(model.SelectedBlock))
+            {
+                customersQuery = customersQuery.Where(c => c.Block == model.SelectedBlock);
+            }
+
+            model.TotalCustomers = customersQuery.Count();
+
+            var blockFilter = model.SelectedBlock;
+            var billsQuery =
+                from bill in _dbContext.MaintenanceBills.AsNoTracking()
+                join c in _dbContext.CustomersMaintenance.AsNoTracking() on bill.Btno equals c.BTNo
+                where bill.BillingMonth == model.SelectedMonth
+                      && bill.BillingYear == model.SelectedYear
+                      && c.Project.Trim() == projectTrim
+                      && (string.IsNullOrWhiteSpace(blockFilter) || c.Block == blockFilter)
+                select bill;
+
+            var billsList = billsQuery.ToList();
+            model.TotalBillsGenerated = billsList.Count;
+            model.PaidBillsCount = billsList.Count(b =>
+                b.PaymentStatus == "paid" || b.PaymentStatus == "Paid");
+            model.UnpaidBillsCount = billsList.Count(b =>
+                b.PaymentStatus == "unpaid"
+                || b.PaymentStatus == "Unpaid"
+                || string.IsNullOrEmpty(b.PaymentStatus));
+            model.HasResults = true;
+
+            return View("MaintenanceReports", model);
+        }
+
+        private List<string> GetMaintenanceReportProjects()
+        {
+            return _dbContext.CustomersMaintenance
+                .AsNoTracking()
+                .Where(p => !string.IsNullOrWhiteSpace(p.Project))
+                .Select(p => p.Project!.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+        }
+
+        private List<string> GetMaintenanceReportBlocks(string? project)
+        {
+            if (string.IsNullOrWhiteSpace(project))
+            {
+                return new List<string>();
+            }
+
+            var trim = project.Trim();
+            return _dbContext.CustomersMaintenance
+                .AsNoTracking()
+                .Where(c => c.Project.Trim() == trim)
+                .Select(c => c.Block)
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+        }
 
         public IActionResult CustomersMaintenance()
         {
@@ -184,7 +285,10 @@ namespace BMSBT.Controllers
 
             if (!string.IsNullOrWhiteSpace(btNo))
             {
-                query = query.Where(c => c.BTNo != null && c.BTNo.Contains(btNo));
+                var term = btNo.Trim();
+                query = query.Where(c =>
+                    (c.BTNo != null && c.BTNo.Contains(term)) ||
+                    c.PloNo.Contains(term));
             }
 
             int pageSize = 20;
@@ -961,14 +1065,23 @@ namespace BMSBT.Controllers
 
 
 
-        public IActionResult SearchBill(string? month, string? year, string? BtNo)
+        public IActionResult SearchBill(string? month, string? year, string? BtNo, string? project)
         {
             ViewBag.SelectedMonth = month;
             ViewBag.SelectedYear = year;
             ViewBag.SelectedBtNo = BtNo;
+            ViewBag.SelectedProject = project;
+
+            var projects = _dbContext.CustomersMaintenance
+                .Where(p => !string.IsNullOrWhiteSpace(p.Project))
+                .Select(p => p.Project!.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+            ViewBag.Projects = projects;
 
             // If nothing is provided
-            if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
+            if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year) && string.IsNullOrWhiteSpace(project))
             {
                 return View("SearchBill");
             }
@@ -1037,6 +1150,12 @@ namespace BMSBT.Controllers
             {
                 // BtNo is empty, filter by month/year only
                 query = query.Where(b => b.BillingMonth == month && b.BillingYear == year);
+            }
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                var trimProj = project.Trim();
+                query = query.Where(b => b.Project.Trim() == trimProj);
             }
 
             var billsList = query.ToList();

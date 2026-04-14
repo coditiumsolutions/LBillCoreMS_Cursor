@@ -127,8 +127,8 @@
                 <i class="fas fa-users text-muted mr-2" aria-hidden="true"></i>Customers
                 <span class="cm-badge-soft ml-2">Maintenance</span>
             </p>
-            <small class="text-muted mb-0 d-none d-md-block">
-                <i class="fas fa-mouse-pointer mr-1" aria-hidden="true"></i> Double-click a row to open customer details.
+            <small id="maintCustomerTotalLabel" class="text-muted mb-0">
+                <i class="fas fa-users mr-1" aria-hidden="true"></i>Total customers: <strong id="maintCustomerTotalCount" class="text-body">@Model.Customers.TotalItemCount</strong>
             </small>
         </div>
 
@@ -155,8 +155,8 @@
                     </select>
                 </div>
                 <div class="form-group col-md-3 mb-md-0">
-                    <label for="btnoSearch" class="font-weight-bold text-secondary small text-uppercase">BT No</label>
-                    <input type="text" id="btnoSearch" class="form-control" placeholder="Search by BT No" autocomplete="off" />
+                    <label for="btnoSearch" class="font-weight-bold text-secondary small text-uppercase">BT No / Plot No</label>
+                    <input type="text" id="btnoSearch" class="form-control" placeholder="BT No or Plot No (e.g. BTOM-11494, C-12 F-1)" autocomplete="off" />
                 </div>
                 <div class="form-group col-md-1 mb-0 d-flex align-items-end">
                     <button type="button" id="btnSearch" class="btn btn-primary btn-block">
@@ -191,6 +191,13 @@
                     });
             }
 
+            function syncMaintCustomerTotalFromGrid() {
+                var $meta = $('#maintCustomerTotalMeta');
+                var total = $meta.length ? parseInt($meta.data('total'), 10) : 0;
+                if (isNaN(total)) total = 0;
+                $('#maintCustomerTotalCount').text(total);
+            }
+
             function loadCustomers(page) {
                 var project = $('#projectFilter').val();
                 var block = $('#blockFilter').val();
@@ -208,6 +215,7 @@
                     { project: project, block: block, btNo: btno, page: page },
                     function (html) {
                         $('#gridContainer').html(html);
+                        syncMaintCustomerTotalFromGrid();
                     });
             }
 

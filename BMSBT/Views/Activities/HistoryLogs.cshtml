@@ -1,0 +1,92 @@
+@model IEnumerable<BMSBT.Models.AuditLog>
+
+@{
+    ViewData["Title"] = "History & Logs";
+    Layout = "~/Views/Shared/_LayoutActivities.cshtml";
+}
+
+<div class="card shadow mb-3">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">History &amp; Logs</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="HistoryLogs">
+            <input type="hidden" name="applyFilter" value="true" />
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="fromDate">From Date</label>
+                    <input type="date" class="form-control" id="fromDate" name="fromDate" value="@ViewBag.FromDate" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="toDate">To Date</label>
+                    <input type="date" class="form-control" id="toDate" name="toDate" value="@ViewBag.ToDate" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="operation">Operation</label>
+                    <select class="form-control" id="operation" name="operation">
+                        <option value="">-- All --</option>
+                        @foreach (var op in (IEnumerable<string>)ViewBag.Operations)
+                        {
+                            <option value="@op" selected="@(op == (string)ViewBag.SelectedOperation)">@op</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="btno">BTNo</label>
+                    <input type="text" class="form-control" id="btno" name="btno" value="@ViewBag.Btno" placeholder="Enter BTNo" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-12 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary mr-2">Filter</button>
+                    <a asp-action="HistoryLogs" class="btn btn-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Date &amp; Time</th>
+                        <th>Table</th>
+                        <th>Operation</th>
+                        <th>BTNo</th>
+                        <th>Changed By</th>
+                        <th>Module</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if ((bool)ViewBag.ApplyFilter && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.ChangedAt.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                                <td>@item.TableName</td>
+                                <td>@item.Operation</td>
+                                <td>@item.RecordId</td>
+                                <td>@item.ChangedBy</td>
+                                <td>@item.ModuleName</td>
+                                <td>@item.IPAddress</td>
+                            </tr>
+                        }
+                    }
+                    else if ((bool)ViewBag.ApplyFilter)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">No logs found for the selected filters.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">Select filters and click Filter to load records.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
