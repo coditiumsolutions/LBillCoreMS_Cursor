@@ -1,0 +1,89 @@
+@using System.Linq
+@{
+    ViewData["Title"] = "Collections Dashboard";
+    Layout = "~/Views/Shared/_LayoutMaintenanceDashboards.cshtml";
+    var yearOpts = ViewBag.BillingYearOptions as IEnumerable<string> ?? Enumerable.Empty<string>();
+    var monthOpts = ViewBag.MonthNameOptions as IEnumerable<string> ?? Enumerable.Empty<string>();
+    var selYear = ViewBag.SelectedBillingYear as string ?? "";
+    var selMonth = ViewBag.SelectedBillingMonth as string ?? "";
+}
+
+<h4 class="mb-3 text-secondary">Collections dashboard report</h4>
+
+<form method="get" asp-controller="MaintenanceDashboards" asp-action="Collections" class="card mb-3 border-0 shadow-sm">
+    <div class="card-body py-3">
+        <div class="form-row align-items-end">
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label for="billingYearColl" class="small text-muted d-block mb-1">Billing year</label>
+                <select id="billingYearColl" name="billingYear" class="form-control form-control-sm">
+                    @foreach (var y in yearOpts)
+                    {
+                        if (y == selYear)
+                        {
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label for="billingMonthColl" class="small text-muted d-block mb-1">Billing month</label>
+                <select id="billingMonthColl" name="billingMonth" class="form-control form-control-sm">
+                    @if (string.IsNullOrEmpty(selMonth))
+                    {
+                        <option value="" selected>All months</option>
+                    }
+                    else
+                    {
+                        <option value="">All months</option>
+                    }
+                    @foreach (var m in monthOpts)
+                    {
+                        if (m == selMonth)
+                        {
+                            <option value="@m" selected>@m</option>
+                        }
+                        else
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-auto col-sm-12">
+                <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+            </div>
+        </div>
+        <p class="text-muted small mb-0 mt-2">
+            Monthly collection chart uses <strong>@ViewBag.CollectionsYear</strong>.
+            Collected vs outstanding: <strong>@ViewBag.CollectionsTotalsScopeLabel</strong>.
+            Amounts use payment amount when recorded; otherwise bill amount at due date.
+        </p>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card dashboard-chart-card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">Collected amount per month</div>
+            <div class="card-body" style="height: 380px;">
+                <canvas id="dashChart1"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card dashboard-chart-card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">Collected vs outstanding (@ViewBag.CollectionsTotalsScopeLabel)</div>
+            <div class="card-body" style="height: 380px;">
+                <canvas id="dashChart2"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_MaintenanceDashboardBarChartsScript")
+}

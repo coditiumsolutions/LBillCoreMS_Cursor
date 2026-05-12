@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Users Dashboard";
+    Layout = "~/Views/Shared/_LayoutMaintenanceDashboards.cshtml";
+}
+
+<h4 class="mb-3 text-secondary">Users dashboard report</h4>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card dashboard-chart-card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">Application users by role</div>
+            <div class="card-body" style="height: 380px;">
+                <canvas id="dashChart1"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card dashboard-chart-card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">Role assignment overview</div>
+            <div class="card-body" style="height: 380px;">
+                <canvas id="dashChart2"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_MaintenanceDashboardBarChartsScript")
+}

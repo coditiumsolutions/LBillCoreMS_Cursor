@@ -1,0 +1,70 @@
+@{
+    var labels1 = ViewBag.Chart1Labels as IEnumerable<string> ?? Array.Empty<string>();
+    var values1 = ViewBag.Chart1Values as IEnumerable<double> ?? Array.Empty<double>();
+    var labels2 = ViewBag.Chart2Labels as IEnumerable<string> ?? Array.Empty<string>();
+    var values2 = ViewBag.Chart2Values as IEnumerable<double> ?? Array.Empty<double>();
+    var ds1 = ViewBag.Chart1DatasetLabel as string ?? "Count";
+    var ds2 = ViewBag.Chart2DatasetLabel as string ?? "Count";
+}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const labels1 = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(labels1));
+        const data1 = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(values1));
+        const labels2 = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(labels2));
+        const data2 = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(values2));
+        const ds1 = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ds1));
+        const ds2 = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ds2));
+
+        const palette = [
+            'rgba(37, 99, 235, 0.75)',
+            'rgba(245, 158, 11, 0.75)',
+            'rgba(16, 185, 129, 0.75)',
+            'rgba(239, 68, 68, 0.75)',
+            'rgba(139, 92, 246, 0.75)',
+            'rgba(236, 72, 153, 0.75)',
+            'rgba(14, 165, 233, 0.75)',
+            'rgba(100, 116, 139, 0.75)'
+        ];
+
+        function barColors(len) {
+            const arr = [];
+            for (let i = 0; i < len; i++) arr.push(palette[i % palette.length]);
+            return arr;
+        }
+
+        function makeBarChart(canvasId, labels, values, datasetLabel) {
+            const el = document.getElementById(canvasId);
+            if (!el || typeof Chart === 'undefined') return;
+
+            new Chart(el.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: datasetLabel,
+                        data: values,
+                        backgroundColor: barColors(labels.length),
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: labels.length <= 8 }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { maxRotation: 45, minRotation: 0, autoSkip: true }
+                        },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        makeBarChart('dashChart1', labels1, data1, ds1);
+        makeBarChart('dashChart2', labels2, data2, ds2);
+    });
+</script>
