@@ -163,7 +163,11 @@ public class MaintenanceBillInsertController : ControllerBase
                     if (shouldGenerate)
                     {
                         var btKeysForDuplicate = MaintenanceBillDuplicateChecker.CollectCustomerBtKeys(customer);
-                        if (MaintenanceBillDuplicateChecker.BillExists(_dbContext, btKeysForDuplicate, billingMonth, billingYear))
+                        var isDuplicate = !request.AllowDuplicate
+                            && MaintenanceBillDuplicateChecker.BillExists(
+                                _dbContext, btKeysForDuplicate, billingMonth, billingYear);
+
+                        if (isDuplicate)
                         {
                             statusValue = MaintenanceBillDuplicateChecker.BuildAlreadyGeneratedStatus(billingMonth, billingYear);
                             customer.BillGenerationStatus = statusValue;
@@ -200,11 +204,26 @@ public class MaintenanceBillInsertController : ControllerBase
                                 ValidDate = validDate
                             };
 
+                            var hadExistingBillForPeriod = MaintenanceBillDuplicateChecker.BillExists(
+                                _dbContext, btKeysForDuplicate, billingMonth, billingYear);
+
+                            var isDuplicateInsert = request.AllowDuplicate && hadExistingBillForPeriod;
+                            if (isDuplicateInsert)
+                                dto.GenStatus = MaintenanceBillDuplicateChecker.DuplicateBillGenStatus;
+
                             await _service.CreateAsync(dto, cancellationToken);
 
-                            statusValue = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(billingMonth, billingYear);
-                            customer.BillGenerationStatus = statusValue;
-                            customer.BillStatusMaint = "Unpaid";
+                            if (isDuplicateInsert)
+                            {
+                                // New bill only: mark duplicate; do not change customer gen status (prior bills unchanged).
+                                statusValue = MaintenanceBillDuplicateChecker.DuplicateBillGenStatus;
+                            }
+                            else
+                            {
+                                statusValue = MaintenanceBillDuplicateChecker.BuildGeneratedSuccessStatus(billingMonth, billingYear);
+                                customer.BillGenerationStatus = statusValue;
+                                customer.BillStatusMaint = "Unpaid";
+                            }
 
                             if (!string.IsNullOrWhiteSpace(btNoForLookup))
                             {
@@ -250,6 +269,7 @@ public class MaintenanceBillInsertController : ControllerBase
                     BtNoSearch = btNoSearchValue,
                     BillingMonth = billingMonth,
                     BillingYear = billingYear,
+                    AllowDuplicate = request.AllowDuplicate,
                     ChangedBy = changedBy
                 },
                 "Billing");
@@ -345,6 +365,8 @@ public class MaintenanceBillInsertController : ControllerBase
         public string? SelectedProject { get; set; }
         public string? BtNoSearch { get; set; }
         public string? BillCategory { get; set; }
+        /// <summary>When true, creates a bill even if one already exists for the billing period (testing).</summary>
+        public bool AllowDuplicate { get; set; }
     }
 
     /// <summary>

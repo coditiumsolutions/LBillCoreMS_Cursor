@@ -1,0 +1,40 @@
+@model BMSBT.ViewModels.MaintenanceBillingReportViewModel
+@{
+    ViewData["Title"] = "Users Report";
+    Layout = "~/Views/Shared/_LayoutMaintenanceBillingReports.cshtml";
+    ViewBag.ReportAction = "Users";
+    if (Model.HasResults)
+    {
+        ViewBag.Chart1Title = "Users by role";
+        ViewBag.Chart2Title = "Role assignment";
+    }
+}
+
+<h4 class="mb-3 text-secondary">Users report</h4>
+@await Html.PartialAsync("_MaintenanceBillingReportFilters", Model)
+
+@if (Model.HasResults)
+{
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card report-kpi-card shadow-sm">
+                <div class="card-body">
+                    <div class="small text-muted">Total application users</div>
+                    <div class="kpi-value">@Model.TotalUsers.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @await Html.PartialAsync("_ReportCharts")
+}
+else
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportPrompt")
+}
+
+@section Scripts {
+    @if (Model.HasResults)
+    {
+        @await Html.PartialAsync("_MaintenanceDashboardBarChartsScript")
+    }
+}

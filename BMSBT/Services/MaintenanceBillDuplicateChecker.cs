@@ -114,6 +114,28 @@ public static class MaintenanceBillDuplicateChecker
         return $"Generated {displayMonth} {y}".Trim();
     }
 
+    /// <summary>Gen status when a bill was created with Allow duplicate for an existing billing period.</summary>
+    public const string DuplicateBillGenStatus = "Duplicate Bill";
+
+    private const string BillGenStatusHistoryPrefix = "GenStatus=";
+
+    public static string FormatBillGenStatusHistory(string genStatus) =>
+        $"{BillGenStatusHistoryPrefix}{genStatus.Trim()}";
+
+    /// <summary>Reads per-bill gen status from MaintenanceBills.History; otherwise null.</summary>
+    public static string? TryGetGenStatusFromBillHistory(string? history)
+    {
+        if (string.IsNullOrWhiteSpace(history))
+            return null;
+
+        var t = history.Trim();
+        if (!t.StartsWith(BillGenStatusHistoryPrefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var value = t.Substring(BillGenStatusHistoryPrefix.Length).Trim();
+        return string.IsNullOrEmpty(value) ? null : value;
+    }
+
     /// <summary>
     /// Case-insensitive BT match after trim (cannot be expressed in a single EF-translatable predicate).
     /// </summary>

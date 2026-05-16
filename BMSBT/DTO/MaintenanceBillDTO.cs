@@ -54,6 +54,9 @@ namespace BMSBT.DTO
 
         public string? BillStatus { get; set; }
 
+        /// <summary>Customer bill generation status (Gen status).</summary>
+        public string? GenStatus { get; set; }
+
         public string? InvoiceNo { get; set; }
 
         public string? BillingMonth { get; set; }

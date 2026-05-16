@@ -7,12 +7,9 @@
     ViewData["Title"] = "All Bills";
     Layout = "~/Views/Shared/_LayoutMaintBills.cshtml";
     var bills = Model ?? new StaticPagedList<MaintenanceBillDTO>(new List<MaintenanceBillDTO>(), 1, 10000, 0);
-    var groupedByProject = bills.GroupBy(b => b.Project)
-        .Select(projGroup => new
-        {
-            Project = projGroup.Key,
-            Blocks = projGroup.GroupBy(b => b.Block).OrderBy(bg => bg.Key)
-        });
+    var groupedByProject = bills
+        .GroupBy(b => b.Project)
+        .OrderBy(g => g.Key ?? string.Empty, StringComparer.OrdinalIgnoreCase);
 }
 
 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
@@ -176,43 +173,13 @@
         padding-left: 10px;
     }
 
-    .project-blocks {
+    .project-bills {
         padding-left: 0;
     }
 
-        .project-blocks > .nested-table {
+        .project-bills > .nested-table {
             margin-left: 30px;
             padding-left: 0;
-        }
-
-    .block-header {
-        background-color: #f8fafc !important;
-        cursor: pointer;
-        padding-left: 10px;
-    }
-
-    .block-content {
-        padding-left: 30px;
-        margin-left: 0;
-    }
-
-        .block-content > .nested-table {
-            margin-left: 0;
-        }
-
-    .category-header {
-        background-color: #f1f5f9 !important;
-        cursor: pointer;
-        padding-left: 10px;
-    }
-
-    .category-content {
-        padding-left: 30px;
-        margin-left: 0;
-    }
-
-        .category-content > .nested-table {
-            margin-left: 0;
         }
 
     .customer-row {
@@ -230,25 +197,6 @@
         color: #475569;
     }
 
-    @@media (max-width: 768px) {
-        .block-content {
-            padding-left: 20px;
-        }
-
-        .category-content {
-            padding-left: 20px;
-        }
-    }
-
-    @@media (max-width: 576px) {
-        .block-content {
-            padding-left: 15px;
-        }
-
-        .category-content {
-            padding-left: 15px;
-        }
-    }
 </style>
 
 <div class="container-fluid cm-detail-page px-2 px-md-2">
@@ -278,7 +226,7 @@
                 <span class="cm-badge-soft ml-2">Maintenance</span>
             </p>
             <small class="text-muted mb-0 d-none d-md-block">
-                <i class="fas fa-mouse-pointer mr-1" aria-hidden="true"></i> Expand project &rarr; block &rarr; category. Double-click a row for bill details.
+                <i class="fas fa-mouse-pointer mr-1" aria-hidden="true"></i> Expand a project to view bills (sorted by BT No). Double-click a row for bill details.
             </small>
         </div>
 
@@ -302,6 +250,27 @@
                                 else
                                 {
                                     <option value="@proj">@proj</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-md-0">
+                        <label for="block" class="font-weight-bold text-secondary small text-uppercase d-block">Block</label>
+                        <select id="block" name="block" class="form-control">
+                            <option value="">— All blocks —</option>
+                            @{
+                                var blockList = ViewBag.Blocks as List<string> ?? new List<string>();
+                                var selectedBlock = ViewBag.SelectedBlock as string;
+                            }
+                            @foreach (var blk in blockList)
+                            {
+                                if (string.Equals(blk, selectedBlock, StringComparison.Ordinal))
+                                {
+                                    <option value="@blk" selected="selected">@blk</option>
+                                }
+                                else
+                                {
+                                    <option value="@blk">@blk</option>
                                 }
                             }
                         </select>
@@ -334,7 +303,7 @@
                         <label for="btno" class="font-weight-bold text-secondary small text-uppercase d-block">BT No</label>
                         <input type="text" id="btno" name="btno" class="form-control" placeholder="Enter BT No" value="@ViewBag.SelectedBtNo" autocomplete="off" />
                     </div>
-                    <div class="form-group col-md-4 mb-0 d-flex align-items-end">
+                    <div class="form-group col-md-2 mb-0 d-flex align-items-end">
                         <div class="w-100 d-flex">
                             <button type="submit" class="btn btn-primary flex-fill mr-2">
                                 <i class="fas fa-search mr-1" aria-hidden="true"></i>Search
@@ -373,6 +342,13 @@
                 {
                     <span> · Project <strong>@sp</strong></span>
                 }
+                @{
+                    var sb = ViewBag.SelectedBlock as string;
+                }
+                @if (!string.IsNullOrWhiteSpace(sb))
+                {
+                    <span> · Block <strong>@sb</strong></span>
+                }
             </div>
         }
 
@@ -393,83 +369,51 @@
                             <th style="width:150px;">Charges</th>
                             <th style="width:150px;">Arrears</th>
                             <th style="width:150px;">Bill total</th>
+                            <th data-sort="GenStatus" class="sort-icon" style="width:180px;">Gen status</th>
                             <th data-sort="PaymentStatus" class="sort-icon" style="width:150px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var projectGroup in groupedByProject)
                         {
-                            var projectId = "project-" + projectGroup.Project?.Replace(" ", "-");
+                            var projectId = "project-" + projectGroup.Key?.Replace(" ", "-");
                             <tr class="project-header" data-project="@projectId">
                                 <td>
                                     <i class="fas fa-chevron-right toggle-icon"></i>
                                 </td>
-                                <td colspan="10">
-                                    Project: @projectGroup.Project
+                                <td colspan="11">
+                                    Project: @projectGroup.Key
+                                    <span class="text-muted font-weight-normal ml-2">(@projectGroup.Count())</span>
                                 </td>
                             </tr>
                             <tr class="project-content" data-parent="@projectId" style="display:none;">
-                                <td colspan="11" style="padding:0;">
-                                    <div class="project-blocks">
-                                        @foreach (var blockGroup in projectGroup.Blocks)
-                                        {
-                                            var blockId = $"{projectId}-block-{blockGroup.Key?.Replace(" ", "-")}";
-                                            <table class="nested-table" style="width:100%; margin-bottom:0;">
-                                                <tr class="block-header" data-block="@blockId">
-                                                    <td style="width:50px;">
-                                                        <i class="fas fa-chevron-right toggle-icon"></i>
+                                <td colspan="12" style="padding:0;">
+                                    <div class="project-bills">
+                                        <table class="nested-table" style="width:100%; margin-bottom:0;">
+                                            @foreach (var bill in projectGroup)
+                                            {
+                                                <tr class="customer-row" ondblclick="window.location.href='@Url.Action("Details", "MaintenanceNew", new { id = bill.Uid })'" style="cursor: pointer;">
+                                                    <td style="width:50px;"></td>
+                                                    <td style="width:100px;">
+                                                        <input type="checkbox" class="record-checkbox" value="@bill.Uid"
+                                                               data-btno="@bill.Btno"
+                                                               data-month="@bill.BillingMonth"
+                                                               data-year="@bill.BillingYear"
+                                                               onclick="event.stopPropagation();" />
                                                     </td>
-                                                    <td colspan="10">
-                                                        <strong>Block:</strong> @blockGroup.Key
-                                                        <span class="text-muted font-weight-normal ml-2">(@blockGroup.Count())</span>
-                                                    </td>
+                                                    <td style="width:200px;">@bill.Btno</td>
+                                                    <td style="width:200px;">@bill.BillingMonth</td>
+                                                    <td style="width:150px;">@bill.BillingYear</td>
+                                                    <td style="width:250px;">@bill.Category</td>
+                                                    <td style="width:300px;">@bill.CustomerName</td>
+                                                    <td style="width:150px;">@bill.MaintCharges?.ToString("N0")</td>
+                                                    <td style="width:150px;">@bill.Arrears?.ToString("N0")</td>
+                                                    <td style="width:150px;">@bill.BillAmountInDueDate?.ToString("N0")</td>
+                                                    <td style="width:180px;">@bill.GenStatus</td>
+                                                    <td style="width:150px;">@bill.PaymentStatus</td>
                                                 </tr>
-                                            </table>
-                                            <div class="block-content" id="@blockId" style="display:none;">
-                                                <table class="nested-table" style="width:100%; margin-bottom:0;">
-                                                    @foreach (var categoryGroup in blockGroup.GroupBy(b => b.Category).OrderBy(g => g.Key))
-                                                    {
-                                                        var categoryId = $"{blockId}-category-{categoryGroup.Key?.Replace(" ", "-")}";
-                                                        <tr class="category-header" data-category="@categoryId">
-                                                            <td style="width:50px;">
-                                                                <i class="fas fa-chevron-right toggle-icon"></i>
-                                                            </td>
-                                                            <td colspan="10">
-                                                                Category: @categoryGroup.Key
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="category-content" data-parent="@categoryId" style="display:none;">
-                                                            <td colspan="11" style="padding:0;">
-                                                                <table class="nested-table" style="width:100%; margin-bottom:0;">
-                                                                    @foreach (var bill in categoryGroup)
-                                                                    {
-                                                                        <tr class="customer-row" ondblclick="window.location.href='@Url.Action("Details", "MaintenanceNew", new { id = bill.Uid })'" style="cursor: pointer;">
-                                                                            <td style="width:50px;"></td>
-                                                                            <td style="width:100px;">
-                                                                                <input type="checkbox" class="record-checkbox" value="@bill.Uid"
-                                                                                       data-btno="@bill.Btno"
-                                                                                       data-month="@bill.BillingMonth"
-                                                                                       data-year="@bill.BillingYear"
-                                                                                       onclick="event.stopPropagation();" />
-                                                                            </td>
-                                                                            <td style="width:200px;">@bill.Btno</td>
-                                                                            <td style="width:200px;">@bill.BillingMonth</td>
-                                                                            <td style="width:150px;">@bill.BillingYear</td>
-                                                                            <td style="width:250px;">@bill.Category</td>
-                                                                            <td style="width:300px;">@bill.CustomerName</td>
-                                                                            <td style="width:150px;">@bill.MaintCharges?.ToString("N0")</td>
-                                                                            <td style="width:150px;">@bill.Arrears?.ToString("N0")</td>
-                                                                            <td style="width:150px;">@bill.BillAmountInDueDate?.ToString("N0")</td>
-                                                                            <td style="width:150px;">@bill.PaymentStatus</td>
-                                                                        </tr>
-                                                                    }
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                    }
-                                                </table>
-                                            </div>
-                                        }
+                                            }
+                                        </table>
                                     </div>
                                 </td>
                             </tr>
@@ -508,6 +452,29 @@
             var savedSearch = sessionStorage.getItem('maintenanceSearchState');
             var isPost = "@Context.Request.Method" === "POST";
 
+            function loadBlocks(project, selectedBlock, done) {
+                var $block = $('#block');
+                if (!project) {
+                    $block.empty().append($('<option>').val('').text('— All blocks —'));
+                    if (done) done();
+                    return;
+                }
+                $.get('@Url.Action("GetBlocksByProject", "MaintenanceNew")', { project: project }, function (data) {
+                    $block.empty().append($('<option>').val('').text('— All blocks —'));
+                    $.each(data, function (i, b) {
+                        $block.append($('<option>').val(b).text(b));
+                    });
+                    if (selectedBlock) {
+                        $block.val(selectedBlock);
+                    }
+                    if (done) done();
+                });
+            }
+
+            $('#project').on('change', function () {
+                loadBlocks($(this).val(), null);
+            });
+
             if (savedSearch && !isPost) {
                 var state = JSON.parse(savedSearch);
                 $('#month').val(state.month);
@@ -516,10 +483,11 @@
                 if (state.project) {
                     $('#project').val(state.project);
                 }
-
-                if (state.month && state.year || state.btno || state.project) {
-                    $('#searchForm').submit();
-                }
+                loadBlocks(state.project, state.block, function () {
+                    if ((state.month && state.year) || state.btno || state.project) {
+                        $('#searchForm').submit();
+                    }
+                });
             }
 
             $('#searchForm').on('submit', function() {
@@ -527,7 +495,8 @@
                     month: $('#month').val(),
                     year: $('#year').val(),
                     btno: $('#btno').val(),
-                    project: $('#project').val()
+                    project: $('#project').val(),
+                    block: $('#block').val()
                 };
                 sessionStorage.setItem('maintenanceSearchState', JSON.stringify(state));
             });
@@ -536,26 +505,6 @@
                 var projectId = $(this).data('project');
                 var icon = $(this).find('.toggle-icon');
                 var content = $('tr[data-parent="' + projectId + '"]');
-                icon.toggleClass('rotate-icon');
-                content.toggle();
-                if (!content.is(':visible')) {
-                    content.find('.block-content, .category-content').hide();
-                    content.find('.block-header .toggle-icon, .category-header .toggle-icon').removeClass('rotate-icon');
-                }
-            });
-            $('.block-header').click(function (e) {
-                e.stopPropagation();
-                var blockId = $(this).data('block');
-                var icon = $(this).find('.toggle-icon');
-                var content = $('#' + blockId);
-                icon.toggleClass('rotate-icon');
-                content.toggle();
-            });
-            $('.category-header').click(function (e) {
-                e.stopPropagation();
-                var categoryId = $(this).data('category');
-                var icon = $(this).find('.toggle-icon');
-                var content = $('tr[data-parent="' + categoryId + '"]');
                 icon.toggleClass('rotate-icon');
                 content.toggle();
             });

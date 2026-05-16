@@ -1,0 +1,35 @@
+@model BMSBT.ViewModels.MaintenanceBillingReportViewModel
+@{
+    ViewData["Title"] = "Recovery Report";
+    Layout = "~/Views/Shared/_LayoutMaintenanceBillingReports.cshtml";
+    ViewBag.ReportAction = "Recovery";
+    if (Model.HasResults)
+    {
+        ViewBag.Chart1Title = "Recovery rate by month (" + Model.BillingYear + ")";
+        ViewBag.Chart2Title = "Recovered vs outstanding (" + Model.ScopeLabel + ")";
+    }
+}
+
+<h4 class="mb-3 text-secondary">Recovery report</h4>
+@if (Model.HasResults)
+{
+    <p class="text-muted small">Recovery % = collected amount ÷ billed amount per month.</p>
+}
+@await Html.PartialAsync("_MaintenanceBillingReportFilters", Model)
+
+@if (Model.HasResults)
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportKpis", Model)
+    @await Html.PartialAsync("_ReportCharts")
+}
+else
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportPrompt")
+}
+
+@section Scripts {
+    @if (Model.HasResults)
+    {
+        @await Html.PartialAsync("_MaintenanceDashboardBarChartsScript")
+    }
+}

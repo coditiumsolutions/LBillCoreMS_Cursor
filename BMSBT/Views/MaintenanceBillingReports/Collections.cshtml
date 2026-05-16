@@ -1,0 +1,31 @@
+@model BMSBT.ViewModels.MaintenanceBillingReportViewModel
+@{
+    ViewData["Title"] = "Collections Report";
+    Layout = "~/Views/Shared/_LayoutMaintenanceBillingReports.cshtml";
+    ViewBag.ReportAction = "Collections";
+    if (Model.HasResults)
+    {
+        ViewBag.Chart1Title = "Collected amount by month (" + Model.BillingYear + ")";
+        ViewBag.Chart2Title = "Collected vs outstanding (" + Model.ScopeLabel + ")";
+    }
+}
+
+<h4 class="mb-3 text-secondary">Collections report</h4>
+@await Html.PartialAsync("_MaintenanceBillingReportFilters", Model)
+
+@if (Model.HasResults)
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportKpis", Model)
+    @await Html.PartialAsync("_ReportCharts")
+}
+else
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportPrompt")
+}
+
+@section Scripts {
+    @if (Model.HasResults)
+    {
+        @await Html.PartialAsync("_MaintenanceDashboardBarChartsScript")
+    }
+}

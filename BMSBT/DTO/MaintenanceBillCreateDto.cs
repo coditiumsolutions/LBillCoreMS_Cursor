@@ -45,5 +45,8 @@ public class MaintenanceBillCreateDto
     public DateOnly? IssueDate { get; set; }
     public DateOnly? DueDate { get; set; }
     public DateOnly? ValidDate { get; set; }
+
+    /// <summary>When set, stored on the bill record only (not on customer).</summary>
+    public string? GenStatus { get; set; }
 }
 

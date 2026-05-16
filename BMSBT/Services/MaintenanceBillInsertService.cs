@@ -129,7 +129,11 @@ public class MaintenanceBillInsertService : IMaintenanceBillInsertService
         LastUpdated = now,
 
             // Invoice number - simple unique placeholder logic
-            InvoiceNo = GenerateInvoiceNo(now, dto.CustomerNo)
+            InvoiceNo = GenerateInvoiceNo(now, dto.CustomerNo),
+
+            History = !string.IsNullOrWhiteSpace(dto.GenStatus)
+                ? MaintenanceBillDuplicateChecker.FormatBillGenStatusHistory(dto.GenStatus)
+                : null
         };
 
         _dbContext.MaintenanceBills.Add(bill);

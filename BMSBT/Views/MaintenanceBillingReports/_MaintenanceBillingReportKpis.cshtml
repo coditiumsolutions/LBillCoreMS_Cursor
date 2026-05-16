@@ -1,0 +1,57 @@
+﻿@model BMSBT.ViewModels.MaintenanceBillingReportViewModel
+@functions {
+    static string FormatAmount(double amount) => amount.ToString("N0");
+}
+<div class="row mb-4">
+    <div class="col-md-4 col-sm-6 mb-3">
+        <div class="card report-kpi-card shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Maintenance customers</div>
+                <div class="kpi-value">@Model.TotalCustomers.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-3">
+        <div class="card report-kpi-card shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Bills (@Model.ScopeLabel)</div>
+                <div class="kpi-value">@Model.TotalBills.ToString("N0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-3">
+        <div class="card report-kpi-card shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Billed amount (PKR)</div>
+                <div class="kpi-value">@FormatAmount(Model.TotalBilledAmount)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-3">
+        <div class="card report-kpi-card shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Collected (PKR)</div>
+                <div class="kpi-value text-success">@FormatAmount(Model.TotalCollected)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-3">
+        <div class="card report-kpi-card shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Outstanding (PKR)</div>
+                <div class="kpi-value text-danger">@FormatAmount(Model.TotalOutstanding)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-3">
+        <div class="card report-kpi-card shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-muted">Recovery rate</div>
+                <div class="kpi-value">@Model.RecoveryPercent%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

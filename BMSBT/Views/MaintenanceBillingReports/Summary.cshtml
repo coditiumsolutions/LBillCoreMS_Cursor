@@ -1,0 +1,75 @@
+﻿@model BMSBT.ViewModels.MaintenanceBillingReportViewModel
+@{
+    ViewData["Title"] = "Summary Report";
+    Layout = "~/Views/Shared/_LayoutMaintenanceBillingReports.cshtml";
+    ViewBag.ReportAction = "Summary";
+}
+@functions {
+    static string Amt(double v) => v.ToString("N0");
+}
+
+<h4 class="mb-3 text-secondary">Summary report</h4>
+<p class="text-muted">Overview of maintenance billing for the selected period.</p>
+
+@await Html.PartialAsync("_MaintenanceBillingReportFilters", Model)
+
+@if (Model.HasResults)
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportKpis", Model)
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom font-weight-bold">Report sections</div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Section</th>
+                        <th>Summary</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><i class="fas fa-money-bill text-muted mr-1"></i> Collections</td>
+                        <td>@Amt(Model.TotalCollected) PKR collected</td>
+                        <td class="text-right">
+                            <a asp-action="Collections" asp-route-billingYear="@Model.BillingYear" asp-route-billingMonth="@Model.BillingMonth" asp-route-load="true" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-sync text-muted mr-1"></i> Recovery</td>
+                        <td>@Model.RecoveryPercent% recovery (@Amt(Model.TotalCollected) of @Amt(Model.TotalBilledAmount) PKR)</td>
+                        <td class="text-right">
+                            <a asp-action="Recovery" asp-route-billingYear="@Model.BillingYear" asp-route-billingMonth="@Model.BillingMonth" asp-route-load="true" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-users text-muted mr-1"></i> Customers</td>
+                        <td>@Model.TotalCustomers.ToString("N0") maintenance customers registered</td>
+                        <td class="text-right">
+                            <a asp-action="Customers" asp-route-billingYear="@Model.BillingYear" asp-route-billingMonth="@Model.BillingMonth" asp-route-load="true" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-file text-muted mr-1"></i> Billing</td>
+                        <td>@Model.TotalBills.ToString("N0") bills â€” @Model.PaidBillsCount paid, @Model.UnpaidBillsCount unpaid</td>
+                        <td class="text-right">
+                            <a asp-action="Billing" asp-route-billingYear="@Model.BillingYear" asp-route-billingMonth="@Model.BillingMonth" asp-route-load="true" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-user text-muted mr-1"></i> Users</td>
+                        <td>@Model.TotalUsers.ToString("N0") application users</td>
+                        <td class="text-right">
+                            <a asp-action="Users" asp-route-billingYear="@Model.BillingYear" asp-route-billingMonth="@Model.BillingMonth" asp-route-load="true" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    @await Html.PartialAsync("_MaintenanceBillingReportPrompt")
+}

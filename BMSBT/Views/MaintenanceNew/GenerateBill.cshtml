@@ -5,8 +5,10 @@
     var accordionId = "accordionSectors";
     int count = 0;
     var selectedProject = ViewBag.SelectedProject as string;
+    var selectedBlock = ViewBag.SelectedBlock as string;
     var btNoSearch = ViewBag.BTNoSearch as string;
     var projects = ViewBag.Projects as List<string> ?? new List<string>();
+    var blocks = ViewBag.Blocks as List<string> ?? new List<string>();
     var selectedBillCategory = ViewBag.SelectedBillCategory as string ?? "Residential";
     var billingLogicMarkdown = ViewBag.BillingLogicMarkdown as string ?? "";
     string operatorName = ViewBag.OperatorName as string ?? "";
@@ -241,9 +243,9 @@
         <div class="card-body cm-filter-body border-bottom-0">
             <form method="get" asp-action="GenerateBill" asp-controller="MaintenanceNew">
                 <div class="form-row">
-                    <div class="form-group col-md-4 mb-2 mb-md-0">
+                    <div class="form-group col-md-3 mb-2 mb-md-0">
                         <label class="font-weight-bold small text-muted mb-1" for="selectedProject">Project</label>
-                        <select name="selectedProject" id="selectedProject" class="form-control" onchange="this.form.submit()">
+                        <select name="selectedProject" id="selectedProject" class="form-control" onchange="document.getElementById('selectedBlock').value=''; this.form.submit();">
                             <option value="">— Select project —</option>
                             @foreach (var project in projects)
                             {
@@ -258,7 +260,24 @@
                             }
                         </select>
                     </div>
-                    <div class="form-group col-md-3 mb-2 mb-md-0">
+                    <div class="form-group col-md-2 mb-2 mb-md-0">
+                        <label class="font-weight-bold small text-muted mb-1" for="selectedBlock">Block</label>
+                        <select name="selectedBlock" id="selectedBlock" class="form-control">
+                            <option value="">— All blocks —</option>
+                            @foreach (var blk in blocks)
+                            {
+                                if (string.Equals(blk, selectedBlock, StringComparison.Ordinal))
+                                {
+                                    <option value="@blk" selected="selected">@blk</option>
+                                }
+                                else
+                                {
+                                    <option value="@blk">@blk</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-2 mb-md-0">
                         <label class="font-weight-bold small text-muted mb-1" for="selectedBillCategory">Bill category</label>
                         <select name="selectedBillCategory" id="selectedBillCategory" class="form-control">
                             @if (selectedBillCategory == "Residential")
@@ -304,6 +323,12 @@
                     <button id="generateMBillButton" type="button" class="btn btn-outline-primary">
                         <i class="fas fa-cogs mr-1" aria-hidden="true"></i> Generate MBill
                     </button>
+                    <div class="form-check ml-md-3 mt-2 mt-md-0 mb-0">
+                        <input class="form-check-input" type="checkbox" id="allowDuplicateMBill" />
+                        <label class="form-check-label small text-muted" for="allowDuplicateMBill">
+                            Allow duplicate (testing)
+                        </label>
+                    </div>
                     <small class="text-muted ml-md-3 mt-2 mt-md-0">Select rows in the grid below, then run Generate MBill.</small>
                 </div>
             </form>
@@ -370,7 +395,6 @@
                                                     <th>BT number</th>
                                                     <th>Customer name</th>
                                                     <th>Project</th>
-                                                    <th>Category</th>
                                                     <th>Block</th>
                                                     <th>House no</th>
                                                     <th>Size</th>
@@ -390,7 +414,6 @@
                                                         <td>@customer.BTNo</td>
                                                         <td>@customer.CustomerName</td>
                                                         <td>@customer.Project</td>
-                                                        <td>@customer.Category</td>
                                                         <td>@customer.Block</td>
                                                         <td>@customer.PloNo</td>
                                                         <td>@customer.Size</td>
@@ -457,6 +480,7 @@
                 var selectedProject = $('#selectedProject').val() || '';
                 var btNoSearch = $('#btNoSearch').val() || '';
                 var billCategory = $('#selectedBillCategory').val() || '';
+                var allowDuplicate = $('#allowDuplicateMBill').is(':checked');
 
                 if (!selectedIds.length) {
                     alert('No records selected.');
@@ -473,7 +497,8 @@
                         customerUids: selectedIds,
                         selectedProject: selectedProject,
                         btNoSearch: btNoSearch,
-                        billCategory: billCategory
+                        billCategory: billCategory,
+                        allowDuplicate: allowDuplicate
                     }),
                     success: function (response) {
                         $('#loadingOverlayGen').hide();

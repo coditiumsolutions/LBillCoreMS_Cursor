@@ -163,12 +163,24 @@
                     </li>
 
                     <li>
+                        <a asp-controller="MaintenanceBillingReports" asp-action="Summary">
+                            <i class="fas fa-chart-pie" style="color: yellowgreen; font-size: 14px;"></i>
+                            Reports
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="@Url.Action("PrintMMultiBills", "MaintenanceNew")">
                             <i class="fas fa-print" style="color: yellowgreen; font-size: 14px;"></i>
                             Print Bill
                         </a>
                     </li>
 
+                </ul>
+
+                <h4>Modules</h4>
+
+                <ul class="nav flex-column">
                     <li>
                         <a asp-controller="MaintenanceNew" asp-action="Operations">
                             <i class="fas fa-tasks" style="color: yellowgreen; font-size: 14px;"></i>
@@ -209,8 +221,8 @@
 
                                 <li>
                                     <a asp-controller="MaintenanceNew" asp-action="MaintenanceReports">
-                                        <i class="fas fa-chart-pie" style="color: yellowgreen; font-size: 14px;"></i>
-                                        Reports
+                                        <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Project Report
                                     </a>
                                 </li>
                             </ul>

@@ -1,0 +1,62 @@
+﻿@model BMSBT.ViewModels.MaintenanceBillingReportViewModel
+@{
+    var reportAction = ViewBag.ReportAction as string ?? "Summary";
+    var selMonth = Model.BillingMonth ?? "";
+}
+<form method="get" asp-controller="MaintenanceBillingReports" asp-action="@reportAction" class="card mb-3 border-0 shadow-sm">
+    <input type="hidden" name="load" value="true" />
+    <div class="card-body py-3">
+        <div class="form-row align-items-end">
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label for="billingYearReport" class="small text-muted d-block mb-1">Billing year</label>
+                <select id="billingYearReport" name="billingYear" class="form-control form-control-sm">
+                    @foreach (var y in Model.YearOptions)
+                    {
+                        if (y == Model.BillingYear)
+                        {
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label for="billingMonthReport" class="small text-muted d-block mb-1">Billing month</label>
+                <select id="billingMonthReport" name="billingMonth" class="form-control form-control-sm">
+                    @if (string.IsNullOrEmpty(selMonth))
+                    {
+                        <option value="" selected>All months</option>
+                    }
+                    else
+                    {
+                        <option value="">All months</option>
+                    }
+                    @foreach (var m in Model.MonthOptions)
+                    {
+                        if (m == selMonth)
+                        {
+                            <option value="@m" selected>@m</option>
+                        }
+                        else
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-auto col-sm-12">
+                <button type="submit" class="btn btn-primary btn-sm">Load Report</button>
+            </div>
+        </div>
+        @if (Model.HasResults)
+        {
+            <p class="text-muted small mb-0 mt-2">Scope: <strong>@Model.ScopeLabel</strong></p>
+        }
+    </div>
+</form>
+
+
+

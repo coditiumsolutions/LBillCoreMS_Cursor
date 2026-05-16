@@ -308,6 +308,7 @@ namespace BMSBT.Controllers
         public async Task<IActionResult> GenerateBill(
             string selectedProject,
             string btNoSearch,
+            string? selectedBlock,
             string selectedBillCategory = "Residential",
             bool loadMdFile = false)
         {
@@ -357,6 +358,12 @@ namespace BMSBT.Controllers
                     query = query.Where(c => c.BTNo.Contains(btNoSearch));
                 }
 
+                if (!string.IsNullOrWhiteSpace(selectedBlock))
+                {
+                    var trimBlock = selectedBlock.Trim();
+                    query = query.Where(c => c.Block != null && c.Block.Trim() == trimBlock);
+                }
+
                 filteredData = query.GroupBy(c => c.Block)
                 .Select(g => new MaintSectorCustomersViewModel
                 {
@@ -388,7 +395,23 @@ namespace BMSBT.Controllers
             ViewBag.Projects = projects;
             ViewBag.SelectedProject = selectedProject;
             ViewBag.BTNoSearch = btNoSearch;
+            ViewBag.SelectedBlock = selectedBlock;
             ViewBag.SelectedBillCategory = selectedBillCategory;
+
+            if (!string.IsNullOrWhiteSpace(selectedProject))
+            {
+                var trimProj = selectedProject.Trim();
+                ViewBag.Blocks = _dbContext.CustomersMaintenance
+                    .Where(c => c.Project != null && c.Project.Trim() == trimProj && !string.IsNullOrWhiteSpace(c.Block))
+                    .Select(c => c.Block!.Trim())
+                    .Distinct()
+                    .OrderBy(b => b)
+                    .ToList();
+            }
+            else
+            {
+                ViewBag.Blocks = new List<string>();
+            }
 
             return View(filteredData);
 
@@ -1070,12 +1093,13 @@ namespace BMSBT.Controllers
 
 
 
-        public IActionResult SearchBill(string? month, string? year, string? BtNo, string? project)
+        public IActionResult SearchBill(string? month, string? year, string? BtNo, string? project, string? block)
         {
             ViewBag.SelectedMonth = month;
             ViewBag.SelectedYear = year;
             ViewBag.SelectedBtNo = BtNo;
             ViewBag.SelectedProject = project;
+            ViewBag.SelectedBlock = block;
 
             var projects = _dbContext.CustomersMaintenance
                 .Where(p => !string.IsNullOrWhiteSpace(p.Project))
@@ -1084,6 +1108,21 @@ namespace BMSBT.Controllers
                 .OrderBy(p => p)
                 .ToList();
             ViewBag.Projects = projects;
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                var trimProj = project.Trim();
+                ViewBag.Blocks = _dbContext.CustomersMaintenance
+                    .Where(c => c.Project != null && c.Project.Trim() == trimProj && !string.IsNullOrWhiteSpace(c.Block))
+                    .Select(c => c.Block!.Trim())
+                    .Distinct()
+                    .OrderBy(b => b)
+                    .ToList();
+            }
+            else
+            {
+                ViewBag.Blocks = new List<string>();
+            }
 
             // If nothing is provided
             if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year) && string.IsNullOrWhiteSpace(project))
@@ -1121,6 +1160,8 @@ namespace BMSBT.Controllers
                             PloNo = customer != null ? customer.PloNo : "",
                             BillStatusMaint = customer != null ? customer.BillStatusMaint : "",
                             BillStatus = customer != null ? customer.BillStatus : "",
+                            GenStatus = MaintenanceBillDuplicateChecker.TryGetGenStatusFromBillHistory(bill.History)
+                                ?? (customer != null ? customer.BillGenerationStatus : ""),
                             InvoiceNo = bill.InvoiceNo,
                             BillingMonth = bill.BillingMonth,
                             BillingYear = bill.BillingYear,
@@ -1163,7 +1204,15 @@ namespace BMSBT.Controllers
                 query = query.Where(b => b.Project.Trim() == trimProj);
             }
 
-            var billsList = query.ToList();
+            if (!string.IsNullOrWhiteSpace(block))
+            {
+                var trimBlock = block.Trim();
+                query = query.Where(b => b.Block != null && b.Block.Trim() == trimBlock);
+            }
+
+            var billsList = query.ToList()
+                .OrderBy(b => b.Btno ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
             ViewBag.SearchResultCount = billsList.Count;
 
@@ -1172,7 +1221,9 @@ namespace BMSBT.Controllers
                 ViewBag.ErrorMessage = "No bills found for the provided criteria.";
             }
 
-            var pagedBills = billsList.ToPagedList(1, 5000);
+            // Pass full result set so block/category counts match SearchResultCount (was capped at 5000).
+            var pageSize = billsList.Count == 0 ? 1 : billsList.Count;
+            var pagedBills = billsList.ToPagedList(1, pageSize);
             return View("SearchBill", pagedBills);
         }
 
