@@ -1009,34 +1009,7 @@ namespace BMSBT.Controllers
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
                 // Working URLs
-                var url = $"http://172.20.228.2:81/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-                //var url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-
-
-
-
-
-                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
-
-                //var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-                //var url = $"http://172.20.228.2/api/EBill01/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-
-                //var url = $"http://172.20.228.2/api/EBill/PrintEBills";
-
-                //var url = $"http://172.20.228.2/api/EBill01/GetEBill" +
-                //$"?block={Uri.EscapeDataString(request.block)}" +
-                //$"&Category={Uri.EscapeDataString(request.category)}" +
-                //$"&month={Uri.EscapeDataString(request.month)}" +
-                //$"&year={Uri.EscapeDataString(request.year)}" +
-                //$"&Project={Uri.EscapeDataString(request.project)}";
-
-
-
-
-
-                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Commercial&month=October&year=2025&Project=Mohlanwal";
-
-                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Residential&month=October&year=2025&Project=Mohlanwal";
+                var url = $"http://172.20.228.2:88/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.
@@ -1101,34 +1074,11 @@ namespace BMSBT.Controllers
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
                 // Working URLs
-                var url = $"http://172.20.228.2:81/api/ElectricityBillsNetMeter/GetNetMeterBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-                //var url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.228.2:81/api/ElectricityBillsNetMeter/GetNetMeterBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
+                // RDLC URLs
+                var url = $"http://172.20.228.2:88/api/NetMeterBill/GetNMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
-
-
-
-                // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
-
-                //var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-                //var url = $"http://172.20.228.2/api/EBill01/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-
-                //var url = $"http://172.20.228.2/api/EBill/PrintEBills";
-
-                //var url = $"http://172.20.228.2/api/EBill01/GetEBill" +
-                //$"?block={Uri.EscapeDataString(request.block)}" +
-                //$"&Category={Uri.EscapeDataString(request.category)}" +
-                //$"&month={Uri.EscapeDataString(request.month)}" +
-                //$"&year={Uri.EscapeDataString(request.year)}" +
-                //$"&Project={Uri.EscapeDataString(request.project)}";
-
-
-
-
-
-                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Commercial&month=October&year=2025&Project=Mohlanwal";
-
-                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Residential&month=October&year=2025&Project=Mohlanwal";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.

@@ -53,8 +53,13 @@
     }
 
     @@keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 
     /* Shell — aligned with CustomersMaintenance/Details.cshtml */
@@ -82,18 +87,18 @@
         margin-bottom: 0.75rem;
     }
 
-    .cm-detail-card .card-header {
-        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-        border-bottom: 1px solid var(--cm-border);
-        padding: 0.5rem 1rem;
-    }
+        .cm-detail-card .card-header {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid var(--cm-border);
+            padding: 0.5rem 1rem;
+        }
 
-    .cm-detail-card .card-header .cm-header-name {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--cm-heading);
-        margin: 0;
-    }
+            .cm-detail-card .card-header .cm-header-name {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--cm-heading);
+                margin: 0;
+            }
 
     .cm-badge-soft {
         display: inline-block;
@@ -133,17 +138,17 @@
         border-collapse: collapse;
     }
 
-    .cm-detail-table.cm-search-bill-table > thead > tr > th {
-        background: #f1f5f9;
-        color: #475569;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        padding: 0.65rem 0.5rem;
-        border-bottom: 1px solid var(--cm-border);
-        vertical-align: middle;
-    }
+        .cm-detail-table.cm-search-bill-table > thead > tr > th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.65rem 0.5rem;
+            border-bottom: 1px solid var(--cm-border);
+            vertical-align: middle;
+        }
 
     .cm-search-summary {
         padding: 0.65rem 1.25rem;
@@ -175,10 +180,10 @@
         padding-left: 0;
     }
 
-    .project-blocks > .nested-table {
-        margin-left: 30px;
-        padding-left: 0;
-    }
+        .project-blocks > .nested-table {
+            margin-left: 30px;
+            padding-left: 0;
+        }
 
     .block-header {
         background-color: #f8fafc !important;
@@ -191,9 +196,9 @@
         margin-left: 0;
     }
 
-    .block-content > .nested-table {
-        margin-left: 0;
-    }
+        .block-content > .nested-table {
+            margin-left: 0;
+        }
 
     .category-header {
         background-color: #f1f5f9 !important;
@@ -206,17 +211,17 @@
         margin-left: 0;
     }
 
-    .category-content > .nested-table {
-        margin-left: 0;
-    }
+        .category-content > .nested-table {
+            margin-left: 0;
+        }
 
     .customer-row {
         padding-left: 0;
     }
 
-    .customer-row:hover {
-        background-color: var(--cm-row-hover) !important;
-    }
+        .customer-row:hover {
+            background-color: var(--cm-row-hover) !important;
+        }
 
     .cm-results-card .cm-detail-table thead th {
         background: #f1f5f9;
@@ -226,13 +231,23 @@
     }
 
     @@media (max-width: 768px) {
-        .block-content { padding-left: 20px; }
-        .category-content { padding-left: 20px; }
+        .block-content {
+            padding-left: 20px;
+        }
+
+        .category-content {
+            padding-left: 20px;
+        }
     }
 
     @@media (max-width: 576px) {
-        .block-content { padding-left: 15px; }
-        .category-content { padding-left: 15px; }
+        .block-content {
+            padding-left: 15px;
+        }
+
+        .category-content {
+            padding-left: 15px;
+        }
     }
 </style>
 
@@ -562,69 +577,85 @@
             }
 
             $('#PrintRecordsButton').on('click', function () {
-            var selected = $('.record-checkbox:checked');
-            if (selected.length === 0) {
-                alert("Please select at least one record to print.");
-                return;
-            }
-
-            var months = [];
-            var years = [];
-            var btnos = [];
-
-            selected.each(function () {
-                var btno = $(this).data('btno');
-                var month = $(this).data('month');
-                var year = $(this).data('year');
-
-                if (!months.includes(month)) months.push(month);
-                if (!years.includes(year)) years.push(year);
-                btnos.push(btno);
-            });
-
-            console.log("Months List:", months);
-            console.log("Years List:", years);
-            console.log("BTNos List:", btnos);
-
-            var params = [];
-
-            selected.each(function() {
-                var month = $(this).data('month');
-                params.push(`BillingMonths=${encodeURIComponent(month)}`);
-            });
-
-            selected.each(function() {
-                var year = $(this).data('year');
-                params.push(`BillingYears=${encodeURIComponent(year)}`);
-            });
-
-            selected.each(function() {
-                var btno = $(this).data('btno');
-                params.push(`BTNo=${encodeURIComponent(btno)}`);
-            });
-
-            var apiUrl = "http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill?" +
-                         params.join('&');
-
-            console.log("API URL (List format):", apiUrl);
-
-            $('#loadingOverlay').show();
-            $.ajax({
-                url: apiUrl,
-                method: 'GET',
-                xhrFields: { responseType: 'blob' },
-                success: function (data) {
-                    $('#loadingOverlay').hide();
-                    var blob = new Blob([data], { type: 'application/pdf' });
-                    var blobUrl = URL.createObjectURL(blob);
-                    window.open(blobUrl, '_blank');
-                },
-                error: function (xhr) {
-                    $('#loadingOverlay').hide();
-                    alert('Error: ' + (xhr.responseText || 'Server error'));
+                var selected = $('.record-checkbox:checked');
+                if (selected.length === 0) {
+                    alert("Please select at least one record to print.");
+                    return;
                 }
-            });
 
+                $('#loadingOverlay').show();
+
+                // NEW API — GetSingleMBill (one request per selected bill)
+                
+                var pending = selected.length;
+                var errors = [];
+
+                selected.each(function () {
+                    var btno = $(this).data('btno');
+                    var month = $(this).data('month');
+                    var year = $(this).data('year');
+
+                    var apiUrl = "http://172.20.228.2:88/api/MaintenanceBill/GetSingleMBill?" +
+                        "BTNo=" + encodeURIComponent(btno) +
+                        "&BillingMonth=" + encodeURIComponent(month) +
+                        "&BillingYear=" + encodeURIComponent(year);
+
+                    console.log("API URL:", apiUrl);
+
+                    $.ajax({
+                        url: apiUrl,
+                        method: 'GET',
+                        xhrFields: { responseType: 'blob' },
+                        success: function (data) {
+                            var blob = new Blob([data], { type: 'application/pdf' });
+                            window.open(URL.createObjectURL(blob), '_blank');
+                        },
+                        error: function (xhr) {
+                            errors.push(btno + ': ' + (xhr.responseText || 'Server error'));
+                        },
+                        complete: function () {
+                            pending--;
+                            if (pending === 0) {
+                                $('#loadingOverlay').hide();
+                                if (errors.length > 0) {
+                                    alert('Error:\n' + errors.join('\n'));
+                                }
+                            }
+                        }
+                    });
+                });
+                
+
+                // OLD API — SSQCursorMaintenance/GetMBill (single request, combined PDF)
+                // Uncomment this block and comment out the NEW API block above to switch back.
+                /*
+                var params = [];
+                selected.each(function () {
+                    params.push('BillingMonths=' + encodeURIComponent($(this).data('month')));
+                });
+                selected.each(function () {
+                    params.push('BillingYears=' + encodeURIComponent($(this).data('year')));
+                });
+                selected.each(function () {
+                    params.push('BTNo=' + encodeURIComponent($(this).data('btno')));
+                });
+                var apiUrl = "http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill?" + params.join('&');
+                console.log("API URL (List format):", apiUrl);
+                $.ajax({
+                    url: apiUrl,
+                    method: 'GET',
+                    xhrFields: { responseType: 'blob' },
+                    success: function (data) {
+                        $('#loadingOverlay').hide();
+                        var blob = new Blob([data], { type: 'application/pdf' });
+                        window.open(URL.createObjectURL(blob), '_blank');
+                    },
+                    error: function (xhr) {
+                        $('#loadingOverlay').hide();
+                        alert('Error: ' + (xhr.responseText || 'Server error'));
+                    }
+                });
+               */ 
             });
 
         });
