@@ -1009,7 +1009,11 @@ namespace BMSBT.Controllers
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
                 // Working URLs
-                var url = $"http://172.20.228.2:88/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                var url = $"http://172.20.228.2:81/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+
+
+                // RDLC URLs
+                //var url = $"http://172.20.228.2:88/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.
@@ -1074,10 +1078,10 @@ namespace BMSBT.Controllers
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
                 // Working URLs
-                //var url = $"http://172.20.228.2:81/api/ElectricityBillsNetMeter/GetNetMeterBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                var url = $"http://172.20.228.2:81/api/ElectricityBillsNetMeter/GetNetMeterBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
                 // RDLC URLs
-                var url = $"http://172.20.228.2:88/api/NetMeterBill/GetNMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                //var url = $"http://172.20.228.2:88/api/NetMeterBill/GetNMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
 
 

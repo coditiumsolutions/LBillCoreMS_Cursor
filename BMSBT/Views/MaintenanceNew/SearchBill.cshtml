@@ -535,7 +535,7 @@
                 $('#loadingOverlay').show();
 
                 // NEW API — GetSingleMBill (one request per selected bill)
-                
+                /*
                 var pending = selected.length;
                 var errors = [];
 
@@ -573,11 +573,11 @@
                         }
                     });
                 });
-                
+                */
 
                 // OLD API — SSQCursorMaintenance/GetMBill (single request, combined PDF)
                 // Uncomment this block and comment out the NEW API block above to switch back.
-                /*
+                // /*
                 var params = [];
                 selected.each(function () {
                     params.push('BillingMonths=' + encodeURIComponent($(this).data('month')));
@@ -604,7 +604,7 @@
                         alert('Error: ' + (xhr.responseText || 'Server error'));
                     }
                 });
-               */ 
+               // */
             });
 
         });

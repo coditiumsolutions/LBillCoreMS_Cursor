@@ -975,11 +975,11 @@ namespace BMSBT.Controllers
                 var client = _httpClientFactory.CreateClient();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
-                 var url = $"http://172.20.228.2:88/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+                // Working API
+                var url = $"http://172.20.228.2:81/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
-                ////SSQ API Working
-                //var url = $"https://localhost:7077/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
-
+                // RDLC API
+                //var url = $"http://172.20.228.2:88/api/MaintenanceBill/GetMBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
 
 
           
@@ -1041,18 +1041,18 @@ namespace BMSBT.Controllers
                       .Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
 
                 // OLD API — uncomment to use SSQCursorMaintenance instead of GetSingleMBill
-                //var url =
-                //    $"http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill" +
-                //    $"?BillingMonth={Uri.EscapeDataString(request.month)}" +
-                //    $"&BillingYear={Uri.EscapeDataString(request.year)}" +
-                //    $"&BTNo={Uri.EscapeDataString(request.btNo)}";
+                var url =
+                    $"http://172.20.228.2:81/api/SSQCursorMaintenance/GetMBill" +
+                    $"?BillingMonth={Uri.EscapeDataString(request.month)}" +
+                    $"&BillingYear={Uri.EscapeDataString(request.year)}" +
+                    $"&BTNo={Uri.EscapeDataString(request.btNo)}";
 
                 // NEW API — GetSingleMBill
-                var url =
-                    $"http://172.20.228.2:88/api/MaintenanceBill/GetSingleMBill" +
-                    $"?BTNo={Uri.EscapeDataString(request.btNo)}" +
-                    $"&BillingMonth={Uri.EscapeDataString(request.month)}" +
-                    $"&BillingYear={Uri.EscapeDataString(request.year)}";
+                //var url =
+                //    $"http://172.20.228.2:88/api/MaintenanceBill/GetSingleMBill" +
+                //    $"?BTNo={Uri.EscapeDataString(request.btNo)}" +
+                //    $"&BillingMonth={Uri.EscapeDataString(request.month)}" +
+                //    $"&BillingYear={Uri.EscapeDataString(request.year)}";
 
 
 
