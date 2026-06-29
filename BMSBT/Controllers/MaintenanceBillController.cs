@@ -1220,6 +1220,7 @@ namespace BMSBT.Controllers
             public string block { get; set; }
             public string month { get; set; }
             public string year { get; set; }
+            public string tariffType { get; set; }
         }
     }
 }

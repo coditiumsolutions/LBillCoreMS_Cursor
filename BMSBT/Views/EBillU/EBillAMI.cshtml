@@ -1,4 +1,4 @@
-﻿@using BMSBT.DTO
+@using BMSBT.DTO
 @using System.Globalization
 @using X.PagedList
 @using X.PagedList.Mvc.Core
@@ -97,20 +97,16 @@
 {
     <div class="alert alert-success">@ViewBag.SuccessMessage</div>
 }
-<h3>E-Bill Net Meter</h3>
-<form id="filterForm" method="post" asp-action="EBill" asp-controller="EBillU">
+<h3>Electricity Bill AMI</h3>
+<form id="filterForm" method="post" asp-action="EBillAMI" asp-controller="EBillU">
     <div class="row g-3">
         <div class="col-md-3">
-            <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
-                <option value="">Select Project</option>
-                @foreach (var project in (List<string>)ViewBag.Projects)
-                {
-                    <option>@project</option>
-                }
+            <select id="TariffType" name="TariffType" class="form-control">
+                <option value="">Select Tariff Type</option>
+                <option value="Multi Meter">Multi Meter</option>
+                <option value="Net Meter">Net Meter</option>
             </select>
         </div>
-
-
         <div class="col-md-3">
             <select id="month" name="month" class="form-control" required>
                 <option value="">-- Month --</option>
@@ -120,17 +116,23 @@
                 }
             </select>
         </div>
-
-
-
-    </div>
-    <div class="row" style="margin-top:20px">
         <div class="col-md-3">
             <select id="year" name="year" class="form-control" required>
                 <option value="">-- Year --</option>
                 @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
                 {
                     <option>@y</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row" style="margin-top:20px">
+        <div class="col-md-3">
+            <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
+                <option value="">Select Project</option>
+                @foreach (var project in (List<string>)ViewBag.Projects)
+                {
+                    <option>@project</option>
                 }
             </select>
         </div>
@@ -142,71 +144,56 @@
                 <option value="">Select Category</option>
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
-                <option value="Bahria Self Consumption">Bahria Self Consumption</option>>
+                <option value="Bahria Self Consumption">Bahria Self Consumption</option>
             </select>
         </div>
-
-
-
-
-
-        <div class="col-md-2 d-flex align-items-end gap-2">
+        <div class="col-md-3 d-flex align-items-end gap-2">
             <button id="PrintButton" type="button" class="btn btn-primary flex-fill">Print</button>
-            @* <button id="PayRecordsButton" type="button" class="btn btn-success flex-fill">Pay</button> *@
         </div>
     </div>
-
-
 </form>
 
 @section Scripts {
     <script>
-            $(function(){
-              function toggleSection(selector, headerSel, contentSel) {
-                headerSel.click(function(){
-                  var id = $(this).data('id');
-                  $(this).find('.toggle-icon').toggleClass('rotate-icon');
-                  contentSel.filter(`[data-parent='${id}']`).toggle();
-                });
-              }
-              toggleSection('project', $('.project-header'), $('.project-content'));
-              toggleSection('block', $('.block-header'), $('.block-content'));
-              toggleSection('category', $('.category-header'), $('.category-content'));
+        $(function(){
+          function toggleSection(selector, headerSel, contentSel) {
+            headerSel.click(function(){
+              var id = $(this).data('id');
+              $(this).find('.toggle-icon').toggleClass('rotate-icon');
+              contentSel.filter(`[data-parent='${id}']`).toggle();
+            });
+          }
+          toggleSection('project', $('.project-header'), $('.project-content'));
+          toggleSection('block', $('.block-header'), $('.block-content'));
+          toggleSection('category', $('.category-header'), $('.category-content'));
 
-              $('#selectAll').change(function(){ $('.record-checkbox:visible').prop('checked',this.checked); });
+          $('#selectAll').change(function(){ $('.record-checkbox:visible').prop('checked',this.checked); });
 
-              $('#searchInput').on('input', function(){
-                var text = this.value.toLowerCase();
-                $('.project-header, .project-content, .block-header, .block-content, .category-header, .category-content').hide();
-                $('.record-checkbox').closest('tr').filter(function(){ return $(this).text().toLowerCase().includes(text); }).each(function(){
-                  $(this).show();
-                  $(this).parents('tr,div').filter('[data-id]').show();
-                });
-              });
+          $('#searchInput').on('input', function(){
+            var text = this.value.toLowerCase();
+            $('.project-header, .project-content, .block-header, .block-content, .category-header, .category-content').hide();
+            $('.record-checkbox').closest('tr').filter(function(){ return $(this).text().toLowerCase().includes(text); }).each(function(){
+              $(this).show();
+              $(this).parents('tr,div').filter('[data-id]').show();
+            });
+          });
 
-              function ajaxAction(url, payload, onSuccess) {
-                $('#loadingOverlay').show();
-                $.ajax({ url, method:'POST', contentType:'application/json', data: JSON.stringify(payload) })
-                  .done(onSuccess)
-                  .fail(err => alert('Error: '+err.statusText))
-                  .always(()=>$('#loadingOverlay').hide());
-              }
-
-                $('#PrintButton').click(function(){
+          $('#PrintButton').click(function(){
             var uids = $('.record-checkbox:checked').map((i, el) => el.value).get();
             var data = {
                 uids: uids.join(','),
-                        Category: $('#Category').val(),
+                Category: $('#Category').val(),
                 block: $('#BlockDropdown').val(),
                 month: $('#month').val(),
                 year: $('#year').val(),
-                          Project: $('#Project').val()
+                Project: $('#Project').val(),
+                tariffType: $('#TariffType').val()
             };
 
-            $('#loadingOverlay').show(); // Show loading
+            $('#loadingOverlay').show();
 
             $.ajax({
-                url: '/PrintEMultiBillsNM',
+                url: '/PrintEMultiBillsAMI',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
@@ -217,25 +204,18 @@
             }).fail(err => {
                 alert('Print failed');
             }).always(() => {
-                $('#loadingOverlay').hide(); // Hide loading
+                $('#loadingOverlay').hide();
             });
+          });
         });
-        ;
 
-              $('#PayRecordsButton').click(function(){
-                var uids = $('.record-checkbox:checked').map((i,el)=>el.value).get();
-                // if(!uids.length){ return alert('Select bills to pay'); }
-                ajaxAction('/EBillU/PayEMultiBill', uids, res=>{ alert(res.message || 'Paid'); location.reload(); });
-              });
-            });
-
-            function loadSectorsAndBlocks(){
-              var project = $('#Project').val();
-              if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
-              $.getJSON('/GetSectorsAndBlocks',{project},data=>{
-                var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));
-                var blk=$('#BlockDropdown').empty().append('<option>Select Block</option>'); data.blocks.forEach(b=>blk.append(`<option>${b}</option>`));
-              });
-            }
+        function loadSectorsAndBlocks(){
+          var project = $('#Project').val();
+          if(!project){ $('#SectorDropdown,#BlockDropdown').empty().append('<option>Select</option>'); return; }
+          $.getJSON('/GetSectorsAndBlocks',{project},data=>{
+            var sec=$('#SectorDropdown').empty().append('<option>Select Sector</option>'); data.sectors.forEach(s=>sec.append(`<option>${s}</option>`));
+            var blk=$('#BlockDropdown').empty().append('<option>Select Block</option>'); data.blocks.forEach(b=>blk.append(`<option>${b}</option>`));
+          });
+        }
     </script>
 }

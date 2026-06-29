@@ -505,6 +505,19 @@ namespace BMSBT.Controllers
 
 
         [HttpGet]
+        public IActionResult EBillAMI()
+        {
+            var projects = _dbContext.Configurations
+                           .Where(c => c.ConfigKey == "Project")
+                           .Select(c => c.ConfigValue)
+                           .ToList();
+
+            ViewBag.Projects = projects;
+            return View();
+        }
+
+
+        [HttpGet]
         public IActionResult EBillNetMeter()
         {
             var projects = _dbContext.Configurations
@@ -1050,6 +1063,63 @@ namespace BMSBT.Controllers
 
 
 
+
+
+
+
+        [Route("PrintEMultiBillsAMI")]
+        [HttpPost]
+        public async Task<IActionResult> PrintEMultiBillsAMI([FromBody] PrintBillRequest request)
+        {
+            try
+            {
+                if (
+                    string.IsNullOrEmpty(request.category) ||
+                    string.IsNullOrEmpty(request.block) ||
+                    string.IsNullOrEmpty(request.month) ||
+                    string.IsNullOrEmpty(request.year) ||
+                    string.IsNullOrEmpty(request.tariffType))
+                {
+                    return BadRequest("All fields must be provided.");
+                }
+
+                Console.WriteLine($"Generating AMI bills for Project: {request.project}, Block: {request.block}, Category: {request.category}, Month: {request.month}, Year: {request.year}, TariffType: {request.tariffType}");
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                // AMI bill API — parameters dynamically built from dropdown selections
+                var url = $"http://172.20.228.2:81/api/ElectricityBillsAMI/GetAMIBill" +
+                          $"?block={Uri.EscapeDataString(request.block)}" +
+                          $"&Category={Uri.EscapeDataString(request.category)}" +
+                          $"&month={Uri.EscapeDataString(request.month)}" +
+                          $"&year={Uri.EscapeDataString(request.year)}" +
+                          $"&Project={Uri.EscapeDataString(request.project ?? "")}" +
+                          $"&TariffType={Uri.EscapeDataString(request.tariffType)}";
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var pdfData = await response.Content.ReadAsByteArrayAsync();
+
+                    if (pdfData == null || pdfData.Length == 0)
+                    {
+                        return BadRequest("Received empty PDF data");
+                    }
+
+                    Response.Headers.Add("Content-Disposition", "attachment; filename=ElectricityBillAMI.pdf");
+                    return File(pdfData, "application/pdf");
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
 
 
