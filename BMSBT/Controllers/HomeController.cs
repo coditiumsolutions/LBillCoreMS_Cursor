@@ -1,4 +1,5 @@
 using BMSBT.Models;
+using BMSBT.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -29,8 +30,15 @@ namespace BMSBT.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
+            var roles = RoleHelper.GetRolesFromClaims(User);
+            if (RoleHelper.IsAuditOnlyUser(roles))
+            {
+                return RedirectToAction("Index", "Audit");
+            }
+
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
             ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            ViewBag.CanAccessAudit = RoleHelper.CanAccessAuditModule(roles);
             return View();
         }
 

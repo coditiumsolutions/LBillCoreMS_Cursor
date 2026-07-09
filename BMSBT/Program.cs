@@ -7,6 +7,7 @@ using BMSBT.EBillService;
 using BMSBT.Services;
 
 using BMSBT.Helper;
+using BMSBT.Roles;
 
 
 
@@ -15,7 +16,10 @@ builder.Services.AddHttpClient();
 // Add services to the container - keep only one instance of each
 builder.Services.AddHttpContextAccessor(); // Only one instance needed
 builder.Services.AddMemoryCache();
-builder.Services.AddControllersWithViews(); // Only one instance needed
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<RestrictAuditOnlyUsersFilter>();
+});
 
 
 builder.Services.AddSession(options =>

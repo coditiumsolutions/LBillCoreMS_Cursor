@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using BMSBT.BillServices;
 using BMSBT.Services;
+using BMSBT.Roles;
 using Microsoft.AspNetCore.Identity;
 using System.Text.Json; // Required at the top
 
@@ -131,14 +132,22 @@ namespace BMSBT.Controllers
                     },
                     "Authentication");
 
-
-
-
-                return RedirectToAction("Index", "Home");
+                return RedirectAfterLogin(user);
             }
 
             ViewBag.Error = "Invalid username or password.";
             return View();
+        }
+
+        private IActionResult RedirectAfterLogin(User user)
+        {
+            var roles = RoleHelper.ParseRoles(user.Role);
+            if (RoleHelper.IsAuditOnlyUser(roles))
+            {
+                return RedirectToAction("Index", "Audit");
+            }
+
+            return RedirectToAction("Index", "Home");
         }
 
 
@@ -150,18 +159,11 @@ namespace BMSBT.Controllers
         }
 
 
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
-            //await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            //// Clear all cookies explicitly
-            //foreach (var cookie in Request.Cookies.Keys)
-            //{
-            //    Response.Cookies.Delete(cookie);
-            //}
-
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             HttpContext.Session.Clear();
             return RedirectToAction("Index");
-
         }
 
 
@@ -235,7 +237,7 @@ namespace BMSBT.Controllers
                     },
                     "Authentication");
 
-                return RedirectToAction("Index", "Home");
+                return RedirectAfterLogin(user);
             }
 
             ViewBag.Error = "Invalid username or password";

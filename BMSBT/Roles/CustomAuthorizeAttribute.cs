@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using System.Linq;
-using System.Security.Claims;
 
 namespace BMSBT.Roles
 {
@@ -12,23 +10,22 @@ namespace BMSBT.Roles
 
         public CustomAuthorizeAttribute(string roles)
         {
-            _roles = roles.Split(','); // Convert "Admin,Manager" to an array
+            _roles = roles
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             var user = context.HttpContext.User;
-            if (!user.Identity.IsAuthenticated)
+            if (user?.Identity?.IsAuthenticated != true)
             {
-                context.Result = new RedirectToRouteResult(new { controller = "Account", action = "Login" });
+                context.Result = new RedirectToRouteResult(new { controller = "Login", action = "Index" });
                 return;
             }
 
-            // Get user roles from claims
-            var userRoles = user.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).FirstOrDefault();
+            var userRoles = RoleHelper.GetRolesFromClaims(user);
 
-            // Check if any of the user's roles match the required roles
-            if (userRoles == null || !_roles.Any(role => userRoles.Split(',').Contains(role.Trim())))
+            if (!RoleHelper.HasAnyRole(userRoles, _roles))
             {
                 context.Result = new RedirectToRouteResult(new { controller = "Login", action = "AccessDenied" });
             }

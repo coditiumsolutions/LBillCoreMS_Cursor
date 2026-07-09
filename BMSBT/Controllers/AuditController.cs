@@ -9,6 +9,7 @@ using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
 {
+    [CustomAuthorize("Admin,Audit,COO")]
     public class AuditController : Controller
     {
         private readonly BmsbtContext _context;
