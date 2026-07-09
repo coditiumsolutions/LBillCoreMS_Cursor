@@ -254,9 +254,18 @@ public partial class BmsbtContext : DbContext
             entity.Property(e => e.CustomerNo)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.Property(e => e.EnergyCoast)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+
+            // DB columns are int; model uses decimal? — converters avoid InvalidCastException on read.
+            var intToNullableDecimal = new ValueConverter<decimal?, int?>(
+                v => v.HasValue ? Convert.ToInt32(v.Value) : null,
+                v => v.HasValue ? (decimal?)v.Value : null);
+
+            entity.Property(e => e.EnergyCoast).HasConversion(intToNullableDecimal);
+            entity.Property(e => e.BillAmountInDueDate).HasConversion(intToNullableDecimal);
+            entity.Property(e => e.BillSurcharge).HasConversion(intToNullableDecimal);
+            entity.Property(e => e.BillAmountAfterDueDate).HasConversion(intToNullableDecimal);
+            entity.Property(e => e.AmountPaid).HasConversion(intToNullableDecimal);
+
             entity.Property(e => e.Furthertax).HasColumnName("FURTHERTAX");
             entity.Property(e => e.Gst).HasColumnName("GST");
             entity.Property(e => e.InvoiceNo)

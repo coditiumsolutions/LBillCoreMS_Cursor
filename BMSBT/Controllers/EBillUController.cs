@@ -1496,7 +1496,6 @@ namespace BMSBT.Controllers
         }
 
 
-
         //[HttpPost]
         //public async Task<IActionResult> GeneratedBillsReport(BillReportViewModel model)
         //{

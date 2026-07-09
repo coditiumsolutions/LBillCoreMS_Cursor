@@ -26,6 +26,29 @@
     <style>
         .sidebar {
             position: absolute; /* Allow normal scrolling behavior */
+            min-height: 100vh;
+            height: auto !important; /* Grow when collapsible menus expand */
+            background-color: #00203FFF;
+        }
+
+        .sidebar .collapse,
+        .sidebar .collapse ul,
+        .sidebar .collapse li {
+            background-color: #00203FFF;
+        }
+
+        .sidebar h4 {
+            color: #b8df10;
+        }
+
+        .sidebar .nav-link {
+            color: white;
+            background-color: transparent;
+        }
+
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: #3B559E;
         }
 
         .navbar2-top {
@@ -136,44 +159,43 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="EBillU" asp-action="EBill">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print Bills
+                    <!-- Printing with collapsible internal links -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#printingSubMenu"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="printingSubMenu">
+                            <span>
+                                <i class="fas fa-print" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Printing
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
-                    </li>
 
-                    <li>
-                        <a asp-controller="EBillU" asp-action="EBillAMI">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print Bills AMI
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="EBillU" asp-action="EBillNetMeter">
-                            <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                            Print Bills NetM
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="ReadingSheet" asp-action="ReadingDetails">
-                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
-                            Reading
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Tariff" asp-action="Index">
-                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
-                            Tariff
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Tax" asp-action="Index">
-                            <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
-                            Taxes
-                        </a>
+                        <div class="collapse" id="printingSubMenu">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="EBill">
+                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Print Bills
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="EBillAMI">
+                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Print Bills AMI
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="EBillNetMeter">
+                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Print Bills Net
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
                     <!-- Reports with collapsible internal links -->
@@ -297,6 +319,24 @@
                         <div class="collapse" id="twisteeSubMenuSettingsEBill">
                             <ul class="nav flex-column ml-3">
                                 <li>
+                                    <a asp-controller="ReadingSheet" asp-action="ReadingDetails">
+                                        <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Reading
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Tariff" asp-action="Index">
+                                        <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Tariff
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Tax" asp-action="Index">
+                                        <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Taxes
+                                    </a>
+                                </li>
+                                <li>
                                     <a asp-controller="Reading" asp-action="Index">
                                         <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
                                         Reading Sheet
@@ -387,6 +427,14 @@
         });
 
         $(document).on('hide.bs.collapse', '#reportsSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
+
+        $(document).on('show.bs.collapse', '#printingSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+
+        $(document).on('hide.bs.collapse', '#printingSubMenu', function () {
             $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
         });
 

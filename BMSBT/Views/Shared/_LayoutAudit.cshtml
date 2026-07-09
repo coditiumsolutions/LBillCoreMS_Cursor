@@ -23,47 +23,97 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <style>
-        .sidebar {
-            position: absolute; /* Allow normal scrolling behavior */
+        .audit-shell .sidebar {
+            position: absolute;
+            min-height: 100vh;
+            height: auto !important;
+            background-color: #00203FFF;
         }
 
         .navbar2-top {
-            background-color: #f8f9fa; /* Light background color */
-            padding: 0px 0;
+            background-color: #f8f9fa;
+            padding: 0;
         }
 
-            .navbar2-top .container {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
+        .navbar2-top .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-            .navbar2-top .left-section {
-                font-weight: bold;
-            }
+        .navbar2-top .left-section {
+            font-weight: bold;
+        }
 
-            .navbar2-top .right-section {
-                text-align: right;
-                flex-grow: 1;
-            }
+        .navbar2-top .right-section {
+            text-align: right;
+            flex-grow: 1;
+        }
 
-            .navbar2-top .left-section a {
-                color: #0056b3;
-            }
+        .navbar2-top .left-section a {
+            color: #0056b3;
+        }
 
         a {
             text-decoration: none !important;
         }
 
         .user-info {
-            color: #0056b3; /* Dark gray */
-            font-size: 16px; /* Reduce font size */
+            color: #0056b3;
+            font-size: 16px;
             font-weight: normal;
+        }
+
+        .audit-nav .collapse,
+        .audit-nav .collapse ul,
+        .audit-nav .collapse li {
+            background-color: #00203FFF;
+        }
+
+        .audit-nav h4 {
+            color: #b8df10;
+        }
+
+        .audit-nav ul.nav.flex-column > li > a {
+            display: block;
+            padding: 0.45rem 0.25rem;
+            border-radius: 6px;
+            color: inherit;
+        }
+
+        .audit-nav ul.nav.flex-column > li > a:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .audit-nav ul.nav.flex-column > li > a.active {
+            background: rgba(37, 99, 235, 0.35);
+            font-weight: 600;
+        }
+
+        .audit-nav ul.nav.flex-column ul.nav.flex-column > li > a {
+            display: block;
+            padding: 0.45rem 0.25rem;
+            border-radius: 6px;
+            color: inherit;
+        }
+
+        .audit-nav ul.nav.flex-column ul.nav.flex-column > li > a:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .audit-nav ul.nav.flex-column ul.nav.flex-column > li > a.active {
+            background: rgba(37, 99, 235, 0.35);
+            font-weight: 600;
+        }
+
+        .audit-nav .nav-link {
+            color: inherit;
+            background-color: transparent;
         }
     </style>
 
 </head>
-<body>
+<body class="audit-shell">
 
     <!-- First Top Bar -->
     <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
@@ -107,48 +157,117 @@
         <div class="row">
 
             <!-- Left Sidebar -->
-            <div class="col-md-3 col-lg-2 p-3 sidebar">
+            <div class="col-md-3 col-lg-2 p-3 sidebar audit-nav">
                 <h4>Audit</h4>
 
-
                 <ul class="nav flex-column">
-
                     <li>
                         <a asp-controller="Audit" asp-action="Index">
-                            <i class='fas fa-home' style="color: yellowgreen; font-size: 14px;"></i>
+                            <i class="fas fa-home" style="color: yellowgreen; font-size: 14px;"></i>
                             Home
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="Audit" asp-action="OperatorsLog">
-                            <i class='fas fa-history' style="color: yellowgreen; font-size: 14px;"></i>
-                            Operators Log
+                    <!-- Electricity -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#auditElectricitySubMenu"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="auditElectricitySubMenu">
+                            <span>
+                                <i class="fas fa-bolt" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Electricity
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
+
+                        <div class="collapse" id="auditElectricitySubMenu">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="Audit" asp-action="AuditSummary">
+                                        <i class='fas fa-clipboard-check' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Audit Summary
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
-                    <li>
-                        <a asp-controller="Audit" asp-action="AuditLogs">
-                            <i class='fas fa-clipboard-list' style="color: yellowgreen; font-size: 14px;"></i>
-                            Audit Logs
+                    <!-- Maintenance -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#auditMaintenanceSubMenu"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="auditMaintenanceSubMenu">
+                            <span>
+                                <i class="fas fa-cogs" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Maintenance
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
+
+                        <div class="collapse" id="auditMaintenanceSubMenu">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="Audit" asp-action="MaintenanceAuditSummary">
+                                        <i class='fas fa-clipboard-check' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Audit Summary
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Audit" asp-action="DataScience">
+                                        <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
+                                        Data Science
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
-                    <li>
-                        <a asp-controller="Audit" asp-action="DataScience">
-                            <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
-                            Data Science
+                    <!-- Others -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#auditOthersSubMenu"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="auditOthersSubMenu">
+                            <span>
+                                <i class="fas fa-ellipsis-h" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Others
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
+
+                        <div class="collapse" id="auditOthersSubMenu">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="Audit" asp-action="OperatorsLog">
+                                        <i class="fas fa-history" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Operators Log
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Audit" asp-action="AuditLogs">
+                                        <i class="fas fa-clipboard-list" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Audit Logs
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Audit" asp-action="AI">
+                                        <i class="fas fa-robot" style="color: yellowgreen; font-size: 14px;"></i>
+                                        AI
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
-                    <li>
-                        <a asp-controller="Audit" asp-action="AI">
-                            <i class='fas fa-robot' style="color: yellowgreen; font-size: 14px;"></i>
-                            AI
-                        </a>
-                    </li>
-
-                   </ul>
+                </ul>
 
             </div>
 
@@ -165,9 +284,31 @@
         <p>&copy; 2024 My Application. All rights reserved.</p>
     </footer> *@
 
-    @* <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> *@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).on('show.bs.collapse', '#auditElectricitySubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+        $(document).on('hide.bs.collapse', '#auditElectricitySubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
+
+        $(document).on('show.bs.collapse', '#auditMaintenanceSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+        $(document).on('hide.bs.collapse', '#auditMaintenanceSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
+
+        $(document).on('show.bs.collapse', '#auditOthersSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+        $(document).on('hide.bs.collapse', '#auditOthersSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
+    </script>
 </body>
 </html>
 

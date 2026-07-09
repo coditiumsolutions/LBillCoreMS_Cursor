@@ -1,0 +1,218 @@
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@model IPagedList<BMSBT.Models.ElectricityBill>
+
+@{
+    ViewData["Title"] = "Electricity Audit Summary";
+    Layout = "~/Views/Shared/_LayoutAudit.cshtml";
+
+    var selectedMonth = ViewBag.SelectedBillingMonth as string;
+    var selectedYear = ViewBag.SelectedBillingYear as string;
+    var selectedPaymentStatus = ViewBag.SelectedPaymentStatus as string ?? "All";
+    var months = ViewBag.BillingMonths as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+    var years = ViewBag.BillingYears as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+    var hasFilters = !string.IsNullOrEmpty(selectedMonth) && !string.IsNullOrEmpty(selectedYear);
+}
+
+<style>
+    .audit-summary-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .audit-summary-filters .filter-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .audit-summary-filters select {
+        min-width: 180px;
+        height: 40px;
+        font-size: 15px;
+        padding: 5px 8px;
+    }
+
+    .audit-summary-filters button,
+    .audit-summary-filters a.btn-reset {
+        height: 40px;
+        line-height: 28px;
+        padding: 5px 16px;
+        font-size: 15px;
+    }
+
+    .audit-grid {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .audit-grid th,
+    .audit-grid td {
+        border: 1px solid #ddd;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .audit-grid th {
+        background-color: #00203F;
+        color: white;
+    }
+
+    .audit-grid tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .status-paid {
+        color: #155724;
+        font-weight: 600;
+    }
+
+    .status-unpaid {
+        color: #721c24;
+        font-weight: 600;
+    }
+
+    .result-meta {
+        margin: 10px 0;
+        font-size: 15px;
+        color: #333;
+    }
+</style>
+
+<h2>Electricity Audit Summary</h2>
+
+<form method="get" asp-controller="Audit" asp-action="AuditSummary" class="audit-summary-filters">
+    <div class="filter-group">
+        <label for="billingMonth">Billing Month</label>
+        <select id="billingMonth" name="billingMonth" required>
+            <option value="">-- Select Month --</option>
+            @foreach (var month in months)
+            {
+                <option value="@month.Value" selected="@(month.Value == selectedMonth)">@month.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="billingYear">Billing Year</label>
+        <select id="billingYear" name="billingYear" required>
+            <option value="">-- Select Year --</option>
+            @foreach (var year in years)
+            {
+                <option value="@year.Value" selected="@(year.Value == selectedYear)">@year.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="paymentStatus">Payment Status</label>
+        <select id="paymentStatus" name="paymentStatus">
+            <option value="All" selected="@(selectedPaymentStatus == "All")">All</option>
+            <option value="Paid" selected="@(selectedPaymentStatus == "Paid")">Paid</option>
+            <option value="Unpaid" selected="@(selectedPaymentStatus == "Unpaid")">Unpaid</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <button type="submit" class="btn btn-primary">Show Report</button>
+        <a asp-controller="Audit" asp-action="AuditSummary" class="btn btn-secondary btn-reset">Reset</a>
+    </div>
+</form>
+
+@if (!hasFilters)
+{
+    <p class="text-muted">Select billing month and year, then click <strong>Show Report</strong>.</p>
+}
+else if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap">
+        <span>No records found for the selected filters.</span>
+        <a asp-controller="Audit" asp-action="ExportAuditSummaryToExcel"
+           asp-route-billingMonth="@selectedMonth"
+           asp-route-billingYear="@selectedYear"
+           asp-route-paymentStatus="@selectedPaymentStatus"
+           class="btn btn-success btn-sm mt-2 mt-md-0">
+            <i class="fas fa-file-excel"></i> Export to Excel
+        </a>
+    </div>
+}
+else
+{
+    <div class="result-meta d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            Showing @Model.FirstItemOnPage – @Model.LastItemOnPage of @Model.TotalItemCount record(s)
+            for <strong>@selectedMonth @selectedYear</strong>
+            @if (selectedPaymentStatus != "All")
+            {
+                <text>with payment status <strong>@selectedPaymentStatus</strong></text>
+            }
+        </div>
+        <a asp-controller="Audit" asp-action="ExportAuditSummaryToExcel"
+           asp-route-billingMonth="@selectedMonth"
+           asp-route-billingYear="@selectedYear"
+           asp-route-paymentStatus="@selectedPaymentStatus"
+           class="btn btn-success btn-sm">
+            <i class="fas fa-file-excel"></i> Export to Excel
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="audit-grid">
+            <thead>
+                <tr>
+                    <th>BT No</th>
+                    <th>Billing Month</th>
+                    <th>Billing Year</th>
+                    <th>Bill Amount</th>
+                    <th>Amount In Due Date</th>
+                    <th>Payment Status</th>
+                    <th>Payment Date</th>
+                    <th>Payment Method</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var bill in Model)
+                {
+                    var isPaid = !string.IsNullOrWhiteSpace(bill.PaymentStatus)
+                                 && bill.PaymentStatus.Equals("Paid", StringComparison.OrdinalIgnoreCase);
+                    <tr>
+                        <td>@bill.Btno</td>
+                        <td>@bill.BillingMonth</td>
+                        <td>@bill.BillingYear</td>
+                        <td>@bill.BillAmount</td>
+                        <td>@bill.BillAmountInDueDate</td>
+                        <td class="@(isPaid ? "status-paid" : "status-unpaid")">
+                            @(string.IsNullOrWhiteSpace(bill.PaymentStatus) ? "Unpaid" : bill.PaymentStatus)
+                        </td>
+                        <td>@(bill.PaymentDate?.ToString("dd-MMM-yyyy") ?? "-")</td>
+                        <td>@(string.IsNullOrWhiteSpace(bill.PaymentMethod) ? "-" : bill.PaymentMethod)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-center mt-3">
+        @Html.PagedListPager(Model, page => Url.Action("AuditSummary", "Audit", new
+        {
+            page,
+            billingMonth = selectedMonth,
+            billingYear = selectedYear,
+            paymentStatus = selectedPaymentStatus
+        }), new PagedListRenderOptions
+        {
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" },
+            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+            DisplayLinkToLastPage = PagedListDisplayMode.Always,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+            DisplayLinkToNextPage = PagedListDisplayMode.Always,
+            DisplayEllipsesWhenNotShowingAllPageNumbers = true
+        })
+    </div>
+}
