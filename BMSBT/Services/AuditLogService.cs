@@ -1,17 +1,21 @@
 using System.Text.Json;
 using BMSBT.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BMSBT.Services
 {
     public class AuditLogService : IAuditLogService
     {
-        private readonly BmsbtContext _context;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<AuditLogService> _logger;
 
-        public AuditLogService(BmsbtContext context, IHttpContextAccessor httpContextAccessor, ILogger<AuditLogService> logger)
+        public AuditLogService(
+            IServiceScopeFactory scopeFactory,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<AuditLogService> logger)
         {
-            _context = context;
+            _scopeFactory = scopeFactory;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
@@ -39,25 +43,14 @@ namespace BMSBT.Services
                     IPAddress = ipAddress
                 };
 
-                if (httpContext?.Items != null)
-                {
-                    httpContext.Items["SkipEfAudit"] = true;
-                }
-
-                _context.AuditLogs.Add(auditLog);
-                await _context.SaveChangesAsync();
+                using var scope = _scopeFactory.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<BmsbtContext>();
+                context.AuditLogs.Add(auditLog);
+                await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Audit log write failed for {TableName} {Operation} {RecordId}", tableName, operation, recordId);
-            }
-            finally
-            {
-                var httpContext = _httpContextAccessor.HttpContext;
-                if (httpContext?.Items != null)
-                {
-                    httpContext.Items.Remove("SkipEfAudit");
-                }
+                _logger.LogError(ex, "Audit log write failed for {TableName} {Operation} {RecordId}", tableName, operation, recordId);
             }
         }
 

@@ -1,7 +1,7 @@
-﻿@model BMSBT.Models.CustomersDetail
+@model BMSBT.Models.CustomersMaintenance
 
 @{
-    ViewData["Title"] = "Edit E-Customer";
+    ViewData["Title"] = "Edit M-Customer";
     Layout = "_LayoutSSQCustomers";
 }
 
@@ -11,7 +11,7 @@
             <h4 class="mb-0"><i class="fas fa-edit"></i> @ViewData["Title"]</h4>
         </div>
         <div class="card-body">
-            <form asp-action="Edit" method="post">
+            <form asp-action="MEdit" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="Uid" />
                 <div class="row">
@@ -21,8 +21,8 @@
                         <span asp-validation-for="CustomerNo" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
-                        <label asp-for="Btno"></label>
-                        <input asp-for="Btno" class="form-control" />
+                        <label asp-for="BTNo"></label>
+                        <input asp-for="BTNo" class="form-control" />
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="CustomerName"></label>
@@ -61,8 +61,8 @@
                         <input asp-for="TariffName" class="form-control" />
                     </div>
                     <div class="col-md-3 form-group">
-                        <label asp-for="Cnicno"></label>
-                        <input asp-for="Cnicno" class="form-control" />
+                        <label asp-for="CNICNo"></label>
+                        <input asp-for="CNICNo" class="form-control" />
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="City"></label>
@@ -75,7 +75,7 @@
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-warning">Save</button>
-                    <a asp-action="ECustomers" class="btn btn-secondary">Back to List</a>
+                    <a asp-action="MCustomers" class="btn btn-secondary">Back to List</a>
                 </div>
             </form>
         </div>

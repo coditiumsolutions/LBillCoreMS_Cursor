@@ -9,7 +9,7 @@ using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
 {
-    [CustomAuthorize("Admin,Audit,COO")]
+    [CustomAuthorize("Audit")]
     public class AuditController : Controller
     {
         private readonly BmsbtContext _context;
@@ -35,7 +35,7 @@ namespace BMSBT.Controllers
             return View();
         }
 
-        public async Task<IActionResult> OperatorsLog(string changedBy, int? page)
+        public async Task<IActionResult> OperatorsLog(string? changedBy, int? page)
         {
             if (HttpContext.Session.GetString("UserName") == null)
             {
@@ -43,37 +43,37 @@ namespace BMSBT.Controllers
             }
             SetUserContext();
 
-            // Populate Operators dropdown
-            var operators = await _context.OperatorsSetups
-                .Select(o => o.OperatorName)
-                .Where(n => !string.IsNullOrEmpty(n))
+            var operators = await _context.AuditLogs
+                .AsNoTracking()
+                .Where(l => l.ModuleName == "Operators Setup" && l.ChangedBy != null && l.ChangedBy != "")
+                .Select(l => l.ChangedBy!)
                 .Distinct()
                 .OrderBy(n => n)
                 .ToListAsync();
 
-            ViewBag.Operators = new SelectList(operators, changedBy);
+            ViewBag.Operators = operators;
             ViewBag.SelectedChangedBy = changedBy;
 
-            // Query AuditLogs for "Operators Setup" module
             var query = _context.AuditLogs
+                .AsNoTracking()
                 .Where(l => l.ModuleName == "Operators Setup")
                 .OrderByDescending(l => l.ChangedAt)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(changedBy))
+            if (!string.IsNullOrWhiteSpace(changedBy))
             {
                 query = query.Where(l => l.ChangedBy == changedBy);
             }
 
-            int pageSize = 20;
-            int pageNumber = page ?? 1;
+            const int pageSize = 20;
+            var pageNumber = page ?? 1;
 
             var pagedData = query.ToPagedList(pageNumber, pageSize);
 
             return View(pagedData);
         }
 
-        public IActionResult AuditLogs(string? tableName, string? operation, int? page)
+        public IActionResult AuditLogs(string? tableName, string? operation, string? changedBy, int? page)
         {
             if (HttpContext.Session.GetString("UserName") == null)
             {
@@ -97,6 +97,11 @@ namespace BMSBT.Controllers
                 query = query.Where(a => a.Operation == operation);
             }
 
+            if (!string.IsNullOrWhiteSpace(changedBy))
+            {
+                query = query.Where(a => a.ChangedBy == changedBy);
+            }
+
             ViewBag.TableNames = _context.AuditLogs
                 .AsNoTracking()
                 .Select(a => a.TableName)
@@ -114,6 +119,15 @@ namespace BMSBT.Controllers
                 .OrderBy(o => o)
                 .ToList();
             ViewBag.SelectedOperation = operation;
+
+            ViewBag.Users = _context.AuditLogs
+                .AsNoTracking()
+                .Where(a => a.ChangedBy != null && a.ChangedBy != "")
+                .Select(a => a.ChangedBy!)
+                .Distinct()
+                .OrderBy(u => u)
+                .ToList();
+            ViewBag.SelectedChangedBy = changedBy;
 
             const int pageSize = 30;
             var pageNumber = page ?? 1;

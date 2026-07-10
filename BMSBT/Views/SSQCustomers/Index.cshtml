@@ -1,214 +1,77 @@
-﻿@model IEnumerable<BMSBT.Models.CustomersDetail>
-
-@{
-    ViewData["Title"] = "Customers Management";
-    Layout = "_LayoutCustomers"; // Update with your layout
+﻿@{
+    ViewData["Title"] = "Customers";
+    Layout = "_LayoutSSQCustomers";
 }
 
-<div class="container-fluid">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">
-                <i class="fas fa-users"></i> @ViewData["Title"]
-                <a asp-action="Create" class="btn btn-light btn-sm float-right">
-                    <i class="fas fa-plus"></i> Add New Customer
+<style>
+    .customer-hub .section-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+        height: 100%;
+    }
+
+    .customer-hub .section-card:hover {
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.14);
+    }
+
+    .customer-hub .section-title {
+        color: #142141;
+        font-weight: 700;
+    }
+
+    .customer-hub .section-badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.35rem;
+        vertical-align: middle;
+    }
+
+    .customer-hub .badge-e {
+        background: #e8f1ff;
+        color: #1e40af;
+    }
+
+    .customer-hub .badge-m {
+        background: #ecfdf5;
+        color: #047857;
+    }
+</style>
+
+<div class="container-fluid customer-hub px-2">
+    <div class="mb-3">
+        <h4 class="mb-1" style="color:#142141;">Customers</h4>
+        <p class="text-muted mb-0">Choose electricity or maintenance customer records.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card section-card p-4">
+                <h5 class="section-title">
+                    E-Customers
+                    <span class="section-badge badge-e">Electricity</span>
+                </h5>
+                <p class="mt-3 mb-4">Search electricity customers by project, sector, and BT / plot number. Create, edit, view, and delete records.</p>
+                <a asp-controller="SSQCustomers" asp-action="ECustomers" class="btn btn-success">
+                    <i class="fas fa-bolt mr-1"></i> E-Customers
                 </a>
-            </h4>
+            </div>
         </div>
 
-        <div class="card-body">
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @TempData["SuccessMessage"]
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            }
-
-            <!-- Search and Filter Section -->
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <form asp-action="Index" method="get" class="form-inline">
-                        <div class="input-group w-100">
-                            <input type="text" class="form-control" name="searchString"
-                                   value="@ViewData["CurrentFilter"]"
-                                   placeholder="Search by Customer No, Name, CNIC, Mobile...">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-primary" type="submit">
-                                    <i class="fas fa-search"></i> Search
-                                </button>
-                                <a asp-action="Index" class="btn btn-outline-secondary">
-                                    <i class="fas fa-redo"></i> Reset
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Customers Grid -->
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered table-hover" id="customersTable">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>
-                                <a asp-action="Index" asp-route-sortOrder="@ViewData["BtnoSortParm"]">
-                                    BT No
-                                </a>
-                            </th>
-                            <th>
-                                <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]">
-                                    Customer Name
-                                </a>
-                            </th>                                                                  
-                            <th>Project</th>                          
-                            <th>Block</th>
-                            <th>Plot No</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@Html.DisplayFor(modelItem => item.Btno)</td>
-                                <td>@Html.DisplayFor(modelItem => item.CustomerName)</td>                               
-                                <td>@Html.DisplayFor(modelItem => item.Project)</td>
-                               <td>@Html.DisplayFor(modelItem => item.Block)</td>
-                                <td>@Html.DisplayFor(modelItem => item.PloNo)</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a asp-action="Details" asp-route-id="@item.Uid"
-                                           class="btn btn-info btn-sm" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@item.Uid"
-                                           class="btn btn-warning btn-sm" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        @* <button type="button" class="btn btn-danger btn-sm delete-btn"
-                                                data-id="@item.Uid" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button> *@
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            @if (ViewData["TotalPages"] != null && (int)ViewData["TotalPages"] > 1)
-            {
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        @{
-                            int currentPage = (int)ViewData["CurrentPage"];
-                            int totalPages = (int)ViewData["TotalPages"];
-                            string searchString = ViewData["CurrentFilter"] as string;
-                            string sortOrder = ViewData["CurrentSort"] as string;
-                        }
-
-                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                            <a class="page-link"
-                               asp-action="Index"
-                               asp-route-page="1"
-                               asp-route-searchString="@searchString"
-                               asp-route-sortOrder="@sortOrder">
-                                First
-                            </a>
-                        </li>
-
-                        @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
-                        {
-                            <li class="page-item @(i == currentPage ? "active" : "")">
-                                <a class="page-link"
-                                   asp-action="Index"
-                                   asp-route-page="@i"
-                                   asp-route-searchString="@searchString"
-                                   asp-route-sortOrder="@sortOrder">
-                                    @i
-                                </a>
-                            </li>
-                        }
-
-                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                            <a class="page-link"
-                               asp-action="Index"
-                               asp-route-page="@totalPages"
-                               asp-route-searchString="@searchString"
-                               asp-route-sortOrder="@sortOrder">
-                                Last
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            }
-        </div>
-
-        <div class="card-footer">
-            <div class="row">
-                <div class="col-md-6">
-                    <strong>Total Records:</strong>
-                    @(Model.Count() + ((int)ViewData["CurrentPage"] - 1) * (int)ViewData["PageSize"])
-                    of @((int)ViewData["TotalPages"] * (int)ViewData["PageSize"])
-                </div>
-                <div class="col-md-6 text-right">
-                    <form asp-action="Index" method="get" class="form-inline float-right">
-                        <label for="pageSize" class="mr-2">Show:</label>
-                        <select name="pageSize" id="pageSize" class="form-control form-control-sm"
-                                onchange="this.form.submit()" style="width: auto;">
-                            <option value="10" selected="@((int)ViewData["PageSize"] == 10)">10</option>
-                            <option value="25" selected="@((int)ViewData["PageSize"] == 25)">25</option>
-                            <option value="50" selected="@((int)ViewData["PageSize"] == 50)">50</option>
-                            <option value="100" selected="@((int)ViewData["PageSize"] == 100)">100</option>
-                        </select>
-                    </form>
-                </div>
+        <div class="col-md-6 mb-4">
+            <div class="card section-card p-4">
+                <h5 class="section-title">
+                    M-Customers
+                    <span class="section-badge badge-m">Maintenance</span>
+                </h5>
+                <p class="mt-3 mb-4">Search maintenance customers by project, sector, and BT / plot number. Create, edit, view, and delete records.</p>
+                <a asp-controller="SSQCustomers" asp-action="MCustomers" class="btn btn-success">
+                    <i class="fas fa-cogs mr-1"></i> M-Customers
+                </a>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            // Delete confirmation with AJAX
-            $('.delete-btn').click(function() {
-                var customerId = $(this).data('id');
-                var customerName = $(this).closest('tr').find('td:nth-child(2)').text().trim();
-
-                if (confirm('Are you sure you want to delete customer "' + customerName + '"?')) {
-                    $.ajax({
-                        url: '@Url.Action("DeleteAjax", "SSQCustomers")/' + customerId,
-                        type: 'POST',
-                        success: function(response) {
-                            if (response.success) {
-                                location.reload();
-                            } else {
-                                alert(response.message);
-                            }
-                        },
-                        error: function() {
-                            alert('An error occurred while deleting the customer.');
-                        }
-                    });
-                }
-            });
-
-            // Initialize DataTable (optional - if you want enhanced features)
-            $('#customersTable').DataTable({
-                "paging": false,
-                "searching": false,
-                "info": false,
-                "order": [],
-                "columnDefs": [
-                    { "orderable": false, "targets": 9 } // Disable sorting on Actions column
-                ]
-            });
-        });
-    </script>
-}

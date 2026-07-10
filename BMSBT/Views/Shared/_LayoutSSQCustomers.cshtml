@@ -19,7 +19,38 @@
 
     <style>
         .sidebar {
-            position: absolute; /* Allow normal scrolling behavior */
+            position: absolute;
+            min-height: 100vh;
+            height: auto !important;
+            background-color: #00203FFF;
+        }
+
+        .sidebar .collapse,
+        .sidebar .collapse ul,
+        .sidebar .collapse li {
+            background-color: #00203FFF;
+        }
+
+        .sidebar h4 {
+            color: #b8df10;
+        }
+
+        .sidebar .nav-link {
+            color: white;
+            background-color: transparent;
+        }
+
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: #3B559E;
+        }
+
+        .sidebar-section-title {
+            color: #b8df10;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+            margin-bottom: 0.35rem;
         }
 
         .navbar2-top {
@@ -116,57 +147,36 @@
                         </a>
                     </li>
 
-
-
-
                     <li>
                         <a asp-controller="SSQCustomers" asp-action="Index">
-                            <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
-                            Customers
+                            <i class="fas fa-home" style="color: yellowgreen; font-size: 14px;"></i>
+                            Home
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="SSQCustomers" asp-action="CustomersSelection">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Selection
-                        </a>
+                    <li class="nav-item mt-2">
+                        <p class="sidebar-section-title mb-1 px-1">E-Customers</p>
+                        <ul class="nav flex-column ml-2">
+                            <li>
+                                <a asp-controller="SSQCustomers" asp-action="ECustomers">
+                                    <i class="fas fa-bolt" style="color: yellowgreen; font-size: 14px;"></i>
+                                    E-Customers
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-
-                    <li>
-                        <a asp-controller="SSQCustomers" asp-action="Reports">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Reports
-                        </a>
+                    <li class="nav-item mt-2">
+                        <p class="sidebar-section-title mb-1 px-1">M-Customers</p>
+                        <ul class="nav flex-column ml-2">
+                            <li>
+                                <a asp-controller="SSQCustomers" asp-action="MCustomers">
+                                    <i class="fas fa-cogs" style="color: yellowgreen; font-size: 14px;"></i>
+                                    M-Customers
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-
-                    <li>
-                        <a asp-controller="Customers" asp-action="AllCustomersBySector">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            By Sector
-                        </a>
-                    </li>
-
-
-                    @* 
-                     <li>
-                        <h4 style="margin-top: 30px; font-size: 16px;">Quick Links</h4>
-                    </li>    
-                   <li>
-                        <a asp-controller="EBillU" asp-action="Index">
-
-                            <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
-                            Click To: E-Bills
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="MaintenanceBill" asp-action="Index">
-                            <i class='fas fa-arrow-left' style="color: antiquewhite; font-size: 14px; font-weight: bold;"></i>
-                            Click To: M-Bills
-                        </a>
-                    </li> *@
                 </ul>
 
 

@@ -1,6 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Customers Dashboard";
-    Layout = "_LayoutCustomers";
+    Layout = "_LayoutSSQCustomers";
 }
 
 <div class="container-fluid">
@@ -665,7 +665,7 @@
                                 </div>
                             </div>
                             <div class="text-center mt-3">
-                                <a href="@Url.Action("Index", "SSQCustomers")?searchString=${encodeURIComponent(response.projectName)}"
+                                <a href="@Url.Action("List", "SSQCustomers")?searchString=${encodeURIComponent(response.projectName)}"
                                    class="btn btn-info">
                                     <i class="fas fa-search"></i> View All Customers for ${response.projectName}
                                 </a>
@@ -773,7 +773,7 @@
                                 </div>
                             </div>
                             <div class="text-center mt-3">
-                                <a href="@Url.Action("Index", "SSQCustomers")?searchString=${encodeURIComponent(response.blockName)}"
+                                <a href="@Url.Action("List", "SSQCustomers")?searchString=${encodeURIComponent(response.blockName)}"
                                    class="btn btn-warning">
                                     <i class="fas fa-search"></i> View All Customers in Block ${response.blockName}
                                 </a>
@@ -1204,7 +1204,7 @@
 
                             // Update the "View All Customers" link
                             $('#viewAllProjectCustomersLink')
-                                .attr('href', '@Url.Action("Index", "SSQCustomers")?searchString=' + encodeURIComponent(response.projectName))
+                                .attr('href', '@Url.Action("List", "SSQCustomers")?searchString=' + encodeURIComponent(response.projectName))
                                 .show();
                         } else {
                             $('#projectModalContent').html(`
@@ -1348,7 +1348,7 @@
 
                         // Update the "View All Customers" link
                         $('#viewAllBlockCustomersLink')
-                            .attr('href', '@Url.Action("Index", "SSQCustomers")?searchString=' + encodeURIComponent(response.blockName))
+                            .attr('href', '@Url.Action("List", "SSQCustomers")?searchString=' + encodeURIComponent(response.blockName))
                             .show();
                     } else {
                         $('#blockModalContent').html(`

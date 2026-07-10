@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Logging;
 
 namespace BMSBT.Models;
 
 public partial class BmsbtContext : DbContext
 {
     private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly ILogger<BmsbtContext>? _logger;
     private bool _isSavingAudit;
 
     public BmsbtContext()
@@ -28,6 +30,16 @@ public partial class BmsbtContext : DbContext
         : base(options)
     {
         _httpContextAccessor = httpContextAccessor;
+    }
+
+    public BmsbtContext(
+        DbContextOptions<BmsbtContext> options,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<BmsbtContext> logger)
+        : base(options)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     public DbSet<TwoMonthOutstandingBill> TwoMonthOutstandingBills { get; set; }
@@ -503,6 +515,18 @@ public partial class BmsbtContext : DbContext
             entity.Property(e => e.Username).HasMaxLength(100);
         });
 
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("AuditLogs");
+            entity.HasKey(e => e.LogId);
+            entity.Property(e => e.LogId).ValueGeneratedOnAdd();
+            entity.Property(e => e.TableName).HasMaxLength(128);
+            entity.Property(e => e.Operation).HasMaxLength(10);
+            entity.Property(e => e.ChangedBy).HasMaxLength(128);
+            entity.Property(e => e.ModuleName).HasMaxLength(100);
+            entity.Property(e => e.IPAddress).HasMaxLength(50);
+        });
+
         modelBuilder.Entity<AdditionalCharge>(entity =>
         {
             entity.HasKey(e => e.Uid);
@@ -625,6 +649,17 @@ public partial class BmsbtContext : DbContext
             }
 
             var tableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name;
+            if (tableName.Equals("Users", StringComparison.OrdinalIgnoreCase))
+            {
+                // User changes are logged explicitly via AuditLogService with field-level detail.
+                continue;
+            }
+
+            if (tableName.Equals("AuditLogs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             if (entry.State == EntityState.Added && tableName.Equals("MaintenanceBills", StringComparison.OrdinalIgnoreCase))
             {
                 // Bulk bill creation can be very large; handled through one summarized log entry.
@@ -642,6 +677,17 @@ public partial class BmsbtContext : DbContext
                 }
 
                 var propertyName = property.Metadata.Name;
+                if (propertyName.Equals("PasswordHash", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (entry.State == EntityState.Modified && property.IsModified)
+                    {
+                        oldValues[propertyName] = "***";
+                        newValues[propertyName] = "Changed";
+                    }
+
+                    continue;
+                }
+
                 var originalValue = NormalizeValue(property.OriginalValue);
                 var currentValue = NormalizeValue(property.CurrentValue);
 
@@ -768,7 +814,7 @@ public partial class BmsbtContext : DbContext
                 RecordId = a.RecordId ?? GetRecordId(a.Entry),
                 OldData = a.OldData == null ? null : JsonSerializer.Serialize(a.OldData),
                 NewData = a.NewData == null ? null : JsonSerializer.Serialize(a.NewData),
-                ModuleName = a.TableName,
+                ModuleName = ResolveModuleName(a.TableName),
                 ChangedBy = currentUser,
                 ChangedAt = changedAt,
                 IPAddress = ipAddress
@@ -777,14 +823,30 @@ public partial class BmsbtContext : DbContext
             AuditLogs.AddRange(logs);
             await base.SaveChangesAsync(cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
-            // Audit failures must never break primary business operations.
+            _logger?.LogError(ex, "Automatic EF audit log persistence failed for {Count} entries", pendingEntries.Count);
         }
         finally
         {
             _isSavingAudit = false;
         }
+    }
+
+    private static string ResolveModuleName(string tableName)
+    {
+        return tableName switch
+        {
+            "Users" => "User Management",
+            "CustomersDetail" => "E-Customer Management",
+            "CustomersMaintenance" => "M-Customer Management",
+            "OperatorsSetup" => "Operators Setup",
+            "Configuration" => "Configuration",
+            "MaintenanceBills" => "Maintenance Billing",
+            "ElectricityBills" => "Electricity Billing",
+            "ReadingSheet" => "Reading Sheet",
+            _ => tableName
+        };
     }
 
     private sealed class PendingAuditEntry

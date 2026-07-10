@@ -2,25 +2,45 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BMSBT.Models;
+using BMSBT.Services;
 using BMSBT.ViewModels;
 
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
 {
     public class SSQCustomersController : Controller
     {
-        private readonly BmsbtContext _context;
+        private const string ECustomerSearchSessionKey = "SSQ_ECustomerSearch";
+        private const string MCustomerSearchSessionKey = "SSQ_MCustomerSearch";
+        private const int CustomerPageSize = 20;
 
-        public SSQCustomersController(BmsbtContext context)
+        private readonly BmsbtContext _context;
+        private readonly IAuditLogService _auditLogService;
+
+        public SSQCustomersController(BmsbtContext context, IAuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         // GET: SSQCustomers
-        // GET: SSQCustomers
-        public async Task<IActionResult> Index(string searchString, string sortOrder, int page = 1, int pageSize = 10)
+        public IActionResult Index()
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            ViewBag.Username = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            return View();
+        }
+
+        public async Task<IActionResult> List(string searchString, string sortOrder, int page = 1, int pageSize = 10)
         {
             ViewData["CurrentSort"] = sortOrder;
             ViewData["NameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
@@ -77,6 +97,12 @@ namespace BMSBT.Controllers
         // GET: SSQCustomers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -96,6 +122,12 @@ namespace BMSBT.Controllers
         // GET: SSQCustomers/Create
         public IActionResult Create()
         {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
             return View();
         }
 
@@ -107,9 +139,26 @@ namespace BMSBT.Controllers
             if (ModelState.IsValid)
             {
                 _context.Add(customersDetail);
-                await _context.SaveChangesAsync();
+                HttpContext.Items["SkipEfAudit"] = true;
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                finally
+                {
+                    HttpContext.Items.Remove("SkipEfAudit");
+                }
+
+                await _auditLogService.LogAsync(
+                    CustomerAuditHelper.ECustomerTable,
+                    "INSERT",
+                    CustomerAuditHelper.GetElectricityRecordId(customersDetail),
+                    null,
+                    CustomerAuditHelper.CreateElectricitySnapshot(customersDetail),
+                    CustomerAuditHelper.ECustomerModule);
+
                 TempData["SuccessMessage"] = "Customer created successfully!";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(ECustomers));
             }
             return View(customersDetail);
         }
@@ -117,6 +166,12 @@ namespace BMSBT.Controllers
         // GET: SSQCustomers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -144,8 +199,68 @@ namespace BMSBT.Controllers
             {
                 try
                 {
-                    _context.Update(customersDetail);
-                    await _context.SaveChangesAsync();
+                    var existing = await _context.CustomersDetails.FindAsync(id);
+                    if (existing == null)
+                    {
+                        return NotFound();
+                    }
+
+                    var oldSnapshot = CustomerAuditHelper.CreateElectricitySnapshot(existing);
+
+                    existing.CustomerNo = customersDetail.CustomerNo;
+                    existing.Btno = customersDetail.Btno;
+                    existing.CustomerName = customersDetail.CustomerName;
+                    existing.GeneratedMonthYear = customersDetail.GeneratedMonthYear;
+                    existing.LocationSeqNo = customersDetail.LocationSeqNo;
+                    existing.Cnicno = customersDetail.Cnicno;
+                    existing.FatherName = customersDetail.FatherName;
+                    existing.InstalledOn = customersDetail.InstalledOn;
+                    existing.MobileNo = customersDetail.MobileNo;
+                    existing.TelephoneNo = customersDetail.TelephoneNo;
+                    existing.MeterType = customersDetail.MeterType;
+                    existing.Ntnnumber = customersDetail.Ntnnumber;
+                    existing.City = customersDetail.City;
+                    existing.Project = customersDetail.Project;
+                    existing.SubProject = customersDetail.SubProject;
+                    existing.TariffName = customersDetail.TariffName;
+                    existing.BankNo = customersDetail.BankNo;
+                    existing.BtnoMaintenance = customersDetail.BtnoMaintenance;
+                    existing.Category = customersDetail.Category;
+                    existing.Block = customersDetail.Block;
+                    existing.PlotType = customersDetail.PlotType;
+                    existing.Size = customersDetail.Size;
+                    existing.Sector = customersDetail.Sector;
+                    existing.PloNo = customersDetail.PloNo;
+                    existing.BillStatusMaint = customersDetail.BillStatusMaint;
+                    existing.BillStatus = customersDetail.BillStatus;
+                    existing.BillGenerationStatus = customersDetail.BillGenerationStatus;
+                    existing.History = customersDetail.History;
+                    existing.MeterNo = customersDetail.MeterNo;
+
+                    var newSnapshot = CustomerAuditHelper.CreateElectricitySnapshot(existing);
+                    var (oldData, newData) = AuditDiffHelper.BuildDiff(oldSnapshot, newSnapshot);
+
+                    HttpContext.Items["SkipEfAudit"] = true;
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    finally
+                    {
+                        HttpContext.Items.Remove("SkipEfAudit");
+                    }
+
+                    if (oldData.Count > 0)
+                    {
+                        await _auditLogService.LogAsync(
+                            CustomerAuditHelper.ECustomerTable,
+                            "UPDATE",
+                            CustomerAuditHelper.GetElectricityRecordId(existing),
+                            oldData,
+                            newData,
+                            CustomerAuditHelper.ECustomerModule);
+                    }
+
                     TempData["SuccessMessage"] = "Customer updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -159,7 +274,7 @@ namespace BMSBT.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(ECustomers));
             }
             return View(customersDetail);
         }
@@ -198,27 +313,411 @@ namespace BMSBT.Controllers
         //    return RedirectToAction(nameof(Index));
         //}
 
-        //// AJAX Delete
-        //[HttpPost]
-        //public async Task<IActionResult> DeleteAjax(int id)
-        //{
-        //    var customersDetail = await _context.CustomersDetails.FindAsync(id);
-        //    if (customersDetail == null)
-        //    {
-        //        return Json(new { success = false, message = "Customer not found." });
-        //    }
+        private IActionResult? RequireLogin()
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
 
-        //    try
-        //    {
-        //        _context.CustomersDetails.Remove(customersDetail);
-        //        await _context.SaveChangesAsync();
-        //        return Json(new { success = true, message = "Customer deleted successfully!" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
-        //    }
-        //}
+            ViewBag.Username = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            return null;
+        }
+
+        private List<string> GetProjectOptions()
+        {
+            return _context.Configurations
+                .AsNoTracking()
+                .Where(c => c.ConfigKey != null &&
+                            c.ConfigValue != null &&
+                            (c.ConfigKey.Trim().ToLower() == "project" ||
+                             c.ConfigKey.Trim().ToLower() == "projects") &&
+                            c.ConfigValue.Trim() != "")
+                .Select(c => c.ConfigValue!.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+        }
+
+        private CustomerSearchState GetSavedSearchState(string sessionKey)
+        {
+            var json = HttpContext.Session.GetString(sessionKey);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new CustomerSearchState();
+            }
+
+            return JsonSerializer.Deserialize<CustomerSearchState>(json) ?? new CustomerSearchState();
+        }
+
+        private void SaveSearchState(string sessionKey, string? project, string? sector, string? btNo, int? page)
+        {
+            var state = new CustomerSearchState
+            {
+                Project = project,
+                Sector = sector,
+                BtNo = btNo,
+                Page = page ?? 1
+            };
+
+            HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(state));
+        }
+
+        private List<string> GetESectors(string? project)
+        {
+            var query = _context.CustomersDetails.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                query = query.Where(c => c.Project == project);
+            }
+
+            return query
+                .Select(c => c.Sector)
+                .Where(s => s != null && s != "")
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList()!;
+        }
+
+        private List<string> GetMSectors(string? project)
+        {
+            var query = _context.CustomersMaintenance.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                query = query.Where(c => c.Project == project);
+            }
+
+            return query
+                .Select(c => c.Sector)
+                .Where(s => s != null && s != "")
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList()!;
+        }
+
+        private IQueryable<CustomersDetail> BuildECustomersQuery(string? project, string? sector, string? btNo)
+        {
+            var query = _context.CustomersDetails.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                query = query.Where(c => c.Project == project);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sector))
+            {
+                query = query.Where(c => c.Sector == sector);
+            }
+
+            if (!string.IsNullOrWhiteSpace(btNo))
+            {
+                var term = btNo.Trim();
+                query = query.Where(c =>
+                    (c.Btno != null && c.Btno.Contains(term)) ||
+                    (c.PloNo != null && c.PloNo.Contains(term)));
+            }
+
+            return query
+                .OrderBy(c => c.Project)
+                .ThenBy(c => c.Sector)
+                .ThenBy(c => c.Btno);
+        }
+
+        private IQueryable<CustomersMaintenance> BuildMCustomersQuery(string? project, string? sector, string? btNo)
+        {
+            var query = _context.CustomersMaintenance.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                query = query.Where(c => c.Project == project);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sector))
+            {
+                query = query.Where(c => c.Sector == sector);
+            }
+
+            if (!string.IsNullOrWhiteSpace(btNo))
+            {
+                var term = btNo.Trim();
+                query = query.Where(c =>
+                    (c.BTNo != null && c.BTNo.Contains(term)) ||
+                    (c.PloNo != null && c.PloNo.Contains(term)));
+            }
+
+            return query
+                .OrderBy(c => c.Project)
+                .ThenBy(c => c.Sector)
+                .ThenBy(c => c.BTNo);
+        }
+
+        public IActionResult ECustomers()
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            var saved = GetSavedSearchState(ECustomerSearchSessionKey);
+            var model = new SSQECustomerFilterViewModel
+            {
+                Projects = GetProjectOptions(),
+                Sectors = GetESectors(saved.Project),
+                SelectedProject = saved.Project,
+                SelectedSector = saved.Sector,
+                SearchBtNo = saved.BtNo,
+                CurrentPage = saved.Page,
+                Customers = saved.HasFilters
+                    ? BuildECustomersQuery(saved.Project, saved.Sector, saved.BtNo).ToPagedList(saved.Page, CustomerPageSize)
+                    : new List<CustomersDetail>().ToPagedList(1, CustomerPageSize)
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult GetESectorsByProject(string project)
+        {
+            return Json(GetESectors(project));
+        }
+
+        [HttpGet]
+        public PartialViewResult FilterECustomers(string project, string sector, string btNo, int? page)
+        {
+            SaveSearchState(ECustomerSearchSessionKey, project, sector, btNo, page);
+
+            var pageNumber = page ?? 1;
+            var customers = BuildECustomersQuery(project, sector, btNo)
+                .ToPagedList(pageNumber, CustomerPageSize);
+
+            return PartialView("_ECustomersGrid", customers);
+        }
+
+        public IActionResult MCustomers()
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            var saved = GetSavedSearchState(MCustomerSearchSessionKey);
+            var model = new SSQMCustomerFilterViewModel
+            {
+                Projects = GetProjectOptions(),
+                Sectors = GetMSectors(saved.Project),
+                SelectedProject = saved.Project,
+                SelectedSector = saved.Sector,
+                SearchBtNo = saved.BtNo,
+                CurrentPage = saved.Page,
+                Customers = saved.HasFilters
+                    ? BuildMCustomersQuery(saved.Project, saved.Sector, saved.BtNo).ToPagedList(saved.Page, CustomerPageSize)
+                    : new List<CustomersMaintenance>().ToPagedList(1, CustomerPageSize)
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult GetMSectorsByProject(string project)
+        {
+            return Json(GetMSectors(project));
+        }
+
+        [HttpGet]
+        public PartialViewResult FilterMCustomers(string project, string sector, string btNo, int? page)
+        {
+            SaveSearchState(MCustomerSearchSessionKey, project, sector, btNo, page);
+
+            var pageNumber = page ?? 1;
+            var customers = BuildMCustomersQuery(project, sector, btNo)
+                .ToPagedList(pageNumber, CustomerPageSize);
+
+            return PartialView("_MCustomersGrid", customers);
+        }
+
+        public async Task<IActionResult> MDetails(int? id)
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var customer = await _context.CustomersMaintenance.FirstOrDefaultAsync(m => m.Uid == id);
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            return View(customer);
+        }
+
+        public IActionResult MCreate()
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            return View(new CustomersMaintenance
+            {
+                CustomerNo = string.Empty,
+                Project = string.Empty,
+                SubProject = string.Empty,
+                TariffName = string.Empty,
+                Category = string.Empty,
+                Block = string.Empty,
+                Sector = string.Empty,
+                PloNo = string.Empty
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MCreate(CustomersMaintenance customer)
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            if (ModelState.IsValid)
+            {
+                _context.Add(customer);
+                HttpContext.Items["SkipEfAudit"] = true;
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                finally
+                {
+                    HttpContext.Items.Remove("SkipEfAudit");
+                }
+
+                await _auditLogService.LogAsync(
+                    CustomerAuditHelper.MCustomerTable,
+                    "INSERT",
+                    CustomerAuditHelper.GetMaintenanceRecordId(customer),
+                    null,
+                    CustomerAuditHelper.CreateMaintenanceSnapshot(customer),
+                    CustomerAuditHelper.MCustomerModule);
+
+                TempData["SuccessMessage"] = "Maintenance customer created successfully!";
+                return RedirectToAction(nameof(MCustomers));
+            }
+
+            return View(customer);
+        }
+
+        public async Task<IActionResult> MEdit(int? id)
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var customer = await _context.CustomersMaintenance.FindAsync(id);
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            return View(customer);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MEdit(int id, CustomersMaintenance customer)
+        {
+            var redirect = RequireLogin();
+            if (redirect != null)
+            {
+                return redirect;
+            }
+
+            if (id != customer.Uid)
+            {
+                return NotFound();
+            }
+
+            var entity = await _context.CustomersMaintenance.FindAsync(id);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            var oldSnapshot = CustomerAuditHelper.CreateMaintenanceSnapshot(entity);
+
+            entity.CustomerNo = customer.CustomerNo;
+            entity.BTNo = customer.BTNo;
+            entity.CustomerName = customer.CustomerName;
+            entity.CNICNo = customer.CNICNo;
+            entity.FatherName = customer.FatherName;
+            entity.MobileNo = customer.MobileNo;
+            entity.TelephoneNo = customer.TelephoneNo;
+            entity.Project = customer.Project;
+            entity.SubProject = customer.SubProject;
+            entity.TariffName = customer.TariffName;
+            entity.Category = customer.Category;
+            entity.Block = customer.Block;
+            entity.Sector = customer.Sector;
+            entity.PloNo = customer.PloNo;
+            entity.PlotType = customer.PlotType;
+            entity.Size = customer.Size;
+            entity.City = customer.City;
+            entity.MeterNo = customer.MeterNo;
+            entity.BTNoMaintenance = customer.BTNoMaintenance;
+            entity.BillStatusMaint = customer.BillStatusMaint;
+
+            ModelState.Clear();
+            if (!TryValidateModel(entity))
+            {
+                return View(entity);
+            }
+
+            var newSnapshot = CustomerAuditHelper.CreateMaintenanceSnapshot(entity);
+            var (oldData, newData) = AuditDiffHelper.BuildDiff(oldSnapshot, newSnapshot);
+
+            HttpContext.Items["SkipEfAudit"] = true;
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            finally
+            {
+                HttpContext.Items.Remove("SkipEfAudit");
+            }
+
+            if (oldData.Count > 0)
+            {
+                await _auditLogService.LogAsync(
+                    CustomerAuditHelper.MCustomerTable,
+                    "UPDATE",
+                    CustomerAuditHelper.GetMaintenanceRecordId(entity),
+                    oldData,
+                    newData,
+                    CustomerAuditHelper.MCustomerModule);
+            }
+
+            TempData["SuccessMessage"] = "Maintenance customer updated successfully!";
+            return RedirectToAction(nameof(MCustomers));
+        }
 
         private bool CustomersDetailExists(int id)
         {

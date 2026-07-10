@@ -1,75 +1,81 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using BMSBT.Models;
 using BMSBT.BillServices;
 using BMSBT.Models.MyObjects;
 using BMSBT.EBillService;
 using BMSBT.Services;
+using BMSBT.Middleware;
 
 using BMSBT.Helper;
-using BMSBT.Roles;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddHttpClient();
-// Add services to the container - keep only one instance of each
-builder.Services.AddHttpContextAccessor(); // Only one instance needed
-builder.Services.AddMemoryCache();
-builder.Services.AddControllersWithViews(options =>
-{
-    options.Filters.Add<RestrictAuditOnlyUsersFilter>();
-});
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
+builder.Services.AddControllersWithViews();
+
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys");
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    .SetApplicationName("BMSBT");
+
+builder.Services.AddDistributedSqlServerCache(options =>
+{
+    options.ConnectionString = connectionString;
+    options.SchemaName = "dbo";
+    options.TableName = PersistentAuthExtensions.SessionCacheTableName;
+});
 
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromDays(7);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.Name = ".BMSBT.Session";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-
-builder.Services.AddHttpContextAccessor();
-
-
-// Database context
 builder.Services.AddDbContext<BmsbtContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
-// Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Login/Index";
         options.AccessDeniedPath = "/Login/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.Cookie.Name = ".BMSBT.Auth";
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
 
-// Register your services
 builder.Services.AddScoped<ICurrentOperatorService, CurrentOperatorService>();
-
-builder.Services.AddScoped<ICurrentOperatorService, CurrentOperatorService>();
-
-builder.Services.AddScoped<IOperatorService, OperatorService>();  // Register the OperatorService
+builder.Services.AddScoped<IOperatorService, OperatorService>();
 builder.Services.AddScoped<SessionHelper>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-
-// Maintenance bills insert service (isolated from MaintenanceNew UI)
+builder.Services.AddScoped<IAuthSessionService, AuthSessionService>();
 builder.Services.AddScoped<IMaintenanceBillInsertService, MaintenanceBillInsertService>();
 builder.Services.AddScoped<IBillingLogicReader, BillingLogicReaderService>();
 builder.Services.AddScoped<IMdBillingService, MdBillingService>();
-
-
-
-
-builder.Services.AddScoped<IOperatorSettingService, OperatorSettingService>();  // ? Correct registration
-
-
-
+builder.Services.AddScoped<IOperatorSettingService, OperatorSettingService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+await PersistentAuthExtensions.EnsureSessionCacheTableAsync(connectionString);
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -79,7 +85,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Cache control middleware
 app.Use(async (context, next) =>
 {
     context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
@@ -88,12 +93,11 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseRouting();
 app.UseSession();
-
-// Middleware pipeline - fix duplicate middleware
-app.UseRouting(); // Only one instance needed
 app.UseAuthentication();
-app.UseAuthorization(); // Only one instance needed
+app.UseMiddleware<SessionRestorationMiddleware>();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",

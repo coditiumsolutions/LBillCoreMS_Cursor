@@ -1,5 +1,5 @@
 using BMSBT.Models;
-using BMSBT.Roles;
+using BMSBT.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +13,16 @@ namespace BMSBT.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly BmsbtContext context;
         private readonly PasswordHasher<User> _passwordHasher;
-        public HomeController(ILogger<HomeController> logger, BmsbtContext context)
+        private readonly IAuditLogService _auditLogService;
+
+        public HomeController(
+            ILogger<HomeController> logger,
+            BmsbtContext context,
+            IAuditLogService auditLogService)
         {
             _logger = logger;
             this.context = context;
+            _auditLogService = auditLogService;
             _passwordHasher = new PasswordHasher<User>();
         }
 
@@ -30,15 +36,8 @@ namespace BMSBT.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            var roles = RoleHelper.GetRolesFromClaims(User);
-            if (RoleHelper.IsAuditOnlyUser(roles))
-            {
-                return RedirectToAction("Index", "Audit");
-            }
-
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
             ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
-            ViewBag.CanAccessAudit = RoleHelper.CanAccessAuditModule(roles);
             return View();
         }
 
@@ -100,18 +99,34 @@ namespace BMSBT.Controllers
 
 
         [HttpPost]
-        public IActionResult CreateUser(User user, List<string> Role)
+        public async Task<IActionResult> CreateUser(User user, List<string> Role)
         {
             if (Role != null && Role.Count > 0)
             {
-                user.Role = string.Join(",", Role); // Store roles as comma-separated string
+                user.Role = string.Join(",", Role);
             }
 
-            // Hash the password before saving
             user.PasswordHash = _passwordHasher.HashPassword(user, user.PasswordHash);
 
             context.Users.Add(user);
-            context.SaveChanges();
+            HttpContext.Items["SkipEfAudit"] = true;
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            finally
+            {
+                HttpContext.Items.Remove("SkipEfAudit");
+            }
+
+            var newData = UserAuditHelper.CreateSnapshot(user, passwordChanged: true);
+            await _auditLogService.LogAsync(
+                UserAuditHelper.TableName,
+                "INSERT",
+                user.Uid.ToString(),
+                null,
+                newData,
+                UserAuditHelper.ModuleName);
 
             return RedirectToAction("Users");
         }
@@ -133,8 +148,7 @@ namespace BMSBT.Controllers
         }
 
         [HttpPost]
-
-        public IActionResult EditUser(User user, string[] Role, string? newPassword)
+        public async Task<IActionResult> EditUser(User user, string[] Role, string? newPassword)
         {
             var existingUser = context.Users.FirstOrDefault(u => u.Uid == user.Uid);
             if (existingUser == null)
@@ -142,17 +156,42 @@ namespace BMSBT.Controllers
                 return NotFound();
             }
 
+            var passwordChanged = !string.IsNullOrEmpty(user.PasswordHash);
+            var oldSnapshot = UserAuditHelper.CreateSnapshot(existingUser);
+
             existingUser.EmployeeId = user.EmployeeId;
             existingUser.Username = user.Username;
             existingUser.Role = Role != null ? string.Join(",", Role) : null;
 
-            // Hash new password only if provided
-            if (!string.IsNullOrEmpty(user.PasswordHash))
+            if (passwordChanged)
             {
                 existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, user.PasswordHash);
             }
 
-            context.SaveChanges();
+            var newSnapshot = UserAuditHelper.CreateSnapshot(existingUser, passwordChanged);
+            var (oldData, newData) = UserAuditHelper.BuildDiff(oldSnapshot, newSnapshot);
+
+            HttpContext.Items["SkipEfAudit"] = true;
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            finally
+            {
+                HttpContext.Items.Remove("SkipEfAudit");
+            }
+
+            if (oldData.Count > 0)
+            {
+                await _auditLogService.LogAsync(
+                    UserAuditHelper.TableName,
+                    "UPDATE",
+                    existingUser.Uid.ToString(),
+                    oldData,
+                    newData,
+                    UserAuditHelper.ModuleName);
+            }
+
             return RedirectToAction("Users");
         }
 

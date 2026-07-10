@@ -31,9 +31,9 @@
                             <option value="">-- All Operators --</option>
                             @if (ViewBag.Operators != null)
                             {
-                                foreach (var op in (SelectList)ViewBag.Operators)
+                                foreach (var op in (IEnumerable<string>)ViewBag.Operators)
                                 {
-                                    <option value="@op.Value" selected="@(op.Value == ViewBag.SelectedChangedBy)">@op.Text</option>
+                                    <option value="@op" selected="@(op == (string?)ViewBag.SelectedChangedBy)">@op</option>
                                 }
                             }
                         </select>

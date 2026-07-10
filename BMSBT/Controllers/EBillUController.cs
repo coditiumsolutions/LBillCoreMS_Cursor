@@ -1539,6 +1539,88 @@ namespace BMSBT.Controllers
 
 
 
+        public IActionResult Customers()
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            var projects = _dbContext.Configurations
+                .AsNoTracking()
+                .Where(c => c.ConfigKey != null &&
+                            c.ConfigValue != null &&
+                            c.ConfigKey.Trim().ToLower() == "project" &&
+                            c.ConfigValue.Trim() != "")
+                .Select(c => c.ConfigValue!.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
+            var model = new EBillCustomerFilterViewModel
+            {
+                Projects = projects,
+                Blocks = new List<string>(),
+                Customers = new List<CustomersDetail>().ToPagedList(1, 20)
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult GetCustomerBlocksByProject(string project)
+        {
+            var blocksQuery = _dbContext.CustomersDetails.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                blocksQuery = blocksQuery.Where(c => c.Project == project);
+            }
+
+            var blocks = blocksQuery
+                .Select(c => c.Block)
+                .Where(b => b != null && b != "")
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+
+            return Json(blocks);
+        }
+
+        [HttpGet]
+        public PartialViewResult FilterCustomers(string project, string block, string btNo, int? page)
+        {
+            var query = _dbContext.CustomersDetails.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                query = query.Where(c => c.Project == project);
+            }
+
+            if (!string.IsNullOrWhiteSpace(block))
+            {
+                query = query.Where(c => c.Block == block);
+            }
+
+            if (!string.IsNullOrWhiteSpace(btNo))
+            {
+                var term = btNo.Trim();
+                query = query.Where(c =>
+                    (c.Btno != null && c.Btno.Contains(term)) ||
+                    (c.PloNo != null && c.PloNo.Contains(term)));
+            }
+
+            const int pageSize = 20;
+            var pageNumber = page ?? 1;
+
+            var customers = query
+                .OrderBy(c => c.Project)
+                .ThenBy(c => c.Block)
+                .ThenBy(c => c.Btno)
+                .ToPagedList(pageNumber, pageSize);
+
+            return PartialView("_EBillCustomersGrid", customers);
+        }
 
     }
 

@@ -1,0 +1,55 @@
+@using X.PagedList.Mvc.Core
+@using X.PagedList
+@model IPagedList<BMSBT.Models.CustomersDetail>
+
+<div id="ebillCustomerTotalMeta" class="d-none" data-total="@Model.TotalItemCount" aria-hidden="true"></div>
+
+<div class="table-responsive cm-table-wrap mx-2 my-2 mb-0">
+    <table class="cm-detail-table cm-customers-grid-table mb-0" id="customersTable">
+        <thead>
+            <tr>
+                <th scope="col"><i class="fas fa-barcode text-muted mr-1" aria-hidden="true"></i>BT No</th>
+                <th scope="col"><i class="fas fa-user text-muted mr-1" aria-hidden="true"></i>Customer Name</th>
+                <th scope="col"><i class="fas fa-home text-muted mr-1" aria-hidden="true"></i>Plot No</th>
+                <th scope="col"><i class="fas fa-th-large text-muted mr-1" aria-hidden="true"></i>Block</th>
+                <th scope="col"><i class="fas fa-tags text-muted mr-1" aria-hidden="true"></i>Category</th>
+                <th scope="col"><i class="fas fa-ruler-combined text-muted mr-1" aria-hidden="true"></i>Size</th>
+                <th scope="col"><i class="fas fa-building text-muted mr-1" aria-hidden="true"></i>Project</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.Uid" style="cursor: pointer;" title="Double-click for details">
+                    <td>@item.Btno</td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.PloNo</td>
+                    <td>@item.Block</td>
+                    <td>@item.Category</td>
+                    <td>@item.Size</td>
+                    <td>@item.Project</td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No records found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="cm-grid-pager d-flex justify-content-center">
+    @Html.PagedListPager(Model, page => Url.Action("FilterCustomers", new { page }),
+        new X.PagedList.Mvc.Core.PagedListRenderOptions {
+            DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+            DisplayLinkToLastPage = PagedListDisplayMode.Always,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+            DisplayLinkToNextPage = PagedListDisplayMode.Always,
+            DisplayPageCountAndCurrentLocation = true,
+            UlElementClasses = new[] { "pagination" },
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" }
+        })
+</div>

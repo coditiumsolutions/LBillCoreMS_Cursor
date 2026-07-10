@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using BMSBT.BillServices;
 using BMSBT.Services;
-using BMSBT.Roles;
 using Microsoft.AspNetCore.Identity;
 using System.Text.Json; // Required at the top
 
@@ -21,12 +20,18 @@ namespace BMSBT.Controllers
         private readonly BmsbtContext _context;
         private readonly ICurrentOperatorService _operatorService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IAuthSessionService _authSessionService;
 
-        public LoginController(BmsbtContext context, ICurrentOperatorService operatorService, IAuditLogService auditLogService)
+        public LoginController(
+            BmsbtContext context,
+            ICurrentOperatorService operatorService,
+            IAuditLogService auditLogService,
+            IAuthSessionService authSessionService)
         {
             _context = context;
             _operatorService = operatorService;
             _auditLogService = auditLogService;
+            _authSessionService = authSessionService;
         }
         MaintenanceBill m = new MaintenanceBill();
 
@@ -60,64 +65,27 @@ namespace BMSBT.Controllers
 
             if (result == PasswordVerificationResult.Success)
             {
-                // ✅ Await the InitializeAsync call
-              
-                // Create session
-                HttpContext.Session.SetString("UserName", user.Username);
-                HttpContext.Session.SetString("Role", user.Role ?? "");
-                HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString("hh:mm tt"));
-
-                // Fetch operator setup using OperatorName matched with UserName
-                var operatorSetup = _context.OperatorsSetups
-                    .FirstOrDefault(o => o.OperatorName == user.Username);
-
-                if (operatorSetup != null)
-                {
-                    var operatorSetupDetail = new Dictionary<string, string>
-    {
-        { "OperatorId", operatorSetup.OperatorID ?? "" },
-        { "OperatorName", operatorSetup.OperatorName ?? "" },
-        { "BillingMonth", operatorSetup.BillingMonth ?? "" },
-        { "BillingYear", operatorSetup.BillingYear ?? "" }
-    };
-
-                    HttpContext.Session.SetString("OperatorSetupDetail", JsonSerializer.Serialize(operatorSetupDetail));
-                }
-
-                // Prefer EmployeeId when set; otherwise use Operator Setup ID so billing flows see a valid operator
-                var resolvedOperatorId = !string.IsNullOrWhiteSpace(user.EmployeeId)
-                    ? user.EmployeeId
-                    : (operatorSetup?.OperatorID ?? "");
-                HttpContext.Session.SetString("OperatorId", resolvedOperatorId);
-
-                // Get operator details by OperatorId from session
-                var operatorId = HttpContext.Session.GetString("OperatorId");
-
-                if (!string.IsNullOrEmpty(operatorId))
-                {
-                    var operatorDetails = _context.OperatorsSetups
-                        .FirstOrDefault(o => o.OperatorID == operatorId);
-
-                    if (operatorDetails != null)
-                    {
-                        BillCreationState.CurrentMonth = operatorDetails.BillingMonth ?? "";
-                        BillCreationState.CurrentYear = operatorDetails.BillingYear ?? "";
-                    }
-                }
-
-
-
+                await _authSessionService.PopulateSessionAsync(HttpContext, user);
 
                 var claims = new List<Claim>
-                 {
+                {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role)
-                 };
+                    new Claim(ClaimTypes.Role, user.Role ?? string.Empty)
+                };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var principal = new ClaimsPrincipal(identity);
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7),
+                    AllowRefresh = true
+                };
 
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    principal,
+                    authProperties);
 
                 await _auditLogService.LogAsync(
                     "Users",
@@ -132,22 +100,11 @@ namespace BMSBT.Controllers
                     },
                     "Authentication");
 
-                return RedirectAfterLogin(user);
+                return RedirectToAction("Index", "Home");
             }
 
             ViewBag.Error = "Invalid username or password.";
             return View();
-        }
-
-        private IActionResult RedirectAfterLogin(User user)
-        {
-            var roles = RoleHelper.ParseRoles(user.Role);
-            if (RoleHelper.IsAuditOnlyUser(roles))
-            {
-                return RedirectToAction("Index", "Audit");
-            }
-
-            return RedirectToAction("Index", "Home");
         }
 
 
@@ -201,28 +158,26 @@ namespace BMSBT.Controllers
             //  if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             if (user != null && user.PasswordHash == password)
             {
-                var operatorSetup = await _context.OperatorsSetups
-                    .FirstOrDefaultAsync(o => o.OperatorName == user.Username);
-                var resolvedOperatorId = !string.IsNullOrWhiteSpace(user.EmployeeId)
-                    ? user.EmployeeId
-                    : (operatorSetup?.OperatorID ?? "");
-
-                // Create session
-                HttpContext.Session.SetString("UserName", user.Username);
-                HttpContext.Session.SetString("Role", user.Role ?? "");
-                HttpContext.Session.SetString("OperatorId", resolvedOperatorId);
-                HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString("hh:mm tt"));
+                await _authSessionService.PopulateSessionAsync(HttpContext, user);
 
                 var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role ?? "User")
-            };
+                {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Role, user.Role ?? "User")
+                };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7),
+                    AllowRefresh = true
+                };
 
-                // Await SignInAsync for asynchronous operation
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
 
                 await _auditLogService.LogAsync(
                     "Users",
@@ -237,7 +192,7 @@ namespace BMSBT.Controllers
                     },
                     "Authentication");
 
-                return RedirectAfterLogin(user);
+                return RedirectToAction("Index", "Home");
             }
 
             ViewBag.Error = "Invalid username or password";

@@ -1,0 +1,135 @@
+@model BMSBT.ViewModels.SSQECustomerFilterViewModel
+
+@{
+    ViewData["Title"] = "E-Customers";
+    Layout = "_LayoutSSQCustomers";
+}
+
+@await Html.PartialAsync("_SSQCustomerListStyles")
+
+<div class="container-fluid cm-detail-page px-2 px-md-2">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="card cm-detail-card shadow-sm border-0">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <p class="cm-header-name mb-1 mb-md-0">
+                <i class="fas fa-bolt text-muted mr-2" aria-hidden="true"></i>E-Customers
+                <span class="cm-badge-soft ml-2">Electricity</span>
+            </p>
+            <div class="d-flex align-items-center">
+                <small class="text-muted mb-0 mr-3">
+                    Total: <strong id="eCustomerTotalCount" class="text-body">@Model.Customers.TotalItemCount</strong>
+                </small>
+                <a asp-action="Create" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Customer
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body cm-filter-body border-bottom">
+            <div class="form-row">
+                <div class="form-group col-md-3 mb-md-0">
+                    <label for="projectFilter" class="font-weight-bold text-secondary small text-uppercase">Project</label>
+                    <select id="projectFilter" class="form-control">
+                        <option value="">-- All Projects --</option>
+                        @foreach (var project in Model.Projects)
+                        {
+                            <option value="@project" selected="@(Model.SelectedProject == project ? "selected" : null)">@project</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-3 mb-md-0">
+                    <label for="sectorFilter" class="font-weight-bold text-secondary small text-uppercase">Sector</label>
+                    <select id="sectorFilter" class="form-control">
+                        <option value="">-- All Sectors --</option>
+                        @foreach (var sector in Model.Sectors)
+                        {
+                            <option value="@sector" selected="@(Model.SelectedSector == sector ? "selected" : null)">@sector</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-4 mb-md-0">
+                    <label for="btnoSearch" class="font-weight-bold text-secondary small text-uppercase">BT No / Plot No</label>
+                    <input type="text" id="btnoSearch" class="form-control" placeholder="BT No or Plot No" autocomplete="off" value="@Model.SearchBtNo" />
+                </div>
+                <div class="form-group col-md-2 mb-0 d-flex align-items-end">
+                    <button type="button" id="btnSearch" class="btn btn-primary btn-block">
+                        <i class="fas fa-search mr-1"></i>Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0" id="gridContainer">
+            @await Html.PartialAsync("_ECustomersGrid", Model.Customers)
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            function loadSectors(project, selectedSector) {
+                return $.get('@Url.Action("GetESectorsByProject", "SSQCustomers")',
+                    { project: project },
+                    function (data) {
+                        var $sector = $('#sectorFilter');
+                        $sector.empty();
+                        $sector.append($('<option>').val('').text('-- All Sectors --'));
+                        $.each(data, function (i, s) {
+                            $sector.append($('<option>').val(s).text(s));
+                        });
+                        if (selectedSector) {
+                            $sector.val(selectedSector);
+                        }
+                    });
+            }
+
+            function syncTotal() {
+                var total = parseInt($('#eCustomerTotalMeta').data('total'), 10);
+                if (isNaN(total)) total = 0;
+                $('#eCustomerTotalCount').text(total);
+            }
+
+            function loadCustomers(page) {
+                $.get('@Url.Action("FilterECustomers", "SSQCustomers")',
+                    {
+                        project: $('#projectFilter').val(),
+                        sector: $('#sectorFilter').val(),
+                        btNo: $('#btnoSearch').val(),
+                        page: page
+                    },
+                    function (html) {
+                        $('#gridContainer').html(html);
+                        syncTotal();
+                    });
+            }
+
+            $('#projectFilter').change(function () {
+                loadSectors($(this).val());
+            });
+
+            $('#btnSearch').click(function () { loadCustomers(1); });
+            $('#btnoSearch').on('keypress', function (e) { if (e.which === 13) loadCustomers(1); });
+
+            $(document).on('click', '.pagination a', function (e) {
+                e.preventDefault();
+                var href = $(this).attr('href');
+                if (href) {
+                    var page = new URL(href, window.location.origin).searchParams.get('page');
+                    loadCustomers(page);
+                }
+            });
+
+            syncTotal();
+        });
+    </script>
+}

@@ -70,7 +70,7 @@
                 <div class="card section-card p-3">
                     <h5 class="section-title">Customer's Detail</h5>
                     <p>Manage customer information, including personal details, contact information, and account status.</p>
-                    <a href="Customers" class="btn btn-success">Click to Process</a>
+                    <a asp-controller="SSQCustomers" asp-action="Index" class="btn btn-success">Click to Process</a>
                 </div>
             </div>
 
@@ -102,18 +102,6 @@
                     <a href="Reports" class="btn btn-success">Click to Process</a>
                 </div>
             </div>
-
-            <!-- Section 5: Product/Service Categories -->
-            @if (ViewBag.CanAccessAudit == true)
-            {
-                <div class="col-md-4 mb-4">
-                    <div class="card section-card p-3">
-                        <h5 class="section-title">Audit</h5>
-                        <p>Provide auditors with access to financial records, transaction logs, and system reports for verification and compliance.</p>
-                        <a asp-controller="Audit" asp-action="Index" class="btn btn-success">Click to Process</a>
-                    </div>
-                </div>
-            }
 
             <!-- Section 6: Invoice Templates -->
             <div class="col-md-4 mb-4">

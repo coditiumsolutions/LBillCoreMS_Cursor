@@ -130,16 +130,9 @@
         <div class="container">
             <!-- Left-aligned text -->
             <div class="left-section">
-                @{
-                    var userRoles = RoleHelper.GetRolesFromClaims(User);
-                    var isAuditOnlyUser = RoleHelper.IsAuditOnlyUser(userRoles);
-                }
-                @if (!isAuditOnlyUser)
-                {
-                    <a asp-controller="Home" asp-action="Index">
-                        Back Main Menu
-                    </a>
-                }
+                <a asp-controller="Home" asp-action="Index">
+                    Back Main Menu
+                </a>
             </div>
             <!-- Right-aligned text -->
             <div class="right-section">

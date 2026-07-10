@@ -1,7 +1,7 @@
-﻿@model BMSBT.Models.CustomersDetail
+@model BMSBT.Models.CustomersMaintenance
 
 @{
-    ViewData["Title"] = "E-Customer Details";
+    ViewData["Title"] = "M-Customer Details";
     Layout = "_LayoutSSQCustomers";
 }
 
@@ -12,13 +12,17 @@
         <div class="card-header">
             <p class="cm-header-name">
                 @(string.IsNullOrWhiteSpace(Model.CustomerName) ? "—" : Model.CustomerName)
-                @if (!string.IsNullOrWhiteSpace(Model.Btno))
+                @if (!string.IsNullOrWhiteSpace(Model.BTNo))
                 {
-                    <span class="cm-badge-soft ml-2">BTNo @Model.Btno</span>
+                    <span class="cm-badge-soft maint ml-2">BTNo @Model.BTNo</span>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.BTNoMaintenance))
+                {
+                    <span class="cm-badge-soft maint ml-2">BTNo @Model.BTNoMaintenance</span>
                 }
                 else if (Model.Uid > 0)
                 {
-                    <span class="cm-badge-soft ml-2">ID @Model.Uid</span>
+                    <span class="cm-badge-soft maint ml-2">ID @Model.Uid</span>
                 }
             </p>
         </div>
@@ -31,7 +35,7 @@
                             <th scope="row">Customer No</th>
                             <td>@Model.CustomerNo</td>
                             <th scope="row">BT No</th>
-                            <td>@Model.Btno</td>
+                            <td>@Model.BTNo</td>
                         </tr>
                         <tr>
                             <th scope="row">Customer Name</th>
@@ -41,7 +45,7 @@
                         </tr>
                         <tr>
                             <th scope="row">CNIC No</th>
-                            <td>@Model.Cnicno</td>
+                            <td>@Model.CNICNo</td>
                             <th scope="row">Mobile No</th>
                             <td>@Model.MobileNo</td>
                         </tr>
@@ -91,38 +95,51 @@
                             <th scope="row">Bank No</th>
                             <td>@Model.BankNo</td>
                             <th scope="row">NTN Number</th>
-                            <td>@Model.Ntnnumber</td>
+                            <td>@Model.NTNNumber</td>
                         </tr>
-                        <tr>
-                            <th scope="row">BT No Maintenance</th>
-                            <td>@Model.BtnoMaintenance</td>
-                            <th scope="row">Location Seq No</th>
-                            <td>@Model.LocationSeqNo</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Bill Status</th>
-                            <td>@Model.BillStatus</td>
-                            <th scope="row">Bill Status Maintenance</th>
-                            <td>@Model.BillStatusMaint</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Bill Generation Status</th>
-                            <td>@Model.BillGenerationStatus</td>
-                            <th scope="row">Generated Month/Year</th>
-                            <td>@Model.GeneratedMonthYear</td>
-                        </tr>
+                        @{
+                            var btMain = Model.BTNoMaintenance?.Trim();
+                            var btPrimary = Model.BTNo?.Trim();
+                            var showMaintenanceBt = !string.IsNullOrEmpty(btMain)
+                                && !string.Equals(btMain, btPrimary, StringComparison.OrdinalIgnoreCase);
+                        }
+                        @if (showMaintenanceBt)
+                        {
+                            <tr>
+                                <th scope="row">Maintenance BT No</th>
+                                <td>@Model.BTNoMaintenance</td>
+                                <th scope="row">Bill Status</th>
+                                <td>@Model.BillStatusMaint</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th scope="row">Bill Status</th>
+                                <td>@Model.BillStatusMaint</td>
+                                <th scope="row">Bill Generation Status</th>
+                                <td>@Model.BillGenerationStatus</td>
+                            </tr>
+                        }
+                        @if (showMaintenanceBt)
+                        {
+                            <tr>
+                                <th scope="row">Bill Generation Status</th>
+                                <td colspan="3">@Model.BillGenerationStatus</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="cm-card-footer-actions">
-            <small class="text-muted mb-0 d-none d-sm-block pr-2">Electricity customer detail</small>
+            <small class="text-muted mb-0 d-none d-sm-block pr-2">Maintenance customer detail</small>
             <div class="btn-group-actions" role="group">
-                <a asp-action="Edit" asp-route-id="@Model.Uid" class="btn btn-warning" title="Edit customer">
+                <a asp-action="MEdit" asp-route-id="@Model.Uid" class="btn btn-warning" title="Edit customer">
                     <i class="fas fa-edit"></i><span class="d-none d-sm-inline"> Edit</span>
                 </a>
-                <a asp-action="ECustomers" class="btn btn-outline-secondary" title="Back to list">
+                <a asp-action="MCustomers" class="btn btn-outline-secondary" title="Back to list">
                     <i class="fas fa-arrow-left"></i><span class="d-none d-sm-inline"> Back to List</span>
                 </a>
             </div>

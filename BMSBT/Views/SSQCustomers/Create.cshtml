@@ -1,19 +1,18 @@
-﻿@model BMSBT.Models.CustomersDetail
+@model BMSBT.Models.CustomersDetail
 
 @{
-    ViewData["Title"] = "Edit E-Customer";
+    ViewData["Title"] = "Create E-Customer";
     Layout = "_LayoutSSQCustomers";
 }
 
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header bg-warning text-white">
-            <h4 class="mb-0"><i class="fas fa-edit"></i> @ViewData["Title"]</h4>
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0"><i class="fas fa-plus"></i> @ViewData["Title"]</h4>
         </div>
         <div class="card-body">
-            <form asp-action="Edit" method="post">
+            <form asp-action="Create" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <input type="hidden" asp-for="Uid" />
                 <div class="row">
                     <div class="col-md-3 form-group">
                         <label asp-for="CustomerNo"></label>
@@ -35,30 +34,37 @@
                     <div class="col-md-3 form-group">
                         <label asp-for="Project"></label>
                         <input asp-for="Project" class="form-control" />
+                        <span asp-validation-for="Project" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="SubProject"></label>
                         <input asp-for="SubProject" class="form-control" />
+                        <span asp-validation-for="SubProject" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="Sector"></label>
                         <input asp-for="Sector" class="form-control" />
+                        <span asp-validation-for="Sector" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="Block"></label>
                         <input asp-for="Block" class="form-control" />
+                        <span asp-validation-for="Block" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="PloNo"></label>
                         <input asp-for="PloNo" class="form-control" />
+                        <span asp-validation-for="PloNo" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="Category"></label>
                         <input asp-for="Category" class="form-control" />
+                        <span asp-validation-for="Category" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="TariffName"></label>
                         <input asp-for="TariffName" class="form-control" />
+                        <span asp-validation-for="TariffName" class="text-danger"></span>
                     </div>
                     <div class="col-md-3 form-group">
                         <label asp-for="Cnicno"></label>
@@ -68,14 +74,10 @@
                         <label asp-for="City"></label>
                         <input asp-for="City" class="form-control" />
                     </div>
-                    <div class="col-md-3 form-group">
-                        <label asp-for="MeterNo"></label>
-                        <input asp-for="MeterNo" class="form-control" />
-                    </div>
                 </div>
                 <div class="mt-3">
-                    <button type="submit" class="btn btn-warning">Save</button>
-                    <a asp-action="ECustomers" class="btn btn-secondary">Back to List</a>
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <a asp-action="ECustomers" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
         </div>
