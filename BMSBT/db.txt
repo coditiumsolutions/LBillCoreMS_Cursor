@@ -1,3 +1,4 @@
+# Version: 1.1 | UpdatedAt: 01/08/2026
 Database schema
 
 dbo.__EFMigrationsHistory
@@ -43,7 +44,7 @@ dbo.Configuration
 - uid: int(10) NOT NULL
 - ConfigId: int(10) NULL
 - ConfigKey: varchar(50) NULL
-- ConfigValue: varchar(500) NULL
+- ConfigValue: varchar(-1) NULL
 
 dbo.CustomerDetail_Bak09July25
 - uid: int(10) NOT NULL
@@ -155,7 +156,7 @@ dbo.CustomersMaintenance
 - BillGenerationStatus: varchar(50) NULL
 - MeterNo: varchar(50) NULL
 
-dbo.ElectricityBills
+dbo.EBill_Comparison
 - uid: int(10) NOT NULL
 - InvoiceNo: varchar(-1) NULL
 - CustomerNo: varchar(50) NULL
@@ -175,8 +176,8 @@ dbo.ElectricityBills
 - PaymentMethod: varchar(50) NULL
 - BankDetail: varchar(50) NULL
 - EnergyCoast: int(10) NULL
-- CurrentBill: decimal(18,0) NULL
-- BillAmount: decimal(18,0) NULL
+- CurrentBill: decimal(18) NULL
+- BillAmount: decimal(18) NULL
 - LastUpdated: varchar(100) NULL
 - BillAmountInDueDate: int(10) NULL
 - BillSurcharge: int(10) NULL
@@ -190,11 +191,11 @@ dbo.ElectricityBills
 - PreviousSolarReading: int(10) NULL
 - CurrentSolarReading: int(10) NULL
 - DifferenceSolar: int(10) NULL
-- TotalUnit: decimal(18,0) NULL
-- OPC: decimal(18,0) NULL
-- GST: decimal(18,0) NULL
-- PTVFEE: decimal(18,0) NULL
-- FURTHERTAX: decimal(18,0) NULL
+- TotalUnit: decimal(18) NULL
+- OPC: decimal(18) NULL
+- GST: decimal(18) NULL
+- PTVFEE: decimal(18) NULL
+- FURTHERTAX: decimal(18) NULL
 - FPACHARGES: decimal(18,2) NULL
 - CreatedBy: varchar(50) NULL
 - CreateOn: varchar(50) NULL
@@ -223,6 +224,81 @@ dbo.ElectricityBills
 - UnitRate: decimal(18,2) NULL
 - MDIReading: decimal(18,2) NULL
 - DeferredAmount: int(10) NULL
+- FaultyMeter: varchar(50) NULL
+- AMIMeter: varchar(100) NULL
+- TariffType: varchar(100) NULL
+
+dbo.ElectricityBills
+- uid: int(10) NOT NULL
+- InvoiceNo: varchar(-1) NULL
+- CustomerNo: varchar(50) NULL
+- CustomerName: varchar(100) NULL
+- BTNo: varchar(50) NULL
+- BillingMonth: varchar(50) NULL
+- BillingYear: varchar(50) NULL
+- BillingDate: date NULL
+- DueDate: date NULL
+- ReadingDate: date NULL
+- IssueDate: date NULL
+- ValidDate: date NULL
+- MeterType: varchar(50) NULL
+- MeterNo: varchar(50) NULL
+- PaymentStatus: varchar(20) NULL
+- PaymentDate: date NULL
+- PaymentMethod: varchar(50) NULL
+- BankDetail: varchar(50) NULL
+- EnergyCoast: int(10) NULL
+- CurrentBill: decimal(18) NULL
+- BillAmount: decimal(18) NULL
+- LastUpdated: varchar(100) NULL
+- BillAmountInDueDate: int(10) NULL
+- BillSurcharge: int(10) NULL
+- BillAmountAfterDueDate: int(10) NULL
+- PreviousReading1: int(10) NULL
+- CurrentReading1: int(10) NULL
+- Difference1: int(10) NULL
+- PreviousReading2: int(10) NULL
+- CurrentReading2: int(10) NULL
+- Difference2: int(10) NULL
+- PreviousSolarReading: int(10) NULL
+- CurrentSolarReading: int(10) NULL
+- DifferenceSolar: int(10) NULL
+- TotalUnit: decimal(18) NULL
+- OPC: decimal(18) NULL
+- GST: decimal(18) NULL
+- PTVFEE: decimal(18) NULL
+- FURTHERTAX: decimal(18) NULL
+- FPACHARGES: decimal(18,2) NULL
+- CreatedBy: varchar(50) NULL
+- CreateOn: varchar(50) NULL
+- UpdateBy: varchar(50) NULL
+- UpdateOn: varchar(50) NULL
+- Arrears: decimal(18,1) NULL
+- History: varchar(-1) NULL
+- AmountPaid: int(10) NULL
+- Sector: varchar(-1) NULL
+- Block: varchar(-1) NULL
+- PushDate: date NULL
+- PushedBy: varchar(-1) NULL
+- InstalledOn: varchar(50) NULL
+- OPCRate: decimal(18,1) NULL
+- UnitsAmount: int(10) NULL
+- fpa1: decimal(18,1) NULL
+- fpa2: decimal(18,1) NULL
+- fpa3: decimal(18,1) NULL
+- FPARate: varchar(100) NULL
+- MeterStatus: varchar(50) NULL
+- Fine: int(10) NULL
+- SalesTax: int(10) NULL
+- IncomeTax: int(10) NULL
+- ExtraTax: int(10) NULL
+- MF@: int(10) NULL
+- UnitRate: decimal(18,2) NULL
+- MDIReading: decimal(18,2) NULL
+- DeferredAmount: int(10) NULL
+- FaultyMeter: varchar(50) NULL
+- AMIMeter: varchar(100) NULL
+- TariffType: varchar(100) NULL
 
 dbo.ElectricityBills_Copy
 - uid: int(10) NOT NULL
@@ -244,8 +320,8 @@ dbo.ElectricityBills_Copy
 - PaymentMethod: varchar(50) NULL
 - BankDetail: varchar(50) NULL
 - EnergyCoast: int(10) NULL
-- CurrentBill: decimal(18,0) NULL
-- BillAmount: decimal(18,0) NULL
+- CurrentBill: decimal(18) NULL
+- BillAmount: decimal(18) NULL
 - LastUpdated: datetime NULL
 - BillAmountInDueDate: int(10) NULL
 - BillSurcharge: int(10) NULL
@@ -259,11 +335,11 @@ dbo.ElectricityBills_Copy
 - PreviousSolarReading: int(10) NULL
 - CurrentSolarReading: int(10) NULL
 - DifferenceSolar: int(10) NULL
-- TotalUnit: decimal(18,0) NULL
-- OPC: decimal(18,0) NULL
-- GST: decimal(18,0) NULL
-- PTVFEE: decimal(18,0) NULL
-- FURTHERTAX: decimal(18,0) NULL
+- TotalUnit: decimal(18) NULL
+- OPC: decimal(18) NULL
+- GST: decimal(18) NULL
+- PTVFEE: decimal(18) NULL
+- FURTHERTAX: decimal(18) NULL
 - FPACHARGES: decimal(18,2) NULL
 - CreatedBy: varchar(50) NULL
 - CreateOn: varchar(50) NULL
@@ -295,8 +371,8 @@ dbo.ElectricityBillsNetMeter
 - PaymentMethod: varchar(50) NULL
 - BankDetail: varchar(50) NULL
 - EnergyCoast: int(10) NULL
-- CurrentBill: decimal(18,0) NULL
-- BillAmount: decimal(18,0) NULL
+- CurrentBill: decimal(18) NULL
+- BillAmount: decimal(18) NULL
 - LastUpdated: varchar(100) NULL
 - BillAmountInDueDate: int(10) NULL
 - BillSurcharge: int(10) NULL
@@ -310,11 +386,11 @@ dbo.ElectricityBillsNetMeter
 - PreviousSolarReading: int(10) NULL
 - CurrentSolarReading: int(10) NULL
 - DifferenceSolar: int(10) NULL
-- TotalUnit: decimal(18,0) NULL
+- TotalUnit: decimal(18) NULL
 - OPC: decimal(18,1) NULL
-- GST: decimal(18,0) NULL
-- PTVFEE: decimal(18,0) NULL
-- FURTHERTAX: decimal(18,0) NULL
+- GST: decimal(18) NULL
+- PTVFEE: decimal(18) NULL
+- FURTHERTAX: decimal(18) NULL
 - FPACHARGES: decimal(18,2) NULL
 - CreatedBy: varchar(50) NULL
 - CreateOn: varchar(50) NULL
@@ -349,6 +425,11 @@ dbo.ElectricityBillsNetMeter
 - NMCurrentCredit: int(10) NULL
 - NMTotalCredit: int(10) NULL
 - MF@: int(10) NULL
+- AMIMeter: varchar(100) NULL
+- TariffType: varchar(100) NULL
+- CreditAmount: decimal(18,2) NULL
+- FineType: varchar(50) NULL
+- NMInstallDate: date NULL
 
 dbo.Fine
 - FineID: int(10) NOT NULL
@@ -377,7 +458,7 @@ dbo.FpaCharges
 - Id: int(10) NOT NULL
 - FPAMonth: nchar(10) NULL
 - FPAYear: nvarchar(50) NULL
-- FPARate: decimal(18,0) NULL
+- FPARate: decimal(18) NULL
 - Status: bit NULL
 
 dbo.Inventory
@@ -411,7 +492,49 @@ dbo.MaintenanceBills
 - PaymentMethod: varchar(50) NULL
 - BankDetail: varchar(50) NULL
 - LastUpdated: datetime NULL
-- MaintCharges: decimal(18,0) NULL
+- MaintCharges: decimal(18) NULL
+- BillAmountInDueDate: int(10) NULL
+- BillSurcharge: int(10) NULL
+- BillAmountAfterDueDate: int(10) NULL
+- Arrears: decimal(18,1) NULL
+- History: varchar(-1) NULL
+- TaxAmount: int(10) NULL
+- Fine: int(10) NULL
+- OtherCharges: int(10) NULL
+- WaterCharges: int(10) NULL
+- FineDept: varchar(100) NULL
+- PaymentAmount: int(10) NULL
+- Tag: varchar(100) NULL
+
+dbo.MaintenanceTarrif
+- UID: int(10) NOT NULL
+- Project: varchar(50) NOT NULL
+- Category: varchar(-1) NOT NULL
+- Size: nvarchar(100) NOT NULL
+- Charges: float(53) NOT NULL
+- Tax: nchar(10) NULL
+- History: varchar(-1) NULL
+
+dbo.MBill_Comparison
+- uid: int(10) NOT NULL
+- InvoiceNo: varchar(50) NULL
+- CustomerNo: varchar(50) NULL
+- CustomerName: varchar(100) NULL
+- PlotStatus: varchar(50) NULL
+- MeterNo: varchar(50) NULL
+- BTNo: varchar(50) NULL
+- BillingMonth: varchar(50) NULL
+- BillingYear: varchar(50) NULL
+- BillingDate: date NULL
+- DueDate: date NULL
+- IssueDate: date NULL
+- ValidDate: date NULL
+- PaymentStatus: varchar(50) NULL
+- PaymentDate: date NULL
+- PaymentMethod: varchar(50) NULL
+- BankDetail: varchar(50) NULL
+- LastUpdated: datetime NULL
+- MaintCharges: decimal(18) NULL
 - BillAmountInDueDate: int(10) NULL
 - BillSurcharge: int(10) NULL
 - BillAmountAfterDueDate: int(10) NULL
@@ -424,22 +547,13 @@ dbo.MaintenanceBills
 - FineDept: varchar(100) NULL
 - PaymentAmount: int(10) NULL
 
-dbo.MaintenanceTarrif
-- UID: int(10) NOT NULL
-- Project: varchar(50) NOT NULL
-- Category: varchar(-1) NOT NULL
-- Size: nvarchar(100) NOT NULL
-- Charges: float NOT NULL
-- Tax: nchar(10) NULL
-- History: varchar(-1) NULL
-
 dbo.MeterType
 - uid: int(10) NOT NULL
 - MeterId: int(10) NOT NULL
 - MeterType: varchar(50) NOT NULL
 - MeterNo: varchar(50) NOT NULL
 - BTNo: varchar(20) NOT NULL
-- MultiplyFactor: decimal(18,0) NULL
+- MultiplyFactor: decimal(18) NULL
 - History: varchar(-1) NULL
 
 dbo.OperatorsSetup
@@ -508,12 +622,19 @@ dbo.ReadingSheet
 - CreatedOn: datetime NULL
 - History: varchar(-1) NULL
 
+dbo.SessionCache
+- Id: nvarchar(449) NOT NULL
+- Value: varbinary(-1) NOT NULL
+- ExpiresAtTime: datetimeoffset NOT NULL
+- SlidingExpirationInSeconds: bigint(19) NULL
+- AbsoluteExpiration: datetimeoffset NULL
+
 dbo.sysdiagrams
 - name: nvarchar(128) NOT NULL
 - principal_id: int(10) NOT NULL
 - diagram_id: int(10) NOT NULL
 - version: int(10) NULL
-- definition: varbinary NULL
+- definition: varbinary(-1) NULL
 
 dbo.TariffMaint
 - uid: int(10) NOT NULL
@@ -536,9 +657,9 @@ dbo.Tarrif
 - Sequence: nvarchar(50) NULL
 - Range: varchar(50) NOT NULL
 - Rate1: decimal(18,2) NOT NULL
-- Rate2: float NOT NULL
-- NM: float NOT NULL
-- Min Charges: float NULL
+- Rate2: float(53) NOT NULL
+- NM: float(53) NOT NULL
+- Min Charges: float(53) NULL
 - Details: varchar(50) NOT NULL
 - CreatedBy: varchar(-1) NULL
 - CreatedOn: varchar(-1) NULL
@@ -564,3 +685,109 @@ dbo.Users
 - CreatedBy: varchar(-1) NULL
 - CreatedOn: varchar(-1) NULL
 - History: varchar(-1) NULL
+
+dbo.vw_EBillCount
+- uid: int(10) NOT NULL
+- InvoiceNo: varchar(-1) NULL
+- CustomerNo: varchar(50) NULL
+- CustomerName: varchar(100) NULL
+- BTNo: varchar(50) NULL
+- BillingMonth: varchar(50) NULL
+- BillingYear: varchar(50) NULL
+- BillingDate: date NULL
+- DueDate: date NULL
+- ReadingDate: date NULL
+- IssueDate: date NULL
+- ValidDate: date NULL
+- MeterType: varchar(50) NULL
+- MeterNo: varchar(50) NULL
+- PaymentStatus: varchar(20) NULL
+- PaymentDate: date NULL
+- PaymentMethod: varchar(50) NULL
+- BankDetail: varchar(50) NULL
+- EnergyCoast: int(10) NULL
+- CurrentBill: decimal(18) NULL
+- BillAmount: decimal(18) NULL
+- LastUpdated: varchar(100) NULL
+- BillAmountInDueDate: int(10) NULL
+- BillSurcharge: int(10) NULL
+- BillAmountAfterDueDate: int(10) NULL
+- PreviousReading1: int(10) NULL
+- CurrentReading1: int(10) NULL
+- Difference1: int(10) NULL
+- PreviousReading2: int(10) NULL
+- CurrentReading2: int(10) NULL
+- Difference2: int(10) NULL
+- PreviousSolarReading: int(10) NULL
+- CurrentSolarReading: int(10) NULL
+- DifferenceSolar: int(10) NULL
+- TotalUnit: decimal(18) NULL
+- OPC: decimal(18) NULL
+- GST: decimal(18) NULL
+- PTVFEE: decimal(18) NULL
+- FURTHERTAX: decimal(18) NULL
+- FPACHARGES: decimal(18,2) NULL
+- CreatedBy: varchar(50) NULL
+- CreateOn: varchar(50) NULL
+- UpdateBy: varchar(50) NULL
+- UpdateOn: varchar(50) NULL
+- Arrears: decimal(18,1) NULL
+- History: varchar(-1) NULL
+- AmountPaid: int(10) NULL
+- Sector: varchar(-1) NULL
+- Block: varchar(-1) NULL
+- PushDate: date NULL
+- PushedBy: varchar(-1) NULL
+- InstalledOn: varchar(50) NULL
+- OPCRate: decimal(18,1) NULL
+- UnitsAmount: int(10) NULL
+- fpa1: decimal(18,1) NULL
+- fpa2: decimal(18,1) NULL
+- fpa3: decimal(18,1) NULL
+- FPARate: varchar(100) NULL
+- MeterStatus: varchar(50) NULL
+- Fine: int(10) NULL
+- SalesTax: int(10) NULL
+- IncomeTax: int(10) NULL
+- ExtraTax: int(10) NULL
+- Customer_Uid: int(10) NOT NULL
+- Customer_CustomerNo: varchar(20) NOT NULL
+- Customer_BTNo: varchar(20) NULL
+- Customer_Name: varchar(70) NULL
+- GeneratedMonthYear: varchar(50) NULL
+- LocationSeqNo: varchar(50) NULL
+- CNICNo: varchar(50) NULL
+- FatherName: varchar(70) NULL
+- Customer_InstalledOn: varchar(20) NULL
+- MobileNo: varchar(50) NULL
+- TelephoneNo: varchar(50) NULL
+- Customer_MeterType: varchar(50) NULL
+- NTNNumber: varchar(50) NULL
+- City: varchar(50) NULL
+- Customer_Project: varchar(50) NOT NULL
+- SubProject: varchar(50) NOT NULL
+- TariffName: varchar(50) NOT NULL
+- BankNo: varchar(50) NULL
+- BTNoMaintenance: varchar(30) NULL
+- Customer_Category: varchar(100) NOT NULL
+- Customer_Block: varchar(100) NOT NULL
+- PlotType: nvarchar(50) NULL
+- Size: nvarchar(50) NULL
+- Customer_Sector: varchar(100) NOT NULL
+- PloNo: varchar(100) NOT NULL
+- BillStatusMaint: varchar(-1) NULL
+- Customer_BillStatus: varchar(-1) NULL
+- Customer_History: varchar(-1) NULL
+
+dbo.vw_MBill_Comparison
+- uid: int(10) NOT NULL
+- BTNo: varchar(50) NULL
+- InvoiceNo: varchar(50) NULL
+- CustomerNo: varchar(50) NULL
+- CustomerName: varchar(100) NULL
+- BillingMonth: varchar(50) NULL
+- BillingYear: varchar(50) NULL
+- MaintenanceBills_Amount: int(10) NULL
+- MBill_Comparison_Amount: int(10) NULL
+- DifferenceAmount: int(10) NULL
+- ComparisonStatus: varchar(11) NOT NULL

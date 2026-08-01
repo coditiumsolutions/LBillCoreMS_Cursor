@@ -1,33 +1,48 @@
-﻿@model IEnumerable<BMSBT.ViewModels.SectorCustomersViewModel>
+﻿@model X.PagedList.IPagedList<BMSBT.Models.CustomersDetail>
 @using System.Text.Json
+@using X.PagedList
+@using X.PagedList.Mvc.Core
 @{
     Layout = "~/Views/Shared/_LayoutEBills.cshtml";
-    var accordionId = "accordionSectors";
-    int count = 0;
     var selectedProject = ViewBag.SelectedProject as string;
+    var selectedBlock = ViewBag.SelectedBlock as string;
+    var selectedStatus = ViewBag.SelectedStatus as string ?? "Not Generated";
     var btNoSearch = ViewBag.BTNoSearch as string;
     var projects = ViewBag.Projects as List<string> ?? new List<string>();
+    var blocks = ViewBag.Blocks as List<string> ?? new List<string>();
+    var statuses = ViewBag.Statuses as List<string> ?? new List<string> { "Not Generated", "Generated" };
+    var billingMonth = ViewBag.BillingMonth as string;
+    var billingYear = ViewBag.BillingYear as string;
 }
 
 @{
     string operatorJson = Context.Session.GetString("OperatorSetupDetail");
-    string operatorName = "", billingMonth = "", billingYear = "";
+    string operatorName = "", sessionBillingMonth = "", sessionBillingYear = "";
 
     if (!string.IsNullOrEmpty(operatorJson))
     {
         var setup = JsonSerializer.Deserialize<Dictionary<string, string>>(operatorJson);
-        operatorName = setup.ContainsKey("OperatorName") ? setup["OperatorName"] : "";
-        billingMonth = setup.ContainsKey("BillingMonth") ? setup["BillingMonth"] : "";
-        billingYear = setup.ContainsKey("BillingYear") ? setup["BillingYear"] : "";
+        operatorName = setup != null && setup.ContainsKey("OperatorName") ? setup["OperatorName"] : "";
+        sessionBillingMonth = setup != null && setup.ContainsKey("BillingMonth") ? setup["BillingMonth"] : "";
+        sessionBillingYear = setup != null && setup.ContainsKey("BillingYear") ? setup["BillingYear"] : "";
+    }
+
+    if (string.IsNullOrWhiteSpace(billingMonth))
+    {
+        billingMonth = sessionBillingMonth;
+    }
+    if (string.IsNullOrWhiteSpace(billingYear))
+    {
+        billingYear = sessionBillingYear;
+    }
+    if (string.IsNullOrWhiteSpace(operatorName))
+    {
+        operatorName = ViewBag.OperatorName as string ?? "";
     }
 }
 
-
-
-<!-- Include Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-<!-- Optional: Loading overlay -->
 <style>
     #loadingOverlay {
         position: fixed;
@@ -37,13 +52,31 @@
         height: 100%;
         background-color: rgba(255, 255, 255, 0.7);
         z-index: 2000;
-        display: none; /* hidden initially */
+        display: none;
         align-items: center;
         justify-content: center;
     }
     #loadingOverlay .spinner-border {
         width: 3rem;
         height: 3rem;
+    }
+
+    .btn-theme {
+        background-color: #00203F;
+        border-color: #00203F;
+        color: #fff;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.3;
+        height: auto;
+        min-height: 0;
+    }
+
+    .btn-theme:hover,
+    .btn-theme:focus {
+        background-color: #00335f;
+        border-color: #00335f;
+        color: #fff;
     }
 </style>
 
@@ -53,22 +86,17 @@
     </div>
 </div>
 
-<!-- Search / filter form -->
-
-
 <div class="mb-3">
     <span class="fw-bold text-primary">Operator:</span> @operatorName |
     <span class="fw-bold text-primary">Billing Month:</span> @billingMonth |
     <span class="fw-bold text-primary">Billing Year:</span> @billingYear
 </div>
 
-
-
-<form method="get" asp-action="GenerateBill" asp-controller="SGCustomers">
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Bills Not Generated</label>
-            <select name="selectedProject" class="form-select" onchange="this.form.submit()">
+<form method="get" asp-action="GenerateBill" asp-controller="SGCustomers" id="generateBillFilterForm">
+    <div class="row g-2 mb-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-bold" for="selectedProject">Project</label>
+            <select name="selectedProject" id="selectedProject" class="form-select">
                 <option value="">-- Select Project --</option>
                 @foreach (var project in projects)
                 {
@@ -84,106 +112,177 @@
             </select>
         </div>
 
-        @* Show search only if project is selected *@
-        @if (!string.IsNullOrEmpty(selectedProject))
-        {
-            <div class="col-md-4">
-                <label class="form-label fw-bold">Search by BTNo:</label>
-                <input type="text" name="btNoSearch" value="@btNoSearch" class="form-control" placeholder="Enter BTNo..." />
-            </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold" for="selectedBlock">Block</label>
+            <select name="selectedBlock" id="selectedBlock" class="form-select">
+                <option value="">-- All Blocks --</option>
+                @foreach (var blk in blocks)
+                {
+                    if (string.Equals(blk, selectedBlock, StringComparison.Ordinal))
+                    {
+                        <option value="@blk" selected>@blk</option>
+                    }
+                    else
+                    {
+                        <option value="@blk">@blk</option>
+                    }
+                }
+            </select>
+        </div>
 
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
-        }
+        <div class="col-md-3">
+            <label class="form-label fw-bold" for="selectedStatus">Status</label>
+            <select name="selectedStatus" id="selectedStatus" class="form-select">
+                @foreach (var status in statuses)
+                {
+                    if (string.Equals(status, selectedStatus, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@status" selected>@status</option>
+                    }
+                    else
+                    {
+                        <option value="@status">@status</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label fw-bold" for="btNoSearch">Search by BTNo</label>
+            <input type="text" name="btNoSearch" id="btNoSearch" value="@btNoSearch" class="form-control" placeholder="Enter BTNo..." />
+        </div>
     </div>
-    <button id="createRecordelec" type="button" class="btn btn-success mb-3" style="width:150px">
-        Generate Bill
-    </button>
-</form>
 
-<div class="accordion" id="@accordionId">
-    @foreach (var group in Model)
-    {
-        var collapseId = $"collapse_{count}";
-        var headingId = $"heading_{count}";
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="@headingId">
-                <button class="accordion-button collapsed" type="button"
-                        data-bs-toggle="collapse" data-bs-target="#@collapseId"
-                        aria-expanded="false" aria-controls="@collapseId">
-                    Sector: @group.Sector <span class="ms-3 text-muted">(Total: @group.Customers.Count)</span>
-                </button>
-            </h2>
-            <div id="@collapseId" class="accordion-collapse collapse"
-                 aria-labelledby="@headingId" data-bs-parent="#@accordionId">
-                <div class="accordion-body p-0">
-                    <table class="table table-bordered table-striped mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>
-                                    <input type="checkbox"
-                                           onclick="toggleGroupCheckboxes(this, '@collapseId')" />
-                                </th>
-                                <th>BT Number</th>
-                                <th>Customer Name</th>
-                                <th>CNIC No</th>
-                                <th>Mobile No</th>
-                                <th>SubProject</th>
-                                <th>Block</th>
-                                <th>Bill Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var customer in group.Customers)
-                            {
-                                <tr ondblclick="window.location.href='@Url.Action("ViewCustomer", "SGCustomers", new { id = customer.Uid })'"
-                                    style="cursor: pointer;">
-                                    <td>
-                                        @* Each checkbox has name="selectedCustomers" so we can select all checked later *@
-                                        <input type="checkbox" name="selectedCustomers"
-                                               value="@customer.Uid"
-                                               class="checkbox-@collapseId" />
-                                    </td>
-                                    <td>@customer.Btno</td>
-                                    <td>@customer.CustomerName</td>
-                                    <td>@customer.Cnicno</td>
-                                    <td>@customer.MobileNo</td>
-                                    <td>@customer.SubProject</td>
-                                    <td>@customer.Block</td>
-                                    <td>@customer.BillStatus</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex">
+                <button type="submit" class="btn btn-theme mr-2" style="min-width:120px">Search</button>
+                <button id="createRecordelec" type="button" class="btn btn-theme" style="min-width:120px">Generate Bill</button>
             </div>
         </div>
-        count++;
-    }
+    </div>
+</form>
+
+@if (!string.IsNullOrEmpty(selectedProject) && (string.IsNullOrWhiteSpace(billingMonth) || string.IsNullOrWhiteSpace(billingYear)))
+{
+    <div class="alert alert-warning">Operator billing month/year is not set. Update Operator Setup to filter by generation status.</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped mb-0">
+        <thead class="table-light">
+            <tr>
+                <th style="width:40px">
+                    <input type="checkbox" id="selectAllCustomers" title="Select all on this page" />
+                </th>
+                <th>BT Number</th>
+                <th>Customer Name</th>
+                <th>Sector</th>
+                <th>Block</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var customer in Model)
+                {
+                    <tr ondblclick="window.location.href='@Url.Action("ViewCustomer", "SGCustomers", new { id = customer.Uid })'"
+                        style="cursor: pointer;">
+                        <td>
+                            <input type="checkbox" name="selectedCustomers"
+                                   value="@customer.Uid"
+                                   class="customer-checkbox" />
+                        </td>
+                        <td>@customer.Btno</td>
+                        <td>@customer.CustomerName</td>
+                        <td>@customer.Sector</td>
+                        <td>@customer.Block</td>
+                        <td>@selectedStatus</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        @(string.IsNullOrEmpty(selectedProject) ? "Select filters and click Search to load customers." : "No records found for the selected filters.")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
-<!-- Include jQuery first, then Bootstrap JS bundle -->
+@if (Model != null && Model.TotalItemCount > 0)
+{
+    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+        <div class="text-muted small">
+            Showing @Model.FirstItemOnPage–@Model.LastItemOnPage of @Model.TotalItemCount
+        </div>
+        <div>
+            @Html.PagedListPager(Model, pageNumber => Url.Action("GenerateBill", new
+            {
+                selectedProject,
+                selectedBlock,
+                selectedStatus,
+                btNoSearch,
+                page = pageNumber
+            }),
+            new PagedListRenderOptions
+            {
+                LiElementClasses = new[] { "page-item" },
+                PageClasses = new[] { "page-link" },
+                UlElementClasses = new[] { "pagination mb-0" },
+                DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+                DisplayLinkToLastPage = PagedListDisplayMode.Always,
+                DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                MaximumPageNumbersToDisplay = 5
+            })
+        </div>
+    </div>
+}
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJ+Y3TSLRmXX2mY+6pLDcXul5/6p1w5IBXtk=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // Toggle checkboxes in one accordion group
-    function toggleGroupCheckboxes(source, groupId) {
-        // groupId is collapseId, e.g. "collapse_0"
-        // checkboxes have class "checkbox-collapse_0"
-        var selector = '.checkbox-' + groupId;
-        var checked = source.checked;
-        document.querySelectorAll(selector).forEach(cb => {
-            cb.checked = checked;
-        });
-    }
-
     $(document).ready(function () {
-        // Handle Generate Bill button click
+        var blocksUrl = '@Url.Action("GetBlocksByProject", "SGCustomers")';
+        var previouslySelectedBlock = '@(selectedBlock ?? "")';
+
+        function loadBlocks(project, keepSelectedBlock) {
+            var $block = $('#selectedBlock');
+            $block.empty().append($('<option>', { value: '', text: '-- All Blocks --' }));
+
+            if (!project) {
+                return;
+            }
+
+            $.getJSON(blocksUrl, { project: project }, function (blocks) {
+                (blocks || []).forEach(function (blk) {
+                    var opt = $('<option>', { value: blk, text: blk });
+                    if (keepSelectedBlock && blk === previouslySelectedBlock) {
+                        opt.prop('selected', true);
+                    }
+                    $block.append(opt);
+                });
+            });
+        }
+
+        // Changing Project only refreshes Block list — does not run Search
+        $('#selectedProject').on('change', function () {
+            previouslySelectedBlock = '';
+            loadBlocks($(this).val(), false);
+        });
+
+        $('#selectAllCustomers').on('change', function () {
+            $('.customer-checkbox').prop('checked', this.checked);
+        });
+
         $('#createRecordelec').click(function () {
-            // Collect all checked checkboxes named "selectedCustomers"
             var selectedIds = $('input[name="selectedCustomers"]:checked')
                 .map(function () {
                     var v = parseInt($(this).val());
@@ -197,36 +296,27 @@
                 return;
             }
 
-            // Show loading overlay if desired
-            $('#loadingOverlay').show();
+            $('#loadingOverlay').css('display', 'flex');
 
             $.ajax({
-                url: '@Url.Action("GenerateElectricityBills", "EBillU")', // adjust controller/action
+                url: '@Url.Action("GenerateElectricityBills", "EBillU")',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ selectedIds: selectedIds }),
                 success: function (response) {
                     $('#loadingOverlay').hide();
 
+                    var msg = response.message || response.Message || '';
+                    var generated = response.generatedCount || 0;
+
                     if (response.success || response.Success) {
-                        // If you have a #resultsTable to show results:
-                        if ($('#resultsTable').length) {
-                            $('#resultsTable tbody').empty();
-                            var results = Array.isArray(response.results) ? response.results : [];
-                            results.forEach(function (result, index) {
-                                $('#resultsTable tbody').append(
-                                    `<tr><td>${index + 1}</td><td>${result}</td></tr>`
-                                );
-                            });
-                            // Uncheck all for next time
-                            $('input[name="selectedCustomers"]').prop('checked', false);
-                            // Optionally collapse all accordions or reset states
-                            $('#resultsContainer').show();
-                        }
-                        alert('Operation Completed Successfully');
+                        alert(msg || 'Bills Generated');
+                        window.location.reload();
                     } else {
-                        var msg = response.message || response.Message || 'Warning occurred.';
-                        alert('Warning: ' + msg);
+                        alert(msg || 'No bills were generated.');
+                        if (generated > 0) {
+                            window.location.reload();
+                        }
                     }
                 },
                 error: function () {

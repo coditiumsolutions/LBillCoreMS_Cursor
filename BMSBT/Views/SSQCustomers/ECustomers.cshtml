@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "E-Customers";
-    Layout = "_LayoutSSQCustomers";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
 }
 
 @await Html.PartialAsync("_SSQCustomerListStyles")
@@ -47,12 +47,12 @@
                     </select>
                 </div>
                 <div class="form-group col-md-3 mb-md-0">
-                    <label for="sectorFilter" class="font-weight-bold text-secondary small text-uppercase">Sector</label>
-                    <select id="sectorFilter" class="form-control">
-                        <option value="">-- All Sectors --</option>
-                        @foreach (var sector in Model.Sectors)
+                    <label for="blockFilter" class="font-weight-bold text-secondary small text-uppercase">Block</label>
+                    <select id="blockFilter" class="form-control">
+                        <option value="">-- All Blocks --</option>
+                        @foreach (var block in Model.Blocks)
                         {
-                            <option value="@sector" selected="@(Model.SelectedSector == sector ? "selected" : null)">@sector</option>
+                            <option value="@block" selected="@(Model.SelectedBlock == block ? "selected" : null)">@block</option>
                         }
                     </select>
                 </div>
@@ -77,18 +77,18 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            function loadSectors(project, selectedSector) {
-                return $.get('@Url.Action("GetESectorsByProject", "SSQCustomers")',
+            function loadBlocks(project, selectedBlock) {
+                return $.get('@Url.Action("GetEBlocksByProject", "SSQCustomers")',
                     { project: project },
                     function (data) {
-                        var $sector = $('#sectorFilter');
-                        $sector.empty();
-                        $sector.append($('<option>').val('').text('-- All Sectors --'));
-                        $.each(data, function (i, s) {
-                            $sector.append($('<option>').val(s).text(s));
+                        var $block = $('#blockFilter');
+                        $block.empty();
+                        $block.append($('<option>').val('').text('-- All Blocks --'));
+                        $.each(data, function (i, b) {
+                            $block.append($('<option>').val(b).text(b));
                         });
-                        if (selectedSector) {
-                            $sector.val(selectedSector);
+                        if (selectedBlock) {
+                            $block.val(selectedBlock);
                         }
                     });
             }
@@ -103,7 +103,7 @@
                 $.get('@Url.Action("FilterECustomers", "SSQCustomers")',
                     {
                         project: $('#projectFilter').val(),
-                        sector: $('#sectorFilter').val(),
+                        block: $('#blockFilter').val(),
                         btNo: $('#btnoSearch').val(),
                         page: page
                     },
@@ -114,7 +114,7 @@
             }
 
             $('#projectFilter').change(function () {
-                loadSectors($(this).val());
+                loadBlocks($(this).val());
             });
 
             $('#btnSearch').click(function () { loadCustomers(1); });

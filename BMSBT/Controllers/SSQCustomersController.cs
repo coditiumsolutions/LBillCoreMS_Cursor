@@ -351,12 +351,13 @@ namespace BMSBT.Controllers
             return JsonSerializer.Deserialize<CustomerSearchState>(json) ?? new CustomerSearchState();
         }
 
-        private void SaveSearchState(string sessionKey, string? project, string? sector, string? btNo, int? page)
+        private void SaveSearchState(string sessionKey, string? project, string? sector, string? btNo, int? page, string? block = null)
         {
             var state = new CustomerSearchState
             {
                 Project = project,
                 Sector = sector,
+                Block = block,
                 BtNo = btNo,
                 Page = page ?? 1
             };
@@ -364,7 +365,7 @@ namespace BMSBT.Controllers
             HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(state));
         }
 
-        private List<string> GetESectors(string? project)
+        private List<string> GetEBlocks(string? project)
         {
             var query = _context.CustomersDetails.AsNoTracking().AsQueryable();
             if (!string.IsNullOrWhiteSpace(project))
@@ -373,10 +374,10 @@ namespace BMSBT.Controllers
             }
 
             return query
-                .Select(c => c.Sector)
-                .Where(s => s != null && s != "")
+                .Select(c => c.Block)
+                .Where(b => b != null && b != "")
                 .Distinct()
-                .OrderBy(s => s)
+                .OrderBy(b => b)
                 .ToList()!;
         }
 
@@ -396,7 +397,7 @@ namespace BMSBT.Controllers
                 .ToList()!;
         }
 
-        private IQueryable<CustomersDetail> BuildECustomersQuery(string? project, string? sector, string? btNo)
+        private IQueryable<CustomersDetail> BuildECustomersQuery(string? project, string? block, string? btNo)
         {
             var query = _context.CustomersDetails.AsQueryable();
 
@@ -405,9 +406,9 @@ namespace BMSBT.Controllers
                 query = query.Where(c => c.Project == project);
             }
 
-            if (!string.IsNullOrWhiteSpace(sector))
+            if (!string.IsNullOrWhiteSpace(block))
             {
-                query = query.Where(c => c.Sector == sector);
+                query = query.Where(c => c.Block == block);
             }
 
             if (!string.IsNullOrWhiteSpace(btNo))
@@ -420,7 +421,7 @@ namespace BMSBT.Controllers
 
             return query
                 .OrderBy(c => c.Project)
-                .ThenBy(c => c.Sector)
+                .ThenBy(c => c.Block)
                 .ThenBy(c => c.Btno);
         }
 
@@ -464,13 +465,13 @@ namespace BMSBT.Controllers
             var model = new SSQECustomerFilterViewModel
             {
                 Projects = GetProjectOptions(),
-                Sectors = GetESectors(saved.Project),
+                Blocks = GetEBlocks(saved.Project),
                 SelectedProject = saved.Project,
-                SelectedSector = saved.Sector,
+                SelectedBlock = saved.Block,
                 SearchBtNo = saved.BtNo,
                 CurrentPage = saved.Page,
                 Customers = saved.HasFilters
-                    ? BuildECustomersQuery(saved.Project, saved.Sector, saved.BtNo).ToPagedList(saved.Page, CustomerPageSize)
+                    ? BuildECustomersQuery(saved.Project, saved.Block, saved.BtNo).ToPagedList(saved.Page, CustomerPageSize)
                     : new List<CustomersDetail>().ToPagedList(1, CustomerPageSize)
             };
 
@@ -478,18 +479,18 @@ namespace BMSBT.Controllers
         }
 
         [HttpGet]
-        public JsonResult GetESectorsByProject(string project)
+        public JsonResult GetEBlocksByProject(string project)
         {
-            return Json(GetESectors(project));
+            return Json(GetEBlocks(project));
         }
 
         [HttpGet]
-        public PartialViewResult FilterECustomers(string project, string sector, string btNo, int? page)
+        public PartialViewResult FilterECustomers(string project, string block, string btNo, int? page)
         {
-            SaveSearchState(ECustomerSearchSessionKey, project, sector, btNo, page);
+            SaveSearchState(ECustomerSearchSessionKey, project, null, btNo, page, block);
 
             var pageNumber = page ?? 1;
-            var customers = BuildECustomersQuery(project, sector, btNo)
+            var customers = BuildECustomersQuery(project, block, btNo)
                 .ToPagedList(pageNumber, CustomerPageSize);
 
             return PartialView("_ECustomersGrid", customers);

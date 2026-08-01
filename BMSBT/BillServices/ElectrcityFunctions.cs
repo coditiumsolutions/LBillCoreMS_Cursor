@@ -36,8 +36,8 @@ namespace BMSBT.BillServices
 
 
 
-            //Duplication Check 
-            bool billAlreadyExists = dbContext.ElectricityBills.Any(b =>
+            // Duplication check against comparison table (testing target)
+            bool billAlreadyExists = dbContext.EBillComparisons.Any(b =>
               b.Btno == customer.Btno &&
               b.BillingMonth == currentBillingMonth &&
               b.BillingYear == currentBillingYear);
@@ -253,15 +253,15 @@ namespace BMSBT.BillServices
             }
 
 
-            // Create the new bill
-            var newBill = new ElectricityBill
+            // Create the new bill in EBill_Comparison (testing / comparison — not ElectricityBills)
+            var newBill = new EBillComparison
             {
                 CustomerNo = customer.CustomerNo,
                 Btno = customer.Btno,
                 BillingMonth = currentBillingMonth,
                 BillingYear = currentBillingYear,
-                EnergyCoast =Convert.ToInt32(EnergyCoast),
-                CurrentBill = (int?)(Math.Round(Convert.ToDecimal(BillCost))),
+                EnergyCoast = Convert.ToInt32(EnergyCoast),
+                CurrentBill = Math.Round(Convert.ToDecimal(BillCost)),
                 BillAmountInDueDate = RoundToNearestTen(Convert.ToDecimal(BillCost) + Convert.ToDecimal(arrears)),
                 BillSurcharge = (int?)surcharge,
                 BillAmountAfterDueDate = RoundToNearestTen(Convert.ToDecimal(BillCost) + Convert.ToDecimal(surcharge) + Convert.ToDecimal(arrears)),
@@ -270,7 +270,11 @@ namespace BMSBT.BillServices
                 IssueDate = IssueDate,
                 DueDate = DueDate,
                 ValidDate = ValidDate,
-                Opc = Convert.ToDecimal( opc),
+                MeterType = customer.MeterType,
+                MeterNo = customer.MeterNo,
+                Sector = customer.Sector,
+                Block = customer.Block,
+                Opc = Convert.ToDecimal(opc),
                 Ptvfee = Convert.ToDecimal(ptvFee),
                 Furthertax = Convert.ToDecimal(furtherTax),
                 Gst = Convert.ToDecimal(calcgst),
@@ -281,29 +285,30 @@ namespace BMSBT.BillServices
                 PreviousSolarReading = reading.Previous3,
                 CurrentSolarReading = reading.Present3,
                 Difference1 = unitDifference1,
-              
+
                 TotalUnit = TotalUNits,
-                BillAmount= BillAmountt,
+                BillAmount = BillAmountt,
                 Arrears = Convert.ToDecimal(arrears),
-               
-                
-                FPACHARGES=Convert.ToDecimal(TotalFPACHAR),
-                AmountPaid=0,
+
+                FPACHARGES = Convert.ToDecimal(TotalFPACHAR),
+                AmountPaid = 0,
+                PaymentStatus = "Unpaid",
+                CreatedBy = UserName,
+                CreateOn = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             };
 
-            dbContext.ElectricityBills.Add(newBill);
+            dbContext.EBillComparisons.Add(newBill);
             dbContext.SaveChanges();
 
 
             string month = DateTime.ParseExact(currentBillingMonth, "MMMM", null).ToString("MM");
             string year = DateTime.ParseExact(currentBillingYear, "yyyy", null).ToString("yyyy");
 
-            //string paddedUid = newBill.Uid.ToString().PadLeft(8, '0');
             newBill.InvoiceNo = $"{year}{month}{newBill.CustomerNo.PadLeft(5, '0').Substring(Math.Max(0, newBill.CustomerNo.Length - 5))}";
 
             dbContext.Update(newBill);
 
-            customer.BillStatus = $"Bill Generated for {currentBillingMonth} {currentBillingYear}";
+            customer.BillStatus = $"Bill Generated (Comparison) for {currentBillingMonth} {currentBillingYear}";
             dbContext.Update(customer);
             dbContext.SaveChanges();
 

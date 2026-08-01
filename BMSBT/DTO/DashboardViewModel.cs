@@ -10,6 +10,7 @@ namespace BMSBT.DTO
         public int TotalBillsGenerated { get; set; }
         public decimal TotalBillAmountGenerated { get; set; }
         public int BillsUnits { get; set; }
+        public int BscBillsExcluded { get; set; }
 
         // Net Metering Detail
         public int NetMeterBillsGenerated { get; set; }

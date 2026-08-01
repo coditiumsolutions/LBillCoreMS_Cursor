@@ -58,6 +58,8 @@ public partial class BmsbtContext : DbContext
 
     public virtual DbSet<ElectricityBill> ElectricityBills { get; set; }
 
+    public virtual DbSet<EBillComparison> EBillComparisons { get; set; }
+
     public virtual DbSet<MaintenanceBill> MaintenanceBills { get; set; }
 
     public virtual DbSet<MaintenanceTarrif> MaintenanceTarrifs { get; set; }
@@ -305,6 +307,31 @@ public partial class BmsbtContext : DbContext
                 .HasDefaultValue("Unpaid");
             entity.Property(e => e.Ptvfee).HasColumnName("PTVFEE");
             
+        });
+
+        modelBuilder.Entity<EBillComparison>(entity =>
+        {
+            entity.ToTable("EBill_Comparison");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid");
+            entity.Property(e => e.Btno)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("BTNo");
+            entity.Property(e => e.BillingMonth).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.BillingYear).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.CustomerNo).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.CustomerName).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.InvoiceNo).IsUnicode(false);
+            entity.Property(e => e.PaymentStatus)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("Unpaid");
+            entity.Property(e => e.Opc).HasColumnName("OPC");
+            entity.Property(e => e.Gst).HasColumnName("GST");
+            entity.Property(e => e.Ptvfee).HasColumnName("PTVFEE");
+            entity.Property(e => e.Furthertax).HasColumnName("FURTHERTAX");
+            entity.Property(e => e.BillingDate).HasDefaultValueSql("(getdate())");
         });
 
        

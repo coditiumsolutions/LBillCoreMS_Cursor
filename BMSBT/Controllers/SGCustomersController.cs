@@ -2,12 +2,15 @@ using BMSBT.DTO;
 using BMSBT.Models;
 using BMSBT.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
 {
     public class SGCustomersController : Controller
     {
         private readonly BmsbtContext _dbContext;
+        private const int GenerateBillPageSize = 50;
 
         public SGCustomersController(BmsbtContext context)
         {
@@ -117,11 +120,18 @@ namespace BMSBT.Controllers
 
 
 
-        public IActionResult GenerateBill(string selectedProject, string btNoSearch)
+        public IActionResult GenerateBill(
+            string selectedProject,
+            string selectedBlock,
+            string selectedStatus,
+            string btNoSearch,
+            int? page)
         {
-            // Set Operator Name, Billing Month, Billing Year from session and Operators Setup
             string userName = HttpContext.Session.GetString("UserName");
             ViewBag.OperatorName = userName;
+
+            string? billingMonth = null;
+            string? billingYear = null;
 
             if (!string.IsNullOrEmpty(userName))
             {
@@ -132,52 +142,119 @@ namespace BMSBT.Controllers
 
                 if (operatorSetup != null)
                 {
-                    ViewBag.BillingMonth = operatorSetup.BillingMonth;
-                    ViewBag.BillingYear = operatorSetup.BillingYear;
+                    billingMonth = operatorSetup.BillingMonth?.Trim();
+                    billingYear = operatorSetup.BillingYear?.Trim();
+                    ViewBag.BillingMonth = billingMonth;
+                    ViewBag.BillingYear = billingYear;
                 }
             }
 
-            // Dropdown projects
             var projects = _dbContext.CustomersDetails
-                .Select(p => p.Project.Trim())
+                .Where(p => p.Project != null && p.Project.Trim() != "")
+                .Select(p => p.Project!.Trim())
                 .Distinct()
+                .OrderBy(p => p)
                 .ToList();
 
-
-           
-
-            // Start with empty result
-            var filteredData = new List<SectorCustomersViewModel>();
-
-            // Only load if project is selected
-            if (!string.IsNullOrEmpty(selectedProject))
+            var blocks = new List<string>();
+            if (!string.IsNullOrWhiteSpace(selectedProject))
             {
+                var trimProject = selectedProject.Trim();
+                blocks = _dbContext.CustomersDetails
+                    .Where(c => c.Project != null
+                                && c.Project.Trim() == trimProject
+                                && c.Block != null
+                                && c.Block.Trim() != "")
+                    .Select(c => c.Block!.Trim())
+                    .Distinct()
+                    .OrderBy(b => b)
+                    .ToList();
+            }
 
+            // Default status for bill generation screen
+            if (string.IsNullOrWhiteSpace(selectedStatus))
+            {
+                selectedStatus = "Not Generated";
+            }
+
+            IPagedList<CustomersDetail> pagedCustomers =
+                new StaticPagedList<CustomersDetail>(Array.Empty<CustomersDetail>(), 1, GenerateBillPageSize, 0);
+
+            if (!string.IsNullOrWhiteSpace(selectedProject)
+                && !string.IsNullOrWhiteSpace(billingMonth)
+                && !string.IsNullOrWhiteSpace(billingYear))
+            {
+                var trimProject = selectedProject.Trim();
                 var query = _dbContext.CustomersDetails
-            .Where(c =>
-                (c.BillGenerationStatus == null || c.BillGenerationStatus == "Not Generated") &&
-                c.Project.Trim() == selectedProject.Trim());
+                    .Where(c => c.Project != null && c.Project.Trim() == trimProject);
 
-                if (!string.IsNullOrEmpty(btNoSearch))
+                if (!string.IsNullOrWhiteSpace(selectedBlock))
                 {
-                    query = query.Where(c => c.Btno.Contains(btNoSearch));
+                    var trimBlock = selectedBlock.Trim();
+                    query = query.Where(c => c.Block != null && c.Block.Trim() == trimBlock);
                 }
 
-            filteredData = query
-           .GroupBy(c => c.Sector)
-           .Select(g => new SectorCustomersViewModel
-           {
-               Sector = g.Key,
-               Customers = g.ToList()
-           })
-           .ToList();
-           }
+                if (!string.IsNullOrWhiteSpace(btNoSearch))
+                {
+                    var term = btNoSearch.Trim();
+                    query = query.Where(c => c.Btno != null && c.Btno.Contains(term));
+                }
+
+                // Generation status for operator billing month/year via EBill_Comparison (testing)
+                var billedBtNos = _dbContext.EBillComparisons
+                    .Where(b => b.BillingMonth == billingMonth
+                                && b.BillingYear == billingYear
+                                && b.Btno != null)
+                    .Select(b => b.Btno!)
+                    .Distinct();
+
+                if (string.Equals(selectedStatus, "Generated", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(c => c.Btno != null && billedBtNos.Contains(c.Btno));
+                }
+                else if (string.Equals(selectedStatus, "Not Generated", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(c => c.Btno == null || !billedBtNos.Contains(c.Btno));
+                }
+
+                int pageNumber = page ?? 1;
+                pagedCustomers = query
+                    .OrderBy(c => c.Block)
+                    .ThenBy(c => c.Btno)
+                    .ToPagedList(pageNumber, GenerateBillPageSize);
+            }
 
             ViewBag.Projects = projects;
+            ViewBag.Blocks = blocks;
             ViewBag.SelectedProject = selectedProject;
+            ViewBag.SelectedBlock = selectedBlock;
+            ViewBag.SelectedStatus = selectedStatus;
+            ViewBag.BTNoSearch = btNoSearch;
+            ViewBag.Statuses = new List<string> { "Not Generated", "Generated" };
 
-            return View(filteredData);
+            return View(pagedCustomers);
+        }
 
+        [HttpGet]
+        public JsonResult GetBlocksByProject(string project)
+        {
+            if (string.IsNullOrWhiteSpace(project))
+            {
+                return Json(new List<string>());
+            }
+
+            var trimProject = project.Trim();
+            var blocks = _dbContext.CustomersDetails
+                .Where(c => c.Project != null
+                            && c.Project.Trim() == trimProject
+                            && c.Block != null
+                            && c.Block.Trim() != "")
+                .Select(c => c.Block!.Trim())
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+
+            return Json(blocks);
         }
 
 
