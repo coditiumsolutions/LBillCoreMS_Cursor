@@ -1,0 +1,229 @@
+@model X.PagedList.IPagedList<BMSBT.ViewModels.AddReadingCustomerRow>
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@{
+    ViewData["Title"] = "Add Reading";
+    Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+    var selectedProject = ViewBag.SelectedProject as string;
+    var selectedBlock = ViewBag.SelectedBlock as string;
+    var btNoSearch = ViewBag.BTNoSearch as string;
+    var projects = ViewBag.Projects as List<string> ?? new List<string>();
+    var blocks = ViewBag.Blocks as List<string> ?? new List<string>();
+    var billingMonth = ViewBag.BillingMonth as string;
+    var billingYear = ViewBag.BillingYear as string;
+}
+
+<style>
+    .btn-theme {
+        background-color: #00203F;
+        border-color: #00203F;
+        color: #fff;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    .btn-theme:hover, .btn-theme:focus {
+        background-color: #00335f;
+        border-color: #00335f;
+        color: #fff;
+    }
+    .reading-added {
+        color: #1b7a3d;
+        white-space: nowrap;
+    }
+    .reading-missing {
+        color: #c62828;
+        white-space: nowrap;
+    }
+</style>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <h4 class="mb-0">Add Reading — Select Customer</h4>
+    @if (!string.IsNullOrWhiteSpace(billingMonth) && !string.IsNullOrWhiteSpace(billingYear))
+    {
+        <div class="text-muted">
+            Operator Period: <strong>@billingMonth @billingYear</strong>
+        </div>
+    }
+    else
+    {
+        <div class="text-danger small">Operator billing month/year is not set.</div>
+    }
+</div>
+
+<form method="get" asp-action="AddReading" asp-controller="Reading" id="addReadingFilterForm">
+    <div class="row mb-2 align-items-end">
+        <div class="col-md-3">
+            <label class="font-weight-bold small" for="selectedProject">Project</label>
+            <select name="selectedProject" id="selectedProject" class="form-control">
+                <option value="">-- Select Project --</option>
+                @foreach (var project in projects)
+                {
+                    if (project == selectedProject)
+                    {
+                        <option value="@project" selected>@project</option>
+                    }
+                    else
+                    {
+                        <option value="@project">@project</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="font-weight-bold small" for="selectedBlock">Block</label>
+            <select name="selectedBlock" id="selectedBlock" class="form-control">
+                <option value="">-- All Blocks --</option>
+                @foreach (var blk in blocks)
+                {
+                    if (string.Equals(blk, selectedBlock, StringComparison.Ordinal))
+                    {
+                        <option value="@blk" selected>@blk</option>
+                    }
+                    else
+                    {
+                        <option value="@blk">@blk</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="font-weight-bold small" for="btNoSearch">BT No / Name / Plot</label>
+            <input type="text" name="btNoSearch" id="btNoSearch" value="@btNoSearch" class="form-control" placeholder="Search..." />
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-theme">Search</button>
+        </div>
+    </div>
+</form>
+
+<div class="mb-3">
+    <button type="button" id="btnOpenAddReading" class="btn btn-theme">Add Reading</button>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped mb-0">
+        <thead class="thead-light">
+            <tr>
+                <th style="width:40px"></th>
+                <th>BT Number</th>
+                <th>Customer Name</th>
+                <th>Plot No</th>
+                <th>Block</th>
+                <th>Sector</th>
+                <th>Category</th>
+                <th>
+                    Reading (@(string.IsNullOrWhiteSpace(billingMonth) ? "Period" : billingMonth) @(billingYear ?? ""))
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var customer in Model)
+                {
+                    <tr>
+                        <td>
+                            <input type="radio" name="selectedCustomerBtno" value="@customer.Btno" class="customer-radio" />
+                        </td>
+                        <td>@customer.Btno</td>
+                        <td>@customer.CustomerName</td>
+                        <td>@customer.PloNo</td>
+                        <td>@customer.Block</td>
+                        <td>@customer.Sector</td>
+                        <td>@customer.Category</td>
+                        <td>
+                            @if (customer.HasReading)
+                            {
+                                <span class="reading-added">
+                                    Prev: @customer.PreviousReading &nbsp;|&nbsp; Curr: @customer.CurrentReading
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="reading-missing">Not Added</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        @(string.IsNullOrEmpty(selectedProject)
+                            ? "Select a project and click Search to load customers."
+                            : "No customers found for the selected filters.")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model != null && Model.TotalItemCount > 0)
+{
+    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
+        <div class="text-muted small">
+            Showing @Model.FirstItemOnPage–@Model.LastItemOnPage of @Model.TotalItemCount
+        </div>
+        <div>
+            @Html.PagedListPager(Model, pageNumber => Url.Action("AddReading", new
+            {
+                selectedProject,
+                selectedBlock,
+                btNoSearch,
+                page = pageNumber
+            }),
+            new PagedListRenderOptions
+            {
+                LiElementClasses = new[] { "page-item" },
+                PageClasses = new[] { "page-link" },
+                UlElementClasses = new[] { "pagination mb-0" },
+                DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+                DisplayLinkToLastPage = PagedListDisplayMode.Always,
+                DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                MaximumPageNumbersToDisplay = 5
+            })
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    $(document).ready(function () {
+        var blocksUrl = '@Url.Action("GetBlocksByProject", "Reading")';
+
+        $('#selectedProject').on('change', function () {
+            var project = $(this).val();
+            var $block = $('#selectedBlock');
+            $block.empty().append($('<option>', { value: '', text: '-- All Blocks --' }));
+            if (!project) return;
+            $.getJSON(blocksUrl, { project: project }, function (blocks) {
+                (blocks || []).forEach(function (blk) {
+                    $block.append($('<option>', { value: blk, text: blk }));
+                });
+            });
+        });
+
+        $('#btnOpenAddReading').on('click', function () {
+            var btno = $('input[name="selectedCustomerBtno"]:checked').val();
+            if (!btno) {
+                alert('Please select a customer first.');
+                return;
+            }
+            window.location.href = '@Url.Action("CreateReading", "Reading")?btno=' + encodeURIComponent(btno);
+        });
+    });
+</script>
+}

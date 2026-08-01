@@ -27,8 +27,9 @@ namespace BMSBT.Services
             httpContext.Session.SetString("Role", user.Role ?? "");
             httpContext.Session.SetString("LoginTime", DateTime.Now.ToString("hh:mm tt"));
 
-            var operatorSetup = await _context.OperatorsSetups
-                .FirstOrDefaultAsync(o => o.OperatorName == user.Username);
+            // Prefer OperatorsSetup.OperatorName = login name (not Users.EmployeeId).
+            // shahid had EmployeeId=1002 (ASAD/May) while Operator Setup "Shahid" is July.
+            var operatorSetup = OperatorSetupResolver.Resolve(_context, user.Username, user.EmployeeId);
 
             if (operatorSetup != null)
             {
@@ -41,24 +42,17 @@ namespace BMSBT.Services
                 };
 
                 httpContext.Session.SetString("OperatorSetupDetail", JsonSerializer.Serialize(operatorSetupDetail));
+                httpContext.Session.SetString("OperatorId", operatorSetup.OperatorID ?? "");
+
+                BillCreationState.CurrentMonth = operatorSetup.BillingMonth ?? "";
+                BillCreationState.CurrentYear = operatorSetup.BillingYear ?? "";
             }
-
-            var resolvedOperatorId = !string.IsNullOrWhiteSpace(user.EmployeeId)
-                ? user.EmployeeId
-                : (operatorSetup?.OperatorID ?? "");
-            httpContext.Session.SetString("OperatorId", resolvedOperatorId);
-
-            if (!string.IsNullOrEmpty(resolvedOperatorId))
+            else
             {
-                var operatorDetails = await _context.OperatorsSetups
-                    .FirstOrDefaultAsync(o => o.OperatorID == resolvedOperatorId);
-
-                if (operatorDetails != null)
-                {
-                    BillCreationState.CurrentMonth = operatorDetails.BillingMonth ?? "";
-                    BillCreationState.CurrentYear = operatorDetails.BillingYear ?? "";
-                }
+                httpContext.Session.SetString("OperatorId", user.EmployeeId ?? "");
             }
+
+            await Task.CompletedTask;
         }
 
         public async Task RestoreSessionFromClaimsAsync(HttpContext httpContext)

@@ -3,6 +3,7 @@ using BMSBT.DTO;
 using BMSBT.Models;
 using BMSBT.Requests;
 using BMSBT.Roles;
+using BMSBT.Services;
 using BMSBT.ViewModels;
 using DevExpress.CodeParser;
 using Microsoft.AspNetCore.Mvc;
@@ -912,7 +913,16 @@ namespace BMSBT.Controllers
         public async Task<IActionResult> GenerateElectricityBills([FromBody] ElectricityBillRequest request)
         {
             string operatorId = HttpContext.Session.GetString("OperatorId");
-            ViewBag.Username = HttpContext.Session.GetString("UserName");
+            string userName = HttpContext.Session.GetString("UserName");
+            ViewBag.Username = userName;
+
+            // Align with Operator Setup for this login (OperatorName), not stale EmployeeId mapping
+            var resolvedSetup = OperatorSetupResolver.Resolve(_dbContext, userName, operatorId);
+            if (resolvedSetup != null && !string.IsNullOrWhiteSpace(resolvedSetup.OperatorID))
+            {
+                operatorId = resolvedSetup.OperatorID;
+                HttpContext.Session.SetString("OperatorId", operatorId);
+            }
 
             if (string.IsNullOrEmpty(operatorId))
             {
@@ -990,7 +1000,14 @@ namespace BMSBT.Controllers
                 }
                 catch (Exception ex)
                 {
-                    failureResults.Add($"Customer ID {customerId}: {ex.Message}");
+                    var detail = ex.Message;
+                    var inner = ex.InnerException;
+                    while (inner != null)
+                    {
+                        detail += " | " + inner.Message;
+                        inner = inner.InnerException;
+                    }
+                    failureResults.Add($"Customer ID {customerId}: {detail}");
                 }
             }
 

@@ -9,13 +9,17 @@ using BMSBT.Models;
 using System.Globalization;
 using static DevExpress.XtraPrinting.Native.PageSizeInfo;
 using BMSBT.Roles;
+using BMSBT.Services;
 using BMSBT.ViewModels;
+using X.PagedList;
+using X.PagedList.Extensions;
 
 namespace BMSBT.Controllers
 {
     public class ReadingController : Controller
     {
         private readonly BmsbtContext _context; // Your DbContext
+        private const int AddReadingPageSize = 50;
 
         public ReadingController(BmsbtContext context)
         {
@@ -25,37 +29,109 @@ namespace BMSBT.Controllers
 
         public IActionResult Index(string search)
         {
-            string currentMonth = DateTime.Now.ToString("MMMM");
-            string currentYear = DateTime.Now.Year.ToString();
-
-            ViewBag.TotalReadings = _context.ReadingSheets.Count();
-
-            ViewBag.CurrentMonthReadings = _context.ReadingSheets
-                .Count(r => r.Month == currentMonth && r.Year == currentYear);
-
-            ViewBag.PendingReadings = _context.CustomersDetails
-                .Count(c => !_context.ReadingSheets.Any(r => r.Btno == c.Btno && r.Month == currentMonth && r.Year == currentYear));
-
-            return View();
+            return View(BuildLastThreeMonthsReadingStats());
         }
 
 
         public IActionResult Dashboard()
         {
+            return View(BuildLastThreeMonthsReadingStats());
+        }
 
-            string currentMonth = DateTime.Now.ToString("MMMM");
-            string currentYear = DateTime.Now.Year.ToString();
+        private List<MonthlyReadingStat> BuildLastThreeMonthsReadingStats()
+        {
+            var userName = HttpContext.Session.GetString("UserName");
+            var operatorId = HttpContext.Session.GetString("OperatorId");
+            var operatorSetup = OperatorSetupResolver.Resolve(_context, userName, operatorId);
 
-            ViewBag.TotalReadings = _context.ReadingSheets.Count();
+            var anchorMonth = operatorSetup?.BillingMonth?.Trim();
+            var anchorYear = operatorSetup?.BillingYear?.Trim();
 
-            ViewBag.CurrentMonthReadings = _context.ReadingSheets
-                .Count(r => r.Month == currentMonth && r.Year == currentYear);
+            var periods = GetLastThreeBillingPeriods(anchorMonth, anchorYear);
 
-            ViewBag.PendingReadings = _context.CustomersDetails
-                .Count(c => !_context.ReadingSheets.Any(r => r.Btno == c.Btno && r.Month == currentMonth && r.Year == currentYear));
+            var totalCustomers = _context.CustomersDetails
+                .Count(c => c.Btno != null && c.Btno.Trim() != "");
 
-            return View();
+            var monthNames = periods.Select(p => p.Month).Distinct().ToList();
+            var years = periods.Select(p => p.Year).Distinct().ToList();
 
+            var readings = _context.ReadingSheets
+                .Where(r => r.Month != null && r.Year != null
+                            && monthNames.Contains(r.Month)
+                            && years.Contains(r.Year))
+                .Select(r => new { r.Btno, Month = r.Month!, Year = r.Year! })
+                .ToList()
+                .Where(r => periods.Any(p =>
+                    string.Equals(p.Month, r.Month.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(p.Year, r.Year.Trim(), StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            var stats = new List<MonthlyReadingStat>();
+            foreach (var period in periods)
+            {
+                var monthRows = readings
+                    .Where(r => string.Equals(r.Month.Trim(), period.Month, StringComparison.OrdinalIgnoreCase)
+                                && string.Equals(r.Year.Trim(), period.Year, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                var entered = monthRows.Count;
+                var customersWithReading = monthRows
+                    .Where(r => !string.IsNullOrWhiteSpace(r.Btno))
+                    .Select(r => r.Btno!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count();
+
+                stats.Add(new MonthlyReadingStat
+                {
+                    Month = period.Month,
+                    Year = period.Year,
+                    TotalEntered = entered,
+                    Pending = Math.Max(0, totalCustomers - customersWithReading)
+                });
+            }
+
+            ViewBag.AnchorMonth = periods.Count > 0 ? periods[^1].Month : null;
+            ViewBag.AnchorYear = periods.Count > 0 ? periods[^1].Year : null;
+            ViewBag.OperatorName = operatorSetup?.OperatorName ?? userName;
+
+            return stats;
+        }
+
+        /// <summary>
+        /// Returns three periods ending at the operator billing month (or calendar month), oldest first.
+        /// </summary>
+        private static List<(string Month, string Year)> GetLastThreeBillingPeriods(string? monthName, string? yearText)
+        {
+            var monthMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["January"] = 1, ["February"] = 2, ["March"] = 3, ["April"] = 4,
+                ["May"] = 5, ["June"] = 6, ["July"] = 7, ["August"] = 8,
+                ["September"] = 9, ["October"] = 10, ["November"] = 11, ["December"] = 12
+            };
+
+            int month;
+            int year;
+            if (!string.IsNullOrWhiteSpace(monthName)
+                && monthMap.TryGetValue(monthName.Trim(), out month)
+                && int.TryParse(yearText, out year))
+            {
+                // use operator period
+            }
+            else
+            {
+                month = DateTime.Now.Month;
+                year = DateTime.Now.Year;
+            }
+
+            var result = new List<(string Month, string Year)>();
+            var cursor = new DateTime(year, month, 1);
+            for (int i = 2; i >= 0; i--)
+            {
+                var d = cursor.AddMonths(-i);
+                result.Add((d.ToString("MMMM", CultureInfo.InvariantCulture), d.Year.ToString()));
+            }
+
+            return result;
         }
 
 
@@ -444,84 +520,293 @@ namespace BMSBT.Controllers
         // GET: Create Reading
         public IActionResult CreateReading(string btno = null)
         {
-            // Populate dropdowns
-            ViewBag.BillingMonths = new List<string>
-    {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-
-            ViewBag.BillingYears = Enumerable.Range(DateTime.Now.Year - 5, 6)
-                                             .Select(y => y.ToString())
-                                             .ToList();
+            PopulateReadingDropdowns();
 
             var model = new ReadingSheet();
+
+            // Default month/year from operator setup when available
+            string? userName = HttpContext.Session.GetString("UserName");
+            if (!string.IsNullOrWhiteSpace(userName))
+            {
+                var operatorSetup = _context.OperatorsSetups
+                    .AsEnumerable()
+                    .FirstOrDefault(o => string.Equals(o.OperatorName?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase)
+                                      || string.Equals(o.OperatorID?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (operatorSetup != null)
+                {
+                    model.Month = operatorSetup.BillingMonth ?? model.Month;
+                    model.Year = operatorSetup.BillingYear ?? model.Year;
+                }
+            }
 
             if (!string.IsNullOrEmpty(btno))
             {
                 var customer = _context.CustomersDetails.FirstOrDefault(c => c.Btno == btno);
                 if (customer != null)
                 {
-                    model.Btno = customer.Btno;
+                    model.Btno = customer.Btno!;
                     model.CustomerNo = customer.CustomerNo;
+                    model.TarrifName = customer.TariffName;
+                    model.MeterType = customer.MeterType;
+
+                    // Prefill previous reading from last saved present reading for this BTNo
+                    var lastReading = _context.ReadingSheets
+                        .Where(r => r.Btno == customer.Btno)
+                        .OrderByDescending(r => r.Uid)
+                        .FirstOrDefault();
+                    if (lastReading?.Present1 != null)
+                    {
+                        model.Previous1 = lastReading.Present1;
+                    }
                 }
             }
 
             return View(model);
         }
-
-
-
-
 
         // POST: Create Reading
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult CreateReading(ReadingSheet model)
         {
-            if (ModelState.IsValid)
+            PopulateReadingDropdowns();
+
+            if (string.IsNullOrWhiteSpace(model.Btno) ||
+                string.IsNullOrWhiteSpace(model.Month) ||
+                string.IsNullOrWhiteSpace(model.Year))
             {
-                bool exists = _context.ReadingSheets.Any(r => r.Btno == model.Btno
-                                                              && r.Month == model.Month
-                                                              && r.Year == model.Year);
-                if (exists)
-                {
-                    ModelState.AddModelError("", "This reading already exists for the selected month and year.");
-                }
-                else if (model.Previous1 > model.Present1)
-                {
-                    ModelState.AddModelError("", "Previous Reading cannot be greater than Current Reading.");
-                }
-                else
-                {
-                    model.CreatedOn = DateTime.Now;
-                    model.CreatedBy = HttpContext.Session.GetString("UserName") ?? "System";
-                    model.History = $"Created on {model.CreatedOn:yyyy-MM-dd HH:mm} by {model.CreatedBy}";
+                ModelState.AddModelError("", "BT No, Month and Year are required.");
+                return View(model);
+            }
 
-                    _context.ReadingSheets.Add(model);
-                    _context.SaveChanges();
+            model.Btno = model.Btno.Trim();
+            model.Month = model.Month.Trim();
+            model.Year = model.Year.Trim();
 
-                    TempData["SuccessMessage"] = "New reading added successfully!";
-                    return RedirectToAction("Search", new { search = model.Btno });
+            // Unique: BTNo + Month + Year
+            bool exists = _context.ReadingSheets.Any(r =>
+                r.Btno == model.Btno &&
+                r.Month == model.Month &&
+                r.Year == model.Year);
+
+            if (exists)
+            {
+                ModelState.AddModelError("", $"A reading already exists for BT No {model.Btno} in {model.Month} {model.Year}.");
+                return View(model);
+            }
+
+            if (model.Previous1 == null || model.Present1 == null)
+            {
+                ModelState.AddModelError("", "Previous Reading and Current Reading are required.");
+                return View(model);
+            }
+
+            if (model.Previous1 < 0 || model.Present1 < 0)
+            {
+                ModelState.AddModelError("", "Readings cannot be negative.");
+                return View(model);
+            }
+
+            if (model.Previous1 > model.Present1)
+            {
+                ModelState.AddModelError("", "Previous Reading cannot be greater than Current Reading.");
+                return View(model);
+            }
+
+            // Fill customer fields if missing
+            var customer = _context.CustomersDetails.FirstOrDefault(c => c.Btno == model.Btno);
+            if (customer != null)
+            {
+                model.CustomerNo ??= customer.CustomerNo;
+                model.TarrifName ??= customer.TariffName;
+                model.MeterType ??= customer.MeterType;
+            }
+
+            model.Difference1 = model.Present1 - model.Previous1;
+            model.CreatedOn = DateTime.Now;
+            model.CreatedBy = HttpContext.Session.GetString("UserName") ?? "System";
+            model.History = $"Created on {model.CreatedOn:yyyy-MM-dd HH:mm} by {model.CreatedBy}";
+
+            _context.ReadingSheets.Add(model);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = $"Reading saved for BT No {model.Btno} ({model.Month} {model.Year}).";
+            return RedirectToAction(nameof(AddReading));
+        }
+
+        private void PopulateReadingDropdowns()
+        {
+            ViewBag.BillingMonths = new List<string>
+            {
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            };
+
+            ViewBag.BillingYears = Enumerable.Range(DateTime.Now.Year - 5, 8)
+                .Select(y => y.ToString())
+                .ToList();
+        }
+
+        /// <summary>
+        /// Customer list for selecting a customer and opening the Add Reading form.
+        /// </summary>
+        public IActionResult AddReading(string selectedProject, string selectedBlock, string btNoSearch, int? page)
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            string? userName = HttpContext.Session.GetString("UserName");
+            ViewBag.UserName = userName;
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+
+            string? billingMonth = null;
+            string? billingYear = null;
+            if (!string.IsNullOrWhiteSpace(userName))
+            {
+                var operatorSetup = _context.OperatorsSetups
+                    .AsEnumerable()
+                    .FirstOrDefault(o => string.Equals(o.OperatorName?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase)
+                                      || string.Equals(o.OperatorID?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (operatorSetup != null)
+                {
+                    billingMonth = operatorSetup.BillingMonth?.Trim();
+                    billingYear = operatorSetup.BillingYear?.Trim();
                 }
             }
 
-            // ✅ Ensure dropdowns are populated on post-back
-            ViewBag.BillingMonths = new List<string>
-    {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
+            ViewBag.BillingMonth = billingMonth;
+            ViewBag.BillingYear = billingYear;
 
-            ViewBag.BillingYears = Enumerable.Range(DateTime.Now.Year - 5, 6)
-                                             .Select(y => y.ToString())
-                                             .ToList();
+            var projects = _context.CustomersDetails
+                .Where(p => p.Project != null && p.Project.Trim() != "")
+                .Select(p => p.Project!.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
 
-            return View(model);
+            var blocks = new List<string>();
+            if (!string.IsNullOrWhiteSpace(selectedProject))
+            {
+                var trimProject = selectedProject.Trim();
+                blocks = _context.CustomersDetails
+                    .Where(c => c.Project != null
+                                && c.Project.Trim() == trimProject
+                                && c.Block != null
+                                && c.Block.Trim() != "")
+                    .Select(c => c.Block!.Trim())
+                    .Distinct()
+                    .OrderBy(b => b)
+                    .ToList();
+            }
+
+            IPagedList<AddReadingCustomerRow> customers =
+                new StaticPagedList<AddReadingCustomerRow>(Array.Empty<AddReadingCustomerRow>(), 1, AddReadingPageSize, 0);
+
+            if (!string.IsNullOrWhiteSpace(selectedProject))
+            {
+                var trimProject = selectedProject.Trim();
+                var query = _context.CustomersDetails
+                    .Where(c => c.Project != null && c.Project.Trim() == trimProject);
+
+                if (!string.IsNullOrWhiteSpace(selectedBlock))
+                {
+                    var trimBlock = selectedBlock.Trim();
+                    query = query.Where(c => c.Block != null && c.Block.Trim() == trimBlock);
+                }
+
+                if (!string.IsNullOrWhiteSpace(btNoSearch))
+                {
+                    var term = btNoSearch.Trim();
+                    query = query.Where(c =>
+                        (c.Btno != null && c.Btno.Contains(term)) ||
+                        (c.CustomerName != null && c.CustomerName.Contains(term)) ||
+                        (c.PloNo != null && c.PloNo.Contains(term)));
+                }
+
+                var pageNumber = page ?? 1;
+                var pagedCustomers = query
+                    .OrderBy(c => c.Block)
+                    .ThenBy(c => c.Btno)
+                    .ToPagedList(pageNumber, AddReadingPageSize);
+
+                var pageBtNos = pagedCustomers
+                    .Where(c => !string.IsNullOrWhiteSpace(c.Btno))
+                    .Select(c => c.Btno!)
+                    .Distinct()
+                    .ToList();
+
+                Dictionary<string, ReadingSheet> readingsByBtno = new(StringComparer.OrdinalIgnoreCase);
+                if (pageBtNos.Count > 0
+                    && !string.IsNullOrWhiteSpace(billingMonth)
+                    && !string.IsNullOrWhiteSpace(billingYear))
+                {
+                    readingsByBtno = _context.ReadingSheets
+                        .Where(r => r.Month == billingMonth
+                                    && r.Year == billingYear
+                                    && r.Btno != null
+                                    && pageBtNos.Contains(r.Btno))
+                        .AsEnumerable()
+                        .GroupBy(r => r.Btno!, StringComparer.OrdinalIgnoreCase)
+                        .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.Uid).First(), StringComparer.OrdinalIgnoreCase);
+                }
+
+                var rows = pagedCustomers.Select(c =>
+                {
+                    ReadingSheet? reading = null;
+                    bool hasReading = !string.IsNullOrWhiteSpace(c.Btno)
+                                     && readingsByBtno.TryGetValue(c.Btno!, out reading);
+
+                    return new AddReadingCustomerRow
+                    {
+                        Uid = c.Uid,
+                        Btno = c.Btno,
+                        CustomerName = c.CustomerName,
+                        PloNo = c.PloNo,
+                        Block = c.Block,
+                        Sector = c.Sector,
+                        Category = c.Category,
+                        HasReading = hasReading,
+                        PreviousReading = reading?.Previous1,
+                        CurrentReading = reading?.Present1
+                    };
+                }).ToList();
+
+                customers = new StaticPagedList<AddReadingCustomerRow>(
+                    rows, pagedCustomers.PageNumber, pagedCustomers.PageSize, pagedCustomers.TotalItemCount);
+            }
+
+            ViewBag.Projects = projects;
+            ViewBag.Blocks = blocks;
+            ViewBag.SelectedProject = selectedProject;
+            ViewBag.SelectedBlock = selectedBlock;
+            ViewBag.BTNoSearch = btNoSearch;
+
+            return View(customers);
         }
 
+        [HttpGet]
+        public JsonResult GetBlocksByProject(string project)
+        {
+            if (string.IsNullOrWhiteSpace(project))
+            {
+                return Json(new List<string>());
+            }
 
+            var trimProject = project.Trim();
+            var blocks = _context.CustomersDetails
+                .Where(c => c.Project != null
+                            && c.Project.Trim() == trimProject
+                            && c.Block != null
+                            && c.Block.Trim() != "")
+                .Select(c => c.Block!.Trim())
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
 
-
+            return Json(blocks);
+        }
 
         public IActionResult SearchCustomer(string sector = null, string searchTerm = null)
         {

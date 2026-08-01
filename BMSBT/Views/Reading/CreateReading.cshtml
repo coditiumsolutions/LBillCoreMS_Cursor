@@ -29,22 +29,22 @@
     }
 
         .form-group label {
-            width: 40%; /* Increased from 30% to 40% */
+            width: 40%;
             font-weight: bold;
         }
 
         .form-group .form-control {
-            width: 60%; /* Adjusted to match label width */
+            width: 60%;
         }
 
     .btn-container {
         text-align: center;
-        margin-top: 30px; /* Increased spacing */
+        margin-top: 30px;
     }
 
     .btn {
         padding: 10px 30px;
-        margin: 0 10px; /* space between buttons */
+        margin: 0 10px;
     }
 </style>
 
@@ -52,6 +52,11 @@
     @Html.ValidationSummary(false, "", new { @class = "text-danger" })
 
     <form asp-action="CreateReading" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="CustomerNo" />
+        <input type="hidden" asp-for="TarrifName" />
+        <input type="hidden" asp-for="MeterType" />
+
         <div class="form-group">
             <label>BT No:</label>
             <input asp-for="Btno" class="form-control" readonly required />
@@ -80,18 +85,18 @@
         </div>
 
         <div class="form-group">
-            <label>Current Reading:</label>
-            <input asp-for="Present1" type="number" class="form-control" required />
-        </div>
-
-        <div class="form-group">
             <label>Previous Reading:</label>
             <input asp-for="Previous1" type="number" class="form-control" required />
         </div>
 
+        <div class="form-group">
+            <label>Current Reading:</label>
+            <input asp-for="Present1" type="number" class="form-control" required />
+        </div>
+
         <div class="btn-container">
             <button type="submit" class="btn btn-success">Save</button>
-            <a asp-action="ShowReading" class="btn btn-secondary">Cancel</a>
+            <a asp-action="AddReading" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

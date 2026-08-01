@@ -17,16 +17,21 @@
 
 @{
     string operatorJson = Context.Session.GetString("OperatorSetupDetail");
-    string operatorName = "", sessionBillingMonth = "", sessionBillingYear = "";
+    string operatorName = ViewBag.OperatorName as string ?? "";
+    string sessionBillingMonth = "", sessionBillingYear = "";
 
     if (!string.IsNullOrEmpty(operatorJson))
     {
         var setup = JsonSerializer.Deserialize<Dictionary<string, string>>(operatorJson);
-        operatorName = setup != null && setup.ContainsKey("OperatorName") ? setup["OperatorName"] : "";
+        if (string.IsNullOrWhiteSpace(operatorName))
+        {
+            operatorName = setup != null && setup.ContainsKey("OperatorName") ? setup["OperatorName"] : "";
+        }
         sessionBillingMonth = setup != null && setup.ContainsKey("BillingMonth") ? setup["BillingMonth"] : "";
         sessionBillingYear = setup != null && setup.ContainsKey("BillingYear") ? setup["BillingYear"] : "";
     }
 
+    // ViewBag (live OperatorsSetup) wins over stale session JSON
     if (string.IsNullOrWhiteSpace(billingMonth))
     {
         billingMonth = sessionBillingMonth;
@@ -34,10 +39,6 @@
     if (string.IsNullOrWhiteSpace(billingYear))
     {
         billingYear = sessionBillingYear;
-    }
-    if (string.IsNullOrWhiteSpace(operatorName))
-    {
-        operatorName = ViewBag.OperatorName as string ?? "";
     }
 }
 
@@ -180,6 +181,7 @@
                 <th>Sector</th>
                 <th>Block</th>
                 <th>Status</th>
+                <th>Generation Remark</th>
             </tr>
         </thead>
         <tbody>
@@ -187,6 +189,9 @@
             {
                 @foreach (var customer in Model)
                 {
+                    var generationRemark = string.Equals(selectedStatus, "Generated", StringComparison.OrdinalIgnoreCase)
+                        ? string.Empty
+                        : (customer.BillGenerationStatus ?? string.Empty);
                     <tr ondblclick="window.location.href='@Url.Action("ViewCustomer", "SGCustomers", new { id = customer.Uid })'"
                         style="cursor: pointer;">
                         <td>
@@ -199,13 +204,14 @@
                         <td>@customer.Sector</td>
                         <td>@customer.Block</td>
                         <td>@selectedStatus</td>
+                        <td class="small text-danger">@generationRemark</td>
                     </tr>
                 }
             }
             else
             {
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
+                    <td colspan="7" class="text-center text-muted py-4">
                         @(string.IsNullOrEmpty(selectedProject) ? "Select filters and click Search to load customers." : "No records found for the selected filters.")
                     </td>
                 </tr>
@@ -307,17 +313,15 @@
                     $('#loadingOverlay').hide();
 
                     var msg = response.message || response.Message || '';
-                    var generated = response.generatedCount || 0;
 
                     if (response.success || response.Success) {
                         alert(msg || 'Bills Generated');
-                        window.location.reload();
                     } else {
                         alert(msg || 'No bills were generated.');
-                        if (generated > 0) {
-                            window.location.reload();
-                        }
                     }
+
+                    // Reload so Generation Remark (BillGenerationStatus) refreshes
+                    window.location.reload();
                 },
                 error: function () {
                     $('#loadingOverlay').hide();

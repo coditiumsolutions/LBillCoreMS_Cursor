@@ -332,6 +332,7 @@ public partial class BmsbtContext : DbContext
             entity.Property(e => e.Ptvfee).HasColumnName("PTVFEE");
             entity.Property(e => e.Furthertax).HasColumnName("FURTHERTAX");
             entity.Property(e => e.BillingDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.Uid).ValueGeneratedOnAdd();
         });
 
        

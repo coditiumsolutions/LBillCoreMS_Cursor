@@ -44,10 +44,9 @@ namespace BMSBT.BillServices
 
             if (billAlreadyExists)
             {
-                customer.BillStatus = $"Bill Already Generated for {currentBillingMonth} {currentBillingYear}";
-                dbContext.Update(customer);
-                dbContext.SaveChanges();
-                return $"Bill already generated for customer {customer.CustomerName}.";
+                return SetGenerationFailure(customer,
+                    $"Bill Already Generated for {currentBillingMonth} {currentBillingYear}",
+                    $"Bill already generated for customer {customer.CustomerName}.");
             }
 
 
@@ -80,29 +79,30 @@ namespace BMSBT.BillServices
                 }
                 else
                 {
-                    customer.BillStatus = $"No bill found for {PreviousMonth} {previousYear}.";
-                    dbContext.Update(customer);
-                    dbContext.SaveChanges();
-                    return $"No previous bill found for {PreviousMonth} {previousYear} for customer {customer.CustomerName}.";
+                    return SetGenerationFailure(customer,
+                        $"No bill found for {PreviousMonth} {previousYear}.",
+                        $"No previous bill found for {PreviousMonth} {previousYear} for customer {customer.CustomerName}.");
                 }
             }
 
 
 
 
-            //Reading Fetch from Db 
+            //Reading Fetch from Db (trim-safe BTNo + Month + Year)
+            var btno = (customer.Btno ?? string.Empty).Trim();
+            var month = (currentBillingMonth ?? string.Empty).Trim();
+            var year = (currentBillingYear ?? string.Empty).Trim();
 
             var reading = dbContext.ReadingSheets.FirstOrDefault(r =>
-                r.Btno == customer.Btno &&
-                r.Month == currentBillingMonth &&
-                r.Year == currentBillingYear);
+                r.Btno != null && r.Btno.Trim() == btno &&
+                r.Month != null && r.Month.Trim() == month &&
+                r.Year != null && r.Year.Trim() == year);
 
             if (reading == null)
             {
-                customer.BillStatus = $"Reading sheet not found for {currentBillingMonth} {currentBillingYear}";
-                dbContext.Update(customer);
-                dbContext.SaveChanges();
-                return $"Reading sheet not found for customer {customer.CustomerName}.";
+                return SetGenerationFailure(customer,
+                    $"Reading sheet not found for {month} {year}",
+                    $"Reading sheet not found for customer {customer.CustomerName}.");
             }
 
             //Units Diffrence calculation by reading subtraction Here 
@@ -111,20 +111,18 @@ namespace BMSBT.BillServices
 
             if (reading.Previous1 < 0 || reading.Present1 < 0)
             {
-                customer.BillStatus = $"Previous Or Present Reading cannot be Negative for {currentBillingMonth} {currentBillingYear}";
-                dbContext.Update(customer);
-                dbContext.SaveChanges();
-                return $"Wrong Reading for customer {customer.CustomerName}.";
+                return SetGenerationFailure(customer,
+                    $"Previous Or Present Reading cannot be Negative for {month} {year}",
+                    $"Wrong Reading for customer {customer.CustomerName}.");
             }
 
 
 
             if (unitDifference1 < 0)
             {
-                customer.BillStatus = $"Previous Reading cannot be Less Than Current Reading for {currentBillingMonth} {currentBillingYear}";
-                dbContext.Update(customer);
-                dbContext.SaveChanges();
-                return $"Wrong Reading for customer {customer.CustomerName}.";
+                return SetGenerationFailure(customer,
+                    $"Previous Reading cannot be Less Than Current Reading for {month} {year}",
+                    $"Wrong Reading for customer {customer.CustomerName}.");
             }
 
 
@@ -136,10 +134,9 @@ namespace BMSBT.BillServices
 
             if (tariff == null)
             {
-                customer.BillStatus = $"Tariff Not Found for {currentBillingMonth} {currentBillingYear}";
-                dbContext.Update(customer);
-                dbContext.SaveChanges();
-                return $"Tariff not found for customer {customer.CustomerName}.";
+                return SetGenerationFailure(customer,
+                    $"Tariff Not Found for {month} {year}",
+                    $"Tariff not found for customer {customer.CustomerName}.");
             }
 
 
@@ -160,15 +157,10 @@ namespace BMSBT.BillServices
             // Handle not found cases
             if (fpabill1 == null)
             {
-                string missingMonths = "";
-
-                if (fpabill1 == null)
-                    missingMonths += $"FPA Month 1: {FPAMONTH1} ";
-
-                customer.BillStatus = $"Bill for FPA not found for: {missingMonths}";
-                dbContext.Update(customer);
-                dbContext.SaveChanges();
-                return $"Bill for FPA not found for: {missingMonths}";
+                string missingMonths = $"FPA Month 1: {FPAMONTH1} ";
+                return SetGenerationFailure(customer,
+                    $"Bill for FPA not found for: {missingMonths}",
+                    $"Bill for FPA not found for: {missingMonths}");
             }
 
             // Calculation for FPA 1
@@ -301,24 +293,33 @@ namespace BMSBT.BillServices
             dbContext.SaveChanges();
 
 
-            string month = DateTime.ParseExact(currentBillingMonth, "MMMM", null).ToString("MM");
-            string year = DateTime.ParseExact(currentBillingYear, "yyyy", null).ToString("yyyy");
-
-            newBill.InvoiceNo = $"{year}{month}{newBill.CustomerNo.PadLeft(5, '0').Substring(Math.Max(0, newBill.CustomerNo.Length - 5))}";
+            string invoiceMonth = DateTime.ParseExact(currentBillingMonth, "MMMM", null).ToString("MM");
+            string invoiceYear = DateTime.ParseExact(currentBillingYear, "yyyy", null).ToString("yyyy");
+            var customerNo = newBill.CustomerNo ?? string.Empty;
+            var paddedCustomerNo = customerNo.PadLeft(5, '0');
+            newBill.InvoiceNo = $"{invoiceYear}{invoiceMonth}{paddedCustomerNo.Substring(Math.Max(0, paddedCustomerNo.Length - 5))}";
 
             dbContext.Update(newBill);
 
             customer.BillStatus = $"Bill Generated (Comparison) for {currentBillingMonth} {currentBillingYear}";
+            customer.BillGenerationStatus = null;
             dbContext.Update(customer);
             dbContext.SaveChanges();
 
             return $"Bill created successfully for customer {customer.CustomerName}.";
         }
 
-
-
-
-
+        private string SetGenerationFailure(CustomersDetail customer, string statusMessage, string returnMessage)
+        {
+            customer.BillStatus = statusMessage;
+            // Column is varchar(500); keep in sync if DB length changes
+            customer.BillGenerationStatus = returnMessage.Length <= 500
+                ? returnMessage
+                : returnMessage.Substring(0, 500);
+            dbContext.Update(customer);
+            dbContext.SaveChanges();
+            return returnMessage;
+        }
 
         private double ?GetTaxAmount(string taxName, string TarrifType)
         {

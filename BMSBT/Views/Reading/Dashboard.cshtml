@@ -1,49 +1,72 @@
-﻿@{
+﻿@model List<BMSBT.ViewModels.MonthlyReadingStat>
+@{
     ViewData["Title"] = "Reading Dashboard";
     Layout = "~/Views/Shared/_LayoutReadingSheet.cshtml";
+    var operatorName = ViewBag.OperatorName as string ?? "";
+    var anchorMonth = ViewBag.AnchorMonth as string ?? "";
+    var anchorYear = ViewBag.AnchorYear as string ?? "";
 }
 
-<h2>📊 Reading Dashboard</h2>
+<h2>Reading Dashboard</h2>
 
-<div class="row text-center mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white shadow-sm">
-            <div class="card-body">
-                <h4>Total Readings</h4>
-                <h2>@ViewBag.TotalReadings</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white shadow-sm">
-            <div class="card-body">
-                <h4>Current Month Readings</h4>
-                <h2>@ViewBag.CurrentMonthReadings</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white shadow-sm">
-            <div class="card-body">
-                <h4>Pending Readings</h4>
-                <h2>@ViewBag.PendingReadings</h2>
-            </div>
-        </div>
-    </div>
+@if (!string.IsNullOrWhiteSpace(operatorName) || !string.IsNullOrWhiteSpace(anchorMonth))
+{
+    <p class="text-muted mb-3">
+        @if (!string.IsNullOrWhiteSpace(operatorName))
+        {
+            <span>Operator: <strong>@operatorName</strong></span>
+        }
+        @if (!string.IsNullOrWhiteSpace(anchorMonth))
+        {
+            <span class="ms-2">Billing period: <strong>@anchorMonth @anchorYear</strong></span>
+        }
+        <span class="ms-2">(last 3 months)</span>
+    </p>
+}
+
+<div class="table-responsive mb-4">
+    <table class="table table-bordered table-striped mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Month</th>
+                <th class="text-end">Total Readings Entered</th>
+                <th class="text-end">Pending Readings</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var row in Model)
+                {
+                    <tr>
+                        <td>@row.Label</td>
+                        <td class="text-end">@row.TotalEntered.ToString("N0")</td>
+                        <td class="text-end">@row.Pending.ToString("N0")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="3" class="text-center text-muted">No data available.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
-<h4>🔗 Quick Actions</h4>
+<h4>Quick Actions</h4>
 <div class="row">
     <div class="col-md-3">
-        <a class="btn btn-outline-primary w-100 mb-2" asp-action="CreateReading">➕ Add Reading</a>
+        <a class="btn btn-outline-primary w-100 mb-2" asp-action="AddReading">Add Reading</a>
     </div>
     <div class="col-md-3">
-        <a class="btn btn-outline-secondary w-100 mb-2" asp-action="ShowReading">📄 View Readings</a>
+        <a class="btn btn-outline-secondary w-100 mb-2" asp-action="ShowReading">View Readings</a>
     </div>
     <div class="col-md-3">
-        <a class="btn btn-outline-warning w-100 mb-2" asp-action="SearchCustomer">👥 View Customers by Sector</a>
+        <a class="btn btn-outline-warning w-100 mb-2" asp-action="SearchCustomer">View Customers by Sector</a>
     </div>
     <div class="col-md-3">
-        <a class="btn btn-outline-info w-100 mb-2" asp-action="Reports">📊 Reports</a>
+        <a class="btn btn-outline-info w-100 mb-2" asp-action="Reports">Reports</a>
     </div>
 </div>

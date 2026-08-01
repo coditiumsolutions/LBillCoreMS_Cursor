@@ -1,5 +1,6 @@
 using BMSBT.DTO;
 using BMSBT.Models;
+using BMSBT.Services;
 using BMSBT.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using X.PagedList;
@@ -128,25 +129,29 @@ namespace BMSBT.Controllers
             int? page)
         {
             string userName = HttpContext.Session.GetString("UserName");
-            ViewBag.OperatorName = userName;
+            string? operatorId = HttpContext.Session.GetString("OperatorId");
 
-            string? billingMonth = null;
-            string? billingYear = null;
+            // Prefer OperatorsSetup by login name (not Users.EmployeeId / wrong OperatorId)
+            var operatorSetup = OperatorSetupResolver.Resolve(_dbContext, userName, operatorId);
 
-            if (!string.IsNullOrEmpty(userName))
+            string? billingMonth = operatorSetup?.BillingMonth?.Trim();
+            string? billingYear = operatorSetup?.BillingYear?.Trim();
+            ViewBag.OperatorName = operatorSetup?.OperatorName ?? userName;
+            ViewBag.BillingMonth = billingMonth;
+            ViewBag.BillingYear = billingYear;
+
+            // Keep session aligned so Generate Bill API uses the same period
+            if (operatorSetup != null && !string.IsNullOrWhiteSpace(operatorSetup.OperatorID))
             {
-                var operatorSetup = _dbContext.OperatorsSetups
-                    .AsEnumerable()
-                    .FirstOrDefault(o => string.Equals(o.OperatorName?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase)
-                                      || string.Equals(o.OperatorID?.Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase));
-
-                if (operatorSetup != null)
+                HttpContext.Session.SetString("OperatorId", operatorSetup.OperatorID);
+                var detail = new Dictionary<string, string>
                 {
-                    billingMonth = operatorSetup.BillingMonth?.Trim();
-                    billingYear = operatorSetup.BillingYear?.Trim();
-                    ViewBag.BillingMonth = billingMonth;
-                    ViewBag.BillingYear = billingYear;
-                }
+                    { "OperatorId", operatorSetup.OperatorID ?? "" },
+                    { "OperatorName", operatorSetup.OperatorName ?? "" },
+                    { "BillingMonth", operatorSetup.BillingMonth ?? "" },
+                    { "BillingYear", operatorSetup.BillingYear ?? "" }
+                };
+                HttpContext.Session.SetString("OperatorSetupDetail", System.Text.Json.JsonSerializer.Serialize(detail));
             }
 
             var projects = _dbContext.CustomersDetails
