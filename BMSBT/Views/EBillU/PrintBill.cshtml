@@ -4,11 +4,14 @@
 @model IPagedList<BillDTO>
 
 @{
+    ViewData["Title"] = "Print Bill";
     Layout = "~/Views/Shared/_LayoutEBills.cshtml";
     var bills = Model ?? new StaticPagedList<BillDTO>(new List<BillDTO>(), 1, 50, 0);
-    var selectedSearch = ViewBag.SelectedSearch as string ?? "";
     var selectedMonth = ViewBag.SelectedMonth as string ?? "";
     var selectedYear = ViewBag.SelectedYear as string ?? "";
+    var selectedBtNo = ViewBag.SelectedBtNo as string ?? "";
+    var selectedBlock = ViewBag.SelectedBlock as string ?? "";
+    var blocks = ViewBag.Blocks as List<string> ?? new List<string>();
 }
 
 <div id="loadingOverlay" class="loading-overlay" style="display: none;">
@@ -62,23 +65,12 @@
     <div class="alert alert-success">@ViewBag.SuccessMessage</div>
 }
 
-<form method="get" asp-action="SearchBill" asp-controller="EBillU" class="mb-3">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label for="search" class="form-label">Search <span class="text-danger">*</span></label>
-            <input type="text"
-                   id="search"
-                   name="search"
-                   value="@selectedSearch"
-                   class="form-control w-100"
-                   placeholder="BTNo, Name or CNIC"
-                   required
-                   autofocus />
-        </div>
+<form method="get" asp-action="PrintBill" asp-controller="EBillU" class="mb-3">
+    <div class="row g-2">
         <div class="col-md-3">
-            <label for="month" class="form-label">Billing Month</label>
+            <label for="month" class="form-label">Month</label>
             <select id="month" name="month" class="form-control w-100">
-                <option value="">-- All --</option>
+                <option value="">-- Month --</option>
                 @foreach (var monthName in System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
                 {
                     if (string.Equals(monthName, selectedMonth, StringComparison.OrdinalIgnoreCase))
@@ -93,9 +85,9 @@
             </select>
         </div>
         <div class="col-md-3">
-            <label for="year" class="form-label">Billing Year</label>
+            <label for="year" class="form-label">Year</label>
             <select id="year" name="year" class="form-control w-100">
-                <option value="">-- All --</option>
+                <option value="">-- Year --</option>
                 @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 10; i--)
                 {
                     var y = i.ToString();
@@ -110,10 +102,31 @@
                 }
             </select>
         </div>
+        <div class="col-md-3">
+            <label for="block" class="form-label">Block</label>
+            <select id="block" name="block" class="form-control w-100">
+                <option value="">-- All Blocks --</option>
+                @foreach (var blk in blocks)
+                {
+                    if (string.Equals(blk, selectedBlock, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@blk" selected>@blk</option>
+                    }
+                    else
+                    {
+                        <option value="@blk">@blk</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="BtNo" class="form-label">BTNo</label>
+            <input type="text" id="BtNo" name="BtNo" value="@selectedBtNo" class="form-control w-100" placeholder="Enter BTNo" />
+        </div>
     </div>
     <div class="row mt-3">
         <div class="col-12">
-            <div class="d-flex" style="gap: 1rem;">
+            <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary" style="min-width:140px">Search</button>
                 <button id="PrintRecordsButton" type="button" class="btn btn-secondary" style="min-width:140px">Print Bill</button>
             </div>
@@ -136,8 +149,6 @@
                     <input type="checkbox" id="selectAll" title="Select all on this page" />
                 </th>
                 <th>BTNo</th>
-                <th>Name</th>
-                <th>CNIC</th>
                 <th>Block</th>
                 <th>Plot No</th>
                 <th>Category</th>
@@ -161,8 +172,6 @@
                                    data-year="@bill.BillingYear" />
                         </td>
                         <td>@bill.Btno</td>
-                        <td>@bill.CustomerName</td>
-                        <td>@bill.Cnicno</td>
                         <td>@bill.Block</td>
                         <td>@bill.PloNo</td>
                         <td>@bill.Category</td>
@@ -175,9 +184,9 @@
             else
             {
                 <tr>
-                    <td colspan="10" class="text-center text-muted py-4">
+                    <td colspan="8" class="text-center text-muted py-4">
                         @(string.IsNullOrEmpty(ViewBag.ErrorMessage as string)
-                            ? "Enter BTNo, Name or CNIC and click Search."
+                            ? "Select filters and click Search to load bills."
                             : "No records found.")
                     </td>
                 </tr>
@@ -189,11 +198,12 @@
 @if (Model != null && Model.TotalItemCount > 0)
 {
     <div class="d-flex justify-content-end mt-3">
-        @Html.PagedListPager(Model, pageNumber => Url.Action("SearchBill", new
+        @Html.PagedListPager(Model, pageNumber => Url.Action("PrintBill", new
         {
-            search = selectedSearch,
             month = selectedMonth,
             year = selectedYear,
+            BtNo = selectedBtNo,
+            block = selectedBlock,
             page = pageNumber
         }),
         new PagedListRenderOptions
@@ -227,6 +237,7 @@
             });
 
             $("#PrintRecordsButton").on("click", function () {
+                // Build parallel BTNo / Month / Year arrays from checked rows
                 var items = [];
                 $('.record-checkbox:checked').each(function () {
                     var btNo = String($(this).data('btno') || '').trim();

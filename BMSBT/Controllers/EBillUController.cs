@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using X.PagedList.Extensions;
+using X.PagedList;
 using static BMSBT.Controllers.MaintenanceBillController;
 
 namespace BMSBT.Controllers
@@ -1060,48 +1061,204 @@ namespace BMSBT.Controllers
         {
             try
             {
-
-                // Optional: Validate other fields
-                //if (string.IsNullOrEmpty(request.project) ||
-                //    string.IsNullOrEmpty(request.sector) ||
-                //    string.IsNullOrEmpty(request.block) ||
-                //    string.IsNullOrEmpty(request.month) ||
-                //    string.IsNullOrEmpty(request.year))
-                //{
-                //    return BadRequest("All fields must be provided.");
-                //}
-
-                // Optional: Log or process request info
-                Console.WriteLine($"Generating bills for Project: {request.project}, Sector: {request.sector}, Block: {request.block}, Month: {request.month}, Year: {request.year}");
-
-                var client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
-
-                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
-
-                //var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?project={request.project}&sector={request.sector}&block={request.block}&month={request.month}&year={request.year}";
-
-
-                // If needed, you can append filters to the URL or send them in headers/body to the API.
-                // For now, we just log them.
-
-                var response = await client.GetAsync(url);
-
-                if (response.IsSuccessStatusCode)
+                if (request == null || string.IsNullOrWhiteSpace(request.uids))
                 {
-                    var pdfData = await response.Content.ReadAsByteArrayAsync();
-
-                    if (pdfData == null || pdfData.Length == 0)
-                    {
-                        return BadRequest("Received empty PDF data");
-                    }
-
-                    Response.Headers.Add("Content-Disposition", "attachment; filename=MaintenanceBill.pdf");
-                    return File(pdfData, "application/pdf");
+                    return BadRequest("Please select at least one bill to print.");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+                var uidList = request.uids
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(x => int.TryParse(x, out _))
+                    .Select(int.Parse)
+                    .Distinct()
+                    .ToList();
+
+                if (uidList.Count == 0)
+                {
+                    return BadRequest("Please select at least one bill to print.");
+                }
+
+                var selectedSet = uidList.ToHashSet();
+
+                // Load selected bills with customer filters
+                var selectedBills = (
+                    from bill in _dbContext.ElectricityBills
+                    join customer in _dbContext.CustomersDetails on bill.Btno equals customer.Btno
+                    where selectedSet.Contains(bill.Uid)
+                    select new
+                    {
+                        bill.Uid,
+                        bill.Btno,
+                        bill.BillingMonth,
+                        bill.BillingYear,
+                        Category = customer.Category,
+                        Block = customer.Block,
+                        Project = customer.Project
+                    }
+                ).ToList();
+
+                if (selectedBills.Count == 0)
+                {
+                    return BadRequest("Selected bill records were not found.");
+                }
+
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(90);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                // Try UID API first (exact selection) — may be unavailable
+                var uidsParam = string.Join(",", uidList);
+                foreach (var uidUrl in new[]
+                {
+                    $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={uidsParam}",
+                    $"http://172.20.228.2:81/api/ElectricityBill/GetEBillByUid?uids={uidsParam}"
+                })
+                {
+                    try
+                    {
+                        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                        var uidResponse = await client.GetAsync(uidUrl, cts.Token);
+                        if (uidResponse.IsSuccessStatusCode)
+                        {
+                            var pdf = await uidResponse.Content.ReadAsByteArrayAsync(cts.Token);
+                            if (pdf is { Length: > 0 })
+                            {
+                                Response.Headers["Content-Disposition"] = "attachment; filename=ElectricityBills.pdf";
+                                return File(pdf, "application/pdf");
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // fall through to page-filter approach
+                    }
+                }
+
+                // Working API returns 1 PDF page per bill for a Category/Block/Month/Year/Project set.
+                // Download each set PDF and keep only pages that map to the checked UIDs.
+                using var outputDoc = new PdfSharpCore.Pdf.PdfDocument();
+                var billGroups = selectedBills
+                    .GroupBy(b => new
+                    {
+                        Category = (b.Category ?? "").Trim(),
+                        Block = (b.Block ?? "").Trim(),
+                        Month = (b.BillingMonth ?? "").Trim(),
+                        Year = (b.BillingYear ?? "").Trim(),
+                        Project = (b.Project ?? "").Trim()
+                    })
+                    .ToList();
+
+                foreach (var billGroup in billGroups)
+                {
+                    var category = billGroup.Key.Category;
+                    var block = billGroup.Key.Block;
+                    var month = billGroup.Key.Month;
+                    var year = billGroup.Key.Year;
+                    var project = billGroup.Key.Project;
+
+                    if (string.IsNullOrWhiteSpace(category)
+                        || string.IsNullOrWhiteSpace(block)
+                        || string.IsNullOrWhiteSpace(month)
+                        || string.IsNullOrWhiteSpace(year))
+                    {
+                        return BadRequest("Selected bills are missing Category/Block/Month/Year required for printing.");
+                    }
+
+                    var groupBills = _dbContext.ElectricityBills
+                        .Join(
+                            _dbContext.CustomersDetails,
+                            bill => bill.Btno,
+                            customer => customer.Btno,
+                            (bill, customer) => new { bill, customer })
+                        .Where(x =>
+                            x.bill.BillingMonth == month
+                            && x.bill.BillingYear == year
+                            && x.customer.Category != null
+                            && x.customer.Category.Trim() == category
+                            && x.customer.Block != null
+                            && x.customer.Block.Trim() == block
+                            && (project == ""
+                                || (x.customer.Project != null && x.customer.Project.Trim() == project)))
+                        .OrderBy(x => x.bill.Btno)
+                        .Select(x => x.bill.Uid)
+                        .ToList();
+
+                    var url =
+                        "http://172.20.228.2:81/api/ElectricityBill/GetEBill" +
+                        $"?category={Uri.EscapeDataString(category)}" +
+                        $"&block={Uri.EscapeDataString(block)}" +
+                        $"&month={Uri.EscapeDataString(month)}" +
+                        $"&year={Uri.EscapeDataString(year)}" +
+                        $"&project={Uri.EscapeDataString(project)}";
+
+                    var response = await client.GetAsync(url);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+                    }
+
+                    var groupPdf = await response.Content.ReadAsByteArrayAsync();
+                    if (groupPdf == null || groupPdf.Length == 0)
+                    {
+                        return BadRequest("Received empty PDF data from print service.");
+                    }
+
+                    using var inputStream = new MemoryStream(groupPdf);
+                    using var inputDoc = PdfSharpCore.Pdf.IO.PdfReader.Open(
+                        inputStream,
+                        PdfSharpCore.Pdf.IO.PdfDocumentOpenMode.Import);
+
+                    // Expect 1 page per bill in BTNo order
+                    if (inputDoc.PageCount != groupBills.Count)
+                    {
+                        // Retry with Uid order mapping if counts still match
+                        groupBills = _dbContext.ElectricityBills
+                            .Join(
+                                _dbContext.CustomersDetails,
+                                bill => bill.Btno,
+                                customer => customer.Btno,
+                                (bill, customer) => new { bill, customer })
+                            .Where(x =>
+                                x.bill.BillingMonth == month
+                                && x.bill.BillingYear == year
+                                && x.customer.Category != null
+                                && x.customer.Category.Trim() == category
+                                && x.customer.Block != null
+                                && x.customer.Block.Trim() == block
+                                && (project == ""
+                                    || (x.customer.Project != null && x.customer.Project.Trim() == project)))
+                            .OrderBy(x => x.bill.Uid)
+                            .Select(x => x.bill.Uid)
+                            .ToList();
+
+                        if (inputDoc.PageCount != groupBills.Count)
+                        {
+                            return BadRequest(
+                                $"Cannot map selected bills to PDF pages (pages={inputDoc.PageCount}, bills={groupBills.Count}). " +
+                                "UID print service is unavailable.");
+                        }
+                    }
+
+                    for (int i = 0; i < inputDoc.PageCount; i++)
+                    {
+                        if (selectedSet.Contains(groupBills[i]))
+                        {
+                            outputDoc.AddPage(inputDoc.Pages[i]);
+                        }
+                    }
+                }
+
+                if (outputDoc.PageCount == 0)
+                {
+                    return BadRequest("No PDF pages matched the selected bills.");
+                }
+
+                using var outStream = new MemoryStream();
+                outputDoc.Save(outStream, false);
+                Response.Headers["Content-Disposition"] = "attachment; filename=ElectricityBills.pdf";
+                return File(outStream.ToArray(), "application/pdf");
             }
             catch (Exception ex)
             {
@@ -1511,95 +1668,329 @@ namespace BMSBT.Controllers
 
 
 
+        private const int SearchBillPageSize = 50;
+
         [HttpGet]
-        public async Task<IActionResult> SearchBill()
+        public IActionResult SearchBill(string? search, string? month, string? year, int? page)
         {
-            return View();
+            var pagedBills = BuildSearchBillByKeyword(search, month, year, page);
+            return View(pagedBills);
         }
 
-
+        [HttpGet]
+        public IActionResult PrintBill(string? month, string? year, string? BtNo, string? block, int? page)
+        {
+            var pagedBills = BuildBillSearchResults(month, year, BtNo, block, page);
+            return View(pagedBills);
+        }
 
         [HttpPost]
-        public IActionResult SearchBill(string? month, string? year, string? BtNo)
+        public IActionResult SearchBillPost(string? search, string? month, string? year)
         {
-            // If nothing is provided
-            if (string.IsNullOrEmpty(BtNo) && string.IsNullOrEmpty(month) && string.IsNullOrEmpty(year))
+            return RedirectToAction(nameof(SearchBill), new { search, month, year, page = 1 });
+        }
+
+        /// <summary>
+        /// Prints selected bills via ElectricitySingleBill API using parallel BTNo / Month / Year arrays.
+        /// Example: .../GetEBill?BillingMonths=July,July&BillingYears=2026,2026&BTNo=BTL-10014,BTL-10000
+        /// </summary>
+        [Route("PrintElectricitySingleBills")]
+        [HttpPost]
+        public async Task<IActionResult> PrintElectricitySingleBills([FromBody] ElectricitySingleBillPrintRequest request)
+        {
+            try
             {
-                ViewBag.ErrorMessage = "Please select a month/year or enter a Bill No.";
-                return View("SearchBill");
-            }
-
-            var query = from bill in _dbContext.ElectricityBills
-                        join customer in _dbContext.CustomersDetails
-                            on bill.Btno equals customer.Btno
-                        select new BillDTO
-                        {
-                            Uid = bill.Uid,
-                            CustomerNo = customer.CustomerNo,
-                            Btno = bill.Btno,
-                            CustomerName = customer.CustomerName,
-                            Cnicno = customer.Cnicno,
-                            FatherName = customer.FatherName,
-                            InstalledOn = customer.InstalledOn,
-                            MobileNo = customer.MobileNo,
-                            TelephoneNo = customer.TelephoneNo,
-                            Ntnnumber = customer.Ntnnumber,
-                            City = customer.City,
-                            Project = customer.Project,
-                            SubProject = customer.SubProject,
-                            TariffName = customer.TariffName,
-                            BankNo = customer.BankNo,
-                            BtnoMaintenance = customer.BtnoMaintenance,
-                            Category = customer.Category,
-                            Block = customer.Block,
-                            PlotType = customer.PlotType,
-                            Size = customer.Size,
-                            Sector = customer.Sector,
-                            PloNo = customer.PloNo,
-                            BillStatusMaint = customer.BillStatusMaint,
-                            BillStatus = customer.BillStatus,
-                            InvoiceNo = bill.InvoiceNo,
-                            BillingMonth = bill.BillingMonth,
-                            BillingYear = bill.BillingYear,
-                            BillingDate = bill.BillingDate,
-                            DueDate = bill.DueDate,
-                            IssueDate = bill.IssueDate,
-                            ValidDate = bill.ValidDate,
-                            PaymentStatus = bill.PaymentStatus,
-                            PaymentDate = bill.PaymentDate,
-                            PaymentMethod = bill.PaymentMethod,
-                            BankDetail = bill.BankDetail,
-                           
-                            BillAmountInDueDate = bill.BillAmountInDueDate,
-                            BillSurcharge = bill.BillSurcharge,
-                            BillAmountAfterDueDate = bill.BillAmountAfterDueDate
-                        };
-
-            // Apply filters based on inputs
-            if (!string.IsNullOrEmpty(BtNo))
-            {
-                query = query.Where(b => b.Btno == BtNo);
-
-                if (!string.IsNullOrEmpty(month) && !string.IsNullOrEmpty(year))
+                if (request?.Items == null || request.Items.Count == 0)
                 {
-                    query = query.Where(b => b.BillingMonth == month && b.BillingYear == year);
+                    return BadRequest("Please select at least one bill to print.");
                 }
+
+                var btNos = new List<string>();
+                var months = new List<string>();
+                var years = new List<string>();
+
+                foreach (var item in request.Items)
+                {
+                    var btNo = item.BtNo?.Trim();
+                    var month = item.Month?.Trim();
+                    var year = item.Year?.Trim();
+
+                    if (string.IsNullOrWhiteSpace(btNo)
+                        || string.IsNullOrWhiteSpace(month)
+                        || string.IsNullOrWhiteSpace(year))
+                    {
+                        return BadRequest("Each selected bill must include BTNo, Month and Year.");
+                    }
+
+                    btNos.Add(btNo);
+                    months.Add(month);
+                    years.Add(year);
+                }
+
+                var url =
+                    "http://172.20.228.2:81/api/ElectricitySingleBill/GetEBill" +
+                    $"?BillingMonths={Uri.EscapeDataString(string.Join(",", months))}" +
+                    $"&BillingYears={Uri.EscapeDataString(string.Join(",", years))}" +
+                    $"&BTNo={Uri.EscapeDataString(string.Join(",", btNos))}";
+
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(120);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                var response = await client.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+                }
+
+                var pdfData = await response.Content.ReadAsByteArrayAsync();
+                if (pdfData == null || pdfData.Length == 0)
+                {
+                    return BadRequest("Received empty PDF data from print service.");
+                }
+
+                Response.Headers["Content-Disposition"] = "attachment; filename=ElectricitySingleBills.pdf";
+                return File(pdfData, "application/pdf");
             }
-            else if (!string.IsNullOrEmpty(month) && !string.IsNullOrEmpty(year))
+            catch (Exception ex)
             {
-                // BtNo is empty, filter by month/year only
-                query = query.Where(b => b.BillingMonth == month && b.BillingYear == year);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Search bills by keyword (BTNo / Name / CNIC). Optional BillingMonth and BillingYear narrow results.
+        /// Search text is required.
+        /// </summary>
+        private IPagedList<BillDTO> BuildSearchBillByKeyword(string? search, string? month, string? year, int? page)
+        {
+            search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+            month = string.IsNullOrWhiteSpace(month) ? null : month.Trim();
+            year = string.IsNullOrWhiteSpace(year) ? null : year.Trim();
+
+            ViewBag.SelectedSearch = search;
+            ViewBag.SelectedMonth = month;
+            ViewBag.SelectedYear = year;
+
+            if (string.IsNullOrEmpty(search))
+            {
+                if (!string.IsNullOrEmpty(month) || !string.IsNullOrEmpty(year))
+                {
+                    ViewBag.ErrorMessage = "Please enter BTNo, Name or CNIC to search. Month and Year are optional filters only.";
+                }
+                return new StaticPagedList<BillDTO>(Array.Empty<BillDTO>(), 1, SearchBillPageSize, 0);
             }
 
-            var bills = query.ToList();
+            var term = search.ToLower();
 
-            if (!bills.Any())
+            var baseQuery =
+                from bill in _dbContext.ElectricityBills
+                join customer in _dbContext.CustomersDetails
+                    on bill.Btno equals customer.Btno
+                where (bill.Btno != null && bill.Btno.ToLower().Contains(term))
+                      || (customer.CustomerName != null && customer.CustomerName.ToLower().Contains(term))
+                      || (customer.Cnicno != null && customer.Cnicno.ToLower().Contains(term))
+                select new { bill, customer };
+
+            if (!string.IsNullOrEmpty(month))
+            {
+                baseQuery = baseQuery.Where(x => x.bill.BillingMonth == month);
+            }
+
+            if (!string.IsNullOrEmpty(year))
+            {
+                baseQuery = baseQuery.Where(x => x.bill.BillingYear == year);
+            }
+
+            var ordered = baseQuery
+                .OrderBy(x => x.customer.Block)
+                .ThenBy(x => x.bill.Btno)
+                .ThenByDescending(x => x.bill.BillingYear)
+                .ThenBy(x => x.bill.BillingMonth)
+                .Select(x => new BillDTO
+                {
+                    Uid = x.bill.Uid,
+                    CustomerNo = x.customer.CustomerNo,
+                    Btno = x.bill.Btno,
+                    CustomerName = x.customer.CustomerName,
+                    Cnicno = x.customer.Cnicno,
+                    FatherName = x.customer.FatherName,
+                    InstalledOn = x.customer.InstalledOn,
+                    MobileNo = x.customer.MobileNo,
+                    TelephoneNo = x.customer.TelephoneNo,
+                    Ntnnumber = x.customer.Ntnnumber,
+                    City = x.customer.City,
+                    Project = x.customer.Project,
+                    SubProject = x.customer.SubProject,
+                    TariffName = x.customer.TariffName,
+                    BankNo = x.customer.BankNo,
+                    BtnoMaintenance = x.customer.BtnoMaintenance,
+                    Category = x.customer.Category,
+                    Block = x.customer.Block,
+                    PlotType = x.customer.PlotType,
+                    Size = x.customer.Size,
+                    Sector = x.customer.Sector,
+                    PloNo = x.customer.PloNo,
+                    BillStatusMaint = x.customer.BillStatusMaint,
+                    BillStatus = x.customer.BillStatus,
+                    InvoiceNo = x.bill.InvoiceNo,
+                    BillingMonth = x.bill.BillingMonth,
+                    BillingYear = x.bill.BillingYear,
+                    BillingDate = x.bill.BillingDate,
+                    DueDate = x.bill.DueDate,
+                    IssueDate = x.bill.IssueDate,
+                    ValidDate = x.bill.ValidDate,
+                    PaymentStatus = x.bill.PaymentStatus,
+                    PaymentDate = x.bill.PaymentDate,
+                    PaymentMethod = x.bill.PaymentMethod,
+                    BankDetail = x.bill.BankDetail,
+                    BillAmountInDueDate = x.bill.BillAmountInDueDate,
+                    BillSurcharge = x.bill.BillSurcharge,
+                    BillAmountAfterDueDate = x.bill.BillAmountAfterDueDate
+                });
+
+            int pageNumber = page ?? 1;
+            var pagedBills = ordered.ToPagedList(pageNumber, SearchBillPageSize);
+
+            if (pagedBills.TotalItemCount == 0)
+            {
+                ViewBag.ErrorMessage = "No bills found for the provided search.";
+            }
+
+            return pagedBills;
+        }
+
+        private IPagedList<BillDTO> BuildBillSearchResults(
+            string? month,
+            string? year,
+            string? BtNo,
+            string? block,
+            int? page)
+        {
+            month = string.IsNullOrWhiteSpace(month) ? null : month.Trim();
+            year = string.IsNullOrWhiteSpace(year) ? null : year.Trim();
+            BtNo = string.IsNullOrWhiteSpace(BtNo) ? null : BtNo.Trim();
+            block = string.IsNullOrWhiteSpace(block) ? null : block.Trim();
+
+            ViewBag.SelectedMonth = month;
+            ViewBag.SelectedYear = year;
+            ViewBag.SelectedBtNo = BtNo;
+            ViewBag.SelectedBlock = block;
+            PopulateSearchBillBlocks(block);
+
+            var hasBtNo = !string.IsNullOrEmpty(BtNo);
+            var hasMonth = !string.IsNullOrEmpty(month);
+            var hasYear = !string.IsNullOrEmpty(year);
+            var hasBlock = !string.IsNullOrEmpty(block);
+            var hasAnyFilter = hasBtNo || hasMonth || hasYear || hasBlock;
+
+            if (!hasAnyFilter)
+            {
+                return new StaticPagedList<BillDTO>(Array.Empty<BillDTO>(), 1, SearchBillPageSize, 0);
+            }
+
+            if (hasBlock && (!hasMonth || !hasYear) && !hasBtNo)
+            {
+                ViewBag.ErrorMessage = "When filtering by Block, please also select Month and Year.";
+                return new StaticPagedList<BillDTO>(Array.Empty<BillDTO>(), 1, SearchBillPageSize, 0);
+            }
+
+            if ((hasMonth && !hasYear) || (!hasMonth && hasYear))
+            {
+                ViewBag.ErrorMessage = "Please select both Month and Year together, or search by BTNo only.";
+                return new StaticPagedList<BillDTO>(Array.Empty<BillDTO>(), 1, SearchBillPageSize, 0);
+            }
+
+            var baseQuery =
+                from bill in _dbContext.ElectricityBills
+                join customer in _dbContext.CustomersDetails
+                    on bill.Btno equals customer.Btno
+                select new { bill, customer };
+
+            if (hasBtNo)
+            {
+                baseQuery = baseQuery.Where(x => x.bill.Btno != null && x.bill.Btno.Trim() == BtNo);
+            }
+
+            if (hasMonth && hasYear)
+            {
+                baseQuery = baseQuery.Where(x => x.bill.BillingMonth == month && x.bill.BillingYear == year);
+            }
+
+            if (hasBlock)
+            {
+                baseQuery = baseQuery.Where(x => x.customer.Block != null && x.customer.Block.Trim() == block);
+            }
+
+            var ordered = baseQuery
+                .OrderBy(x => x.customer.Block)
+                .ThenBy(x => x.bill.Btno)
+                .ThenByDescending(x => x.bill.BillingYear)
+                .ThenBy(x => x.bill.BillingMonth)
+                .Select(x => new BillDTO
+                {
+                    Uid = x.bill.Uid,
+                    CustomerNo = x.customer.CustomerNo,
+                    Btno = x.bill.Btno,
+                    CustomerName = x.customer.CustomerName,
+                    Cnicno = x.customer.Cnicno,
+                    FatherName = x.customer.FatherName,
+                    InstalledOn = x.customer.InstalledOn,
+                    MobileNo = x.customer.MobileNo,
+                    TelephoneNo = x.customer.TelephoneNo,
+                    Ntnnumber = x.customer.Ntnnumber,
+                    City = x.customer.City,
+                    Project = x.customer.Project,
+                    SubProject = x.customer.SubProject,
+                    TariffName = x.customer.TariffName,
+                    BankNo = x.customer.BankNo,
+                    BtnoMaintenance = x.customer.BtnoMaintenance,
+                    Category = x.customer.Category,
+                    Block = x.customer.Block,
+                    PlotType = x.customer.PlotType,
+                    Size = x.customer.Size,
+                    Sector = x.customer.Sector,
+                    PloNo = x.customer.PloNo,
+                    BillStatusMaint = x.customer.BillStatusMaint,
+                    BillStatus = x.customer.BillStatus,
+                    InvoiceNo = x.bill.InvoiceNo,
+                    BillingMonth = x.bill.BillingMonth,
+                    BillingYear = x.bill.BillingYear,
+                    BillingDate = x.bill.BillingDate,
+                    DueDate = x.bill.DueDate,
+                    IssueDate = x.bill.IssueDate,
+                    ValidDate = x.bill.ValidDate,
+                    PaymentStatus = x.bill.PaymentStatus,
+                    PaymentDate = x.bill.PaymentDate,
+                    PaymentMethod = x.bill.PaymentMethod,
+                    BankDetail = x.bill.BankDetail,
+                    BillAmountInDueDate = x.bill.BillAmountInDueDate,
+                    BillSurcharge = x.bill.BillSurcharge,
+                    BillAmountAfterDueDate = x.bill.BillAmountAfterDueDate
+                });
+
+            int pageNumber = page ?? 1;
+            var pagedBills = ordered.ToPagedList(pageNumber, SearchBillPageSize);
+
+            if (pagedBills.TotalItemCount == 0)
             {
                 ViewBag.ErrorMessage = "No bills found for the provided criteria.";
             }
 
-            var pagedBills = bills.ToPagedList(1, 5000);
-            return View("SearchBill", pagedBills);
+            return pagedBills;
+        }
+
+        private void PopulateSearchBillBlocks(string? selectedBlock)
+        {
+            ViewBag.Blocks = _dbContext.CustomersDetails
+                .Where(c => c.Block != null && c.Block.Trim() != "")
+                .Select(c => c.Block!.Trim())
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+            ViewBag.SelectedBlock = selectedBlock;
         }
 
 
