@@ -5,14 +5,12 @@
 }
 
 <style>
-    /* Center align search box */
     .search-container {
-        max-width: 600px;
+        max-width: 900px;
         margin: 20px auto;
         text-align: center;
     }
 
-    /* Flexbox for alignment */
     .search-box {
         display: flex;
         align-items: center;
@@ -20,17 +18,17 @@
         gap: 10px;
     }
 
-    /* Search input styling */
     .search-input {
-        width: 50%;
-        padding: 8px;
+        width: 75%;
+        padding: 12px 14px;
+        font-size: 1rem;
         border: 1px solid #ccc;
         border-radius: 5px;
     }
 
-    /* Button styling */
     .search-button {
-        padding: 8px 15px;
+        padding: 12px 22px;
+        font-size: 1rem;
         border: none;
         border-radius: 5px;
         background-color: #007bff;
@@ -42,7 +40,6 @@
             background-color: #0056b3;
         }
 
-    /* Table Styling */
     .table {
         border-collapse: collapse;
         width: 100%;
@@ -61,35 +58,20 @@
             padding: 10px;
         }
 
-        /* Hover effect */
         .table tbody tr:hover {
             background-color: #e0e0e0;
             transition: 0.3s;
         }
-
-    /* No records message */
-    .no-records {
-        text-align: center;
-        font-size: 18px;
-        font-weight: bold;
-        color: red;
-        margin-top: 20px;
-    }
 </style>
 
 <div class="search-container">
-    <h3>E-Bills (BT No. Or Customer Name</h3>
     <form method="get" action="@Url.Action("SearchBills")" class="search-box">
         <input type="text" name="search" class="form-control search-input" placeholder="Enter Bill No or Customer Name" />
         <button type="submit" class="search-button">Search</button>
     </form>
 </div>
 
-@if (!Model.Any())
-{
-    <p class="no-records">No records found.</p>
-}
-else
+@if (Model != null && Model.Any())
 {
     <table class="table">
         <thead>

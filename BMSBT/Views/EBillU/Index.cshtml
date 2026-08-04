@@ -26,6 +26,16 @@
         --eb-muted: #5a6a75;
         padding: 1rem 1.25rem 1.5rem;
         color: var(--eb-text);
+        min-height: calc(100vh - 200px);
+        background-color: #f7f9fc;
+        background-image:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(247, 249, 252, 0.9) 100%),
+            url('@Url.Content("~/images/buildings.png")');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: local;
+        border-radius: 8px;
     }
 
     .eb-filters {

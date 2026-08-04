@@ -4,134 +4,185 @@
 }
 
 <style>
+    .home-modules {
+        margin-top: 1rem;
+    }
+
+    .module-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border: 1px solid #d9e0ea;
+        border-radius: 12px;
+        background-color: #f7f9fc;
+        background-image:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(247, 249, 252, 0.9) 100%),
+            url('@Url.Content("~/images/buildings.png")');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        box-shadow: 0 4px 14px rgba(20, 33, 65, 0.08);
+        padding: 1.25rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .module-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(20, 33, 65, 0.14);
+        border-color: #b8c6db;
+    }
+
+    .module-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        color: #fff;
+        font-size: 1.35rem;
+    }
+
+    .module-icon.adjustments { background: linear-gradient(135deg, #1f6feb, #0d47a1); }
+    .module-icon.fine { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+    .module-icon.activities { background: linear-gradient(135deg, #17a2b8, #117a8b); }
+    .module-icon.users { background: linear-gradient(135deg, #f0ad4e, #d48806); }
+    .module-icon.configs { background: linear-gradient(135deg, #3d5a80, #1b3a57); }
+    .module-icon.setup { background: linear-gradient(135deg, #142141, #0d1733); }
+    .module-icon.history { background: linear-gradient(135deg, #28a745, #1e7e34); }
+
+    .module-title {
+        color: #142141;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .module-desc {
+        color: #5b6777;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        flex-grow: 1;
+        margin-bottom: 1rem;
+    }
+
+    .module-btn {
+        background-color: #142141;
+        border: none;
+        color: #fff;
+        border-radius: 8px;
+        padding: 0.55rem 0.9rem;
+        font-weight: 600;
+        text-align: center;
+        transition: background-color 0.2s ease;
+    }
+
+    .module-btn:hover {
+        background-color: #0d1733;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .module-btn i {
+        margin-left: 6px;
+        font-size: 0.85rem;
+    }
 </style>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billing Management System - All Modules</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-        }
-
-        .container {
-            margin-top: 5px;
-        }
-
-        .section-card {
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-            .section-card:hover {
-                box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-            }
-
-        .section-title {
-            color: #142141;
-            font-weight: bold;
-        }
-
-        .btn-primary {
-            background-color: #142141;
-            border: none;
-        }
-
-            .btn-primary:hover {
-                background-color: #0d1733;
-            }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="row mt-5">
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-sliders-h" style="color: #142141; font-size: 16px;"></i>
-                        Adjustments
-                    </h5>
-                    <p>Manage billing adjustments, including charges and credits applied to customer accounts.</p>
-                    <a asp-controller="Adjustments" asp-action="Index" class="btn btn-success">Click to Process</a>
+<div class="home-modules">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon adjustments">
+                    <i class="fas fa-sliders-h"></i>
                 </div>
-            </div>
-
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-gavel" style="color: #142141; font-size: 16px;"></i>
-                        Fine
-                    </h5>
-                    <p>Create and track fines by BT number, service type, month, and year.</p>
-                    <a asp-controller="Fine" asp-action="Index" class="btn btn-success">Click to Process</a>
-                </div>
-            </div>
-
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-clipboard-list" style="color: #142141; font-size: 16px;"></i>
-                        Activities
-                    </h5>
-                    <p>View and manage system activities and related operational records.</p>
-                    <a asp-controller="Activities" asp-action="Index" class="btn btn-success">Click to Process</a>
-                </div>
+                <h5 class="module-title">Adjustments</h5>
+                <p class="module-desc">Manage billing adjustments, including charges and credits applied to customer accounts.</p>
+                <a asp-controller="Adjustments" asp-action="Index" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-edit" style="color: #142141; font-size: 16px;"></i>
-                        All Users
-                    </h5>
-                    <p>Create and manage user accounts, roles, and access permissions.</p>
-                    <a asp-controller="UsersManagement" asp-action="Index" class="btn btn-success">Click to Process</a>
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon fine">
+                    <i class="fas fa-gavel"></i>
                 </div>
+                <h5 class="module-title">Fine</h5>
+                <p class="module-desc">Create and track fines by BT number, service type, month, and year.</p>
+                <a asp-controller="Fine" asp-action="Index" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
+        </div>
 
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-table" style="color: #142141; font-size: 16px;"></i>
-                        Configurations
-                    </h5>
-                    <p>Manage system configuration settings used across billing modules.</p>
-                    <a asp-controller="Configs" asp-action="AllConfigs" class="btn btn-success">Click to Process</a>
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon activities">
+                    <i class="fas fa-clipboard-list"></i>
                 </div>
+                <h5 class="module-title">Activities</h5>
+                <p class="module-desc">View and manage system activities and related operational records.</p>
+                <a asp-controller="Activities" asp-action="Index" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
+        </div>
 
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-cog" style="color: #142141; font-size: 16px;"></i>
-                        Setup
-                    </h5>
-                    <p>Access setup options and related system configuration modules.</p>
-                    <a asp-controller="Setup" asp-action="Index" class="btn btn-success">Click to Process</a>
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon users">
+                    <i class="fas fa-edit"></i>
                 </div>
+                <h5 class="module-title">All Users</h5>
+                <p class="module-desc">Create and manage user accounts, roles, and access permissions.</p>
+                <a asp-controller="UsersManagement" asp-action="Index" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
+        </div>
 
-            <div class="col-md-4 mb-4">
-                <div class="card section-card p-3">
-                    <h5 class="section-title">
-                        <i class="fas fa-history" style="color: #142141; font-size: 16px;"></i>
-                        History/Logs
-                    </h5>
-                    <p>View billing history and system logs across functionalities.</p>
-                    <a asp-controller="HistoryLogs" asp-action="Index" class="btn btn-success">Click to Process</a>
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon configs">
+                    <i class="fas fa-table"></i>
                 </div>
+                <h5 class="module-title">Configurations</h5>
+                <p class="module-desc">Manage system configuration settings used across billing modules.</p>
+                <a asp-controller="Configs" asp-action="AllConfigs" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon setup">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h5 class="module-title">Setup</h5>
+                <p class="module-desc">Access setup options and related system configuration modules.</p>
+                <a asp-controller="Setup" asp-action="Index" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="module-card">
+                <div class="module-icon history">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h5 class="module-title">History/Logs</h5>
+                <p class="module-desc">View billing history and system logs across functionalities.</p>
+                <a asp-controller="HistoryLogs" asp-action="Index" class="module-btn">
+                    Open Module <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>

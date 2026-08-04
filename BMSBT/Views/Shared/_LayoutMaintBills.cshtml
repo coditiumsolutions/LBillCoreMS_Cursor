@@ -29,6 +29,14 @@
             position: absolute; /* Allow normal scrolling behavior */
         }
 
+        .sidebar-home-logo {
+            display: block;
+            max-width: 100%;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 12px auto;
+        }
+
         .navbar2-top {
             background-color: #f8f9fa; /* Light background color */
             padding: 0px 0;
@@ -38,19 +46,34 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                position: relative;
             }
 
             .navbar2-top .left-section {
                 font-weight: bold;
+                z-index: 1;
+            }
+
+            .navbar2-top .center-section {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                font-weight: 700;
+                font-size: 1.15rem;
+                color: #000;
+                white-space: nowrap;
             }
 
             .navbar2-top .right-section {
                 text-align: right;
                 flex-grow: 1;
+                z-index: 1;
             }
 
-            .navbar2-top .left-section a {
-                color: #0056b3;
+            .navbar2-top .left-section a,
+            .navbar2-top .right-section a,
+            .navbar2-top .user-info {
+                color: #000 !important;
             }
 
         a {
@@ -58,8 +81,8 @@
         }
 
         .user-info {
-            color: #0056b3; /* Dark gray */
-            font-size: 16px; /* Reduce font size */
+            color: #000;
+            font-size: 16px;
             font-weight: normal;
         }
 
@@ -89,11 +112,12 @@
             <div class="left-section">
                 <a asp-controller="Home" asp-action="Index">Back Main Menu</a>
             </div>
+            <div class="center-section">Maintenance</div>
             <!-- Right-aligned text -->
             <div class="right-section">
                 <span class="user-info"> Logged-in as @ViewBag.UserName at @ViewBag.LoginTime</span>
                 <a asp-controller="Login" asp-action="Logout"
-                   class="btn btn-link text-black"
+                   class="btn btn-link"
                    onclick="return confirm('Are you sure you want to log out?');">
                     Logout
                 </a>
@@ -113,7 +137,7 @@
 
             <!-- Left Sidebar -->
             <div class="col-md-3 col-lg-2 p-3 sidebar">
-                <h4>Maintenance</h4>
+                <img src="~/images/homelogo03.png" alt="Home Logo" class="sidebar-home-logo" />
 
 
                 <ul class="nav flex-column">
