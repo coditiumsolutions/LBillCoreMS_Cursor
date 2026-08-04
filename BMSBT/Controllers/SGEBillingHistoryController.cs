@@ -22,6 +22,14 @@ namespace BMSBT.Controllers
         [HttpGet]
         public IActionResult SGEBillHistory(string searchCustomer)
         {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            ViewBag.UserName = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+
             List<ElectricityBill> bills = new();
 
             if (!string.IsNullOrWhiteSpace(searchCustomer))

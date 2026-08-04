@@ -1,241 +1,354 @@
-﻿@model BMSBT.DTO.DashboardViewModel
+@model BMSBT.DTO.DashboardViewModel
 @{
-    ViewData["Title"] = "Billing System - Report";
-    Layout = "~/Views/Shared/_LayoutEBILLS.cshtml";
+    ViewData["Title"] = "Electricity Billing Summary";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+    var projects = Model.Projects ?? new List<string>();
+    var years = Model.Years ?? new List<string>();
+    if (!years.Any())
+    {
+        years = Enumerable.Range(DateTime.Now.Year - 5, 8).Select(y => y.ToString()).Reverse().ToList();
+    }
 }
 
 <style>
-    .billing-container {
-        background-color: #f5f5f5;
-        padding: 20px;
-        font-family: Arial, sans-serif;
+    .eb-summary {
+        --eb-primary: #1e5f8a;
+        --eb-primary-soft: #e8f2f8;
+        --eb-border: #d7e2ea;
+        --eb-text: #1a1a1a;
+        --eb-muted: #5a6a75;
+        --eb-success: #1b7a3d;
+        --eb-danger: #c62828;
+        padding: 1rem 1.25rem 1.5rem;
+        color: var(--eb-text);
     }
 
-    .header-section {
-        background-color: #4a90c2;
-        color: white;
-        padding: 10px 15px;
-        margin-bottom: 20px;
-        border-radius: 5px;
+    .eb-summary-header {
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
+        gap: 0.75rem;
+        background: linear-gradient(135deg, #1e5f8a 0%, #2a7aad 100%);
+        color: #fff;
+        padding: 0.9rem 1.25rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(30, 95, 138, 0.25);
     }
 
-    .billing-period {
-        background-color: white;
-        color: #333;
-        padding: 8px 15px;
-        border-radius: 3px;
-        font-weight: bold;
-        border: 2px solid #4a90c2;
+    .eb-summary-header h4 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 400;
+        letter-spacing: 0.01em;
     }
 
-    .controls-section {
-        background-color: white;
-        padding: 15px;
-        border: 2px solid #ccc;
-        margin-bottom: 20px;
-        border-radius: 5px;
+    .eb-period-badge {
+        background: #fff;
+        color: var(--eb-primary);
+        padding: 0.4rem 0.9rem;
+        border-radius: 6px;
+        font-weight: 400;
+        font-size: 0.875rem;
+        border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
-    .btn-group {
-        display: inline-block;
-        margin-right: 20px;
+    .eb-filters {
+        background: #fff;
+        border: 1px solid var(--eb-border);
+        border-radius: 10px;
+        padding: 1.15rem 1.25rem;
+        margin-bottom: 1.15rem;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
     }
 
-    .btn-generate {
-        background-color: #ff6b6b;
-        color: white;
-        border: 2px solid #ff5252;
-        padding: 8px 15px;
-        margin-right: 10px;
+    .eb-filter-row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-end;
+        gap: 0.65rem;
     }
 
-    .report-table {
+    .eb-filter-field {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .eb-filter-field label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 400;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--eb-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .eb-filter-field .form-control {
+        width: 100%;
+        height: 36px;
+        border: 1px solid var(--eb-border);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: var(--eb-text);
+        background: #fafcfd;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .eb-filter-field .form-control:focus {
+        border-color: var(--eb-primary);
+        box-shadow: 0 0 0 0.15rem rgba(30, 95, 138, 0.2);
+        background: #fff;
+    }
+
+    .eb-filter-actions {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .eb-btn-generate {
+        background: var(--eb-primary);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.4rem 0.9rem;
+        font-weight: 400;
+        font-size: 0.85rem;
+        height: 36px;
+        white-space: nowrap;
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .eb-btn-generate:hover {
+        background: #174d70;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .eb-report-card {
+        background: #fff;
+        border: 1px solid var(--eb-border);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+    }
+
+    .eb-report-table {
         width: 100%;
         border-collapse: collapse;
-        background-color: white;
-        margin-top: 20px;
+        margin: 0;
+        background: #fff;
     }
 
-        .report-table th,
-        .report-table td {
-            border: 1px solid #ccc;
-            padding: 12px 15px;
-            text-align: left;
+    .eb-report-table td {
+        border: 1px solid var(--eb-border);
+        padding: 0.85rem 1rem;
+        vertical-align: middle;
+    }
+
+    .eb-section-header {
+        background: #f1f5f9;
+        font-weight: 400;
+        color: #000000;
+        font-size: 0.95rem;
+    }
+
+    /* Generated Detail — white background as requested */
+    .eb-section-header.eb-generated,
+    .eb-report-table tr.eb-generated-row td {
+        background-color: #ffffff !important;
+    }
+
+    .eb-section-header.eb-generated {
+        border-bottom: 2px solid var(--eb-primary);
+        color: #000000;
+    }
+
+    .eb-section-header.eb-netmeter {
+        background: #f0f7fb;
+        color: #000000;
+    }
+
+    .eb-section-header.eb-payments {
+        background: #f3faf5;
+        color: #000000;
+    }
+
+    .eb-metric-name {
+        font-weight: 400;
+        color: #000000;
+        width: 28%;
+    }
+
+    .eb-metric-value {
+        font-weight: 400;
+        color: #1565c0;
+        text-align: right;
+        width: 22%;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .eb-metric-note {
+        color: #000000;
+        font-size: 0.9rem;
+        font-weight: 400;
+        width: 28%;
+    }
+
+    .eb-metric-secondary {
+        font-weight: 400;
+        color: #1565c0;
+        text-align: right;
+        width: 22%;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .eb-amount {
+        color: #1565c0 !important;
+    }
+
+    .eb-important {
+        color: #000000 !important;
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    .eb-validation {
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .eb-filter-row {
+            flex-wrap: wrap;
         }
 
-    .section-header {
-        background-color: #e8e8e8;
-        font-weight: bold;
-        color: #333;
-    }
+        .eb-filter-field {
+            flex: 1 1 calc(50% - 0.65rem);
+        }
 
-    .metric-row {
-        background-color: #f9f9f9;
-    }
+        .eb-filter-actions {
+            flex: 1 1 100%;
+        }
 
-    .metric-name {
-        font-weight: 500;
-        color: #555;
-        width: 25%;
-    }
-
-    .metric-value {
-        font-weight: bold;
-        color: #1976d2;
-        text-align: right;
-        width: 25%;
-    }
-
-    .metric-note {
-        color: #666;
-        font-style: italic;
-        width: 25%;
-    }
-
-    .metric-secondary {
-        font-weight: bold;
-        color: #1976d2;
-        text-align: right;
-        width: 25%;
-    }
-
-    .important-note {
-        color: #e53935 !important;
-        font-weight: 500;
-    }
-
-    .amount {
-        color: #2e7d32;
-        font-weight: bold;
-    }
-
-    .form-control {
-        margin-right: 10px;
-        display: inline-block;
-        width: auto;
+        .eb-btn-generate {
+            width: 100%;
+        }
     }
 </style>
 
-<div class="billing-container">
-    <!-- Header Section -->
-    <div class="header-section">
-        <div>
-            <h4 style="margin: 0;">Billing System -Electricity Report</h4>
-        </div>
-        <div class="billing-period">
-            Billing Year - Month: @ViewBag.BillingPeriod
-        </div>
+<div class="eb-summary">
+    <div class="eb-summary-header">
+        <h4><i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>Electricity Billing Summary</h4>
+        <div class="eb-period-badge">@ViewBag.BillingPeriod</div>
     </div>
 
-    <!-- Controls Section -->
-    <div class="controls-section">
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger eb-validation">
+            @Html.ValidationSummary(false)
+        </div>
+    }
+
+    <div class="eb-filters">
         @using (Html.BeginForm("EDashboard", "Dashboard", FormMethod.Get))
         {
-            <div class="form-inline row">
-                <!-- Month -->
-                <div class="form-group col-md-2">
-                    <label>Month:</label>
-                    @Html.DropDownList("month", new SelectList(new[] {
-                new { Value = "January", Text = "January" },
-                new { Value = "February", Text = "February" },
-                new { Value = "March", Text = "March" },
-                new { Value = "April", Text = "April" },
-                new { Value = "May", Text = "May" },
-                new { Value = "June", Text = "June" },
-                new { Value = "July", Text = "July" },
-                new { Value = "August", Text = "August" },
-                new { Value = "September", Text = "September" },
-                new { Value = "October", Text = "October" },
-                new { Value = "November", Text = "November" },
-                new { Value = "December", Text = "December" }
-                }, "Value", "Text", ViewBag.SelectedMonth), "Select Month", new { @class = "form-control" })
+            <div class="eb-filter-row">
+                <div class="eb-filter-field">
+                    <label for="month">Month</label>
+                    @Html.DropDownList(
+                        "month",
+                        new SelectList(
+                            new[] { "January", "February", "March", "April", "May", "June",
+                                    "July", "August", "September", "October", "November", "December" }
+                                .Select(m => new { Value = m, Text = m }),
+                            "Value", "Text", ViewBag.SelectedMonth as string),
+                        "Select Month",
+                        new { @class = "form-control", id = "month" })
                 </div>
 
-                <!-- Year -->
-                <div class="form-group col-md-2">
-                    <label>Year:</label>
-                    @Html.DropDownList("year", new SelectList(Enumerable.Range(2020, 10)
-                             .Select(y => new { Value = y.ToString(), Text = y.ToString() }),
-                             "Value", "Text", ViewBag.SelectedYear), "Select Year", new { @class = "form-control" })
+                <div class="eb-filter-field">
+                    <label for="year">Year</label>
+                    @Html.DropDownList(
+                        "year",
+                        new SelectList(
+                            years.Select(y => new { Value = y, Text = y }),
+                            "Value", "Text", ViewBag.SelectedYear as string),
+                        "Select Year",
+                        new { @class = "form-control", id = "year" })
                 </div>
 
-                <!-- Project -->
-                <div class="form-group col-md-2">
-                    <label>Project:</label>
-                    @Html.DropDownList("project", new SelectList(new[] {
-                new { Value = "Mohlanwal", Text = "Mohlanwal" },
-                new { Value = "Orchards", Text = "Orchards" }
-                }, "Value", "Text", ViewBag.SelectedProject), "Select Project", new { @class = "form-control" })
+                <div class="eb-filter-field">
+                    <label for="project">Project</label>
+                    @Html.DropDownList(
+                        "project",
+                        new SelectList(
+                            projects.Select(p => new { Value = p, Text = p }),
+                            "Value", "Text", ViewBag.SelectedProject as string),
+                        "All Projects",
+                        new { @class = "form-control", id = "project" })
                 </div>
 
-                <!-- Submit Button -->
-                <div class="form-group col-md-4" style="margin-top: 25px;">
-                    <button type="submit" class="btn btn-generate">Generate Report</button>
+                <div class="eb-filter-actions">
+                    <button type="submit" class="btn eb-btn-generate">
+                        Generate
+                    </button>
                 </div>
             </div>
         }
     </div>
 
-    <!-- Report Table -->
-    <table class="report-table">
-        <!-- Generated Detail Section -->
-        <tr class="section-header">
-            <td colspan="4"><strong>Generated Detail</strong></td>
-        </tr>
-        <tr class="metric-row">
-            <td class="metric-name">Bills Generated</td>
-            <td class="metric-value">@Model.TotalBillsGenerated.ToString("N0")</td>
-            <td class="metric-note important-note">Important: BSC Excluded</td>
-            <td class="metric-secondary"></td>
-        </tr>
-        <tr class="metric-row">
-            <td class="metric-name">Total Current Billing (Rs)</td>
-            <td class="metric-value amount">@Model.TotalBillAmountGenerated.ToString("N0")</td>
-            <td class="metric-note">Bills Units</td>
-            <td class="metric-secondary">@Model.BillsUnits.ToString("N0")</td>
-        </tr>
+    <div class="eb-report-card">
+        <table class="eb-report-table">
+            <tr class="eb-section-header eb-generated">
+                <td colspan="4">Generated Detail</td>
+            </tr>
+            <tr class="eb-generated-row">
+                <td class="eb-metric-name">Bills Generated</td>
+                <td class="eb-metric-value">@Model.TotalBillsGenerated.ToString("N0")</td>
+                <td class="eb-metric-note eb-important">Important: BSC Excluded</td>
+                <td class="eb-metric-secondary">@Model.BscBillsExcluded.ToString("N0")</td>
+            </tr>
+            <tr class="eb-generated-row">
+                <td class="eb-metric-name">Total Current Billing (Rs)</td>
+                <td class="eb-metric-value eb-amount">@Model.TotalBillAmountGenerated.ToString("N0")</td>
+                <td class="eb-metric-note">Bills Units</td>
+                <td class="eb-metric-secondary">@Model.BillsUnits.ToString("N0")</td>
+            </tr>
 
-   
+            <tr class="eb-section-header eb-netmeter">
+                <td colspan="4">Net Metering Detail</td>
+            </tr>
+            <tr>
+                <td class="eb-metric-name">Net Meter Bills Generated</td>
+                <td class="eb-metric-value">@Model.NetMeterBillsGenerated.ToString("N0")</td>
+                <td class="eb-metric-note">Net Meter Units</td>
+                <td class="eb-metric-secondary">@Model.NetMeterBillsUnits.ToString("N0")</td>
+            </tr>
+            <tr>
+                <td class="eb-metric-name">Total Net Meter Billing (Rs)</td>
+                <td class="eb-metric-value eb-amount">@Model.NetMeterTotalBilling.ToString("N0")</td>
+                <td class="eb-metric-note"></td>
+                <td class="eb-metric-secondary"></td>
+            </tr>
 
-        <!-- Payments Detail Section -->
-        <tr class="section-header">
-            <td colspan="4"><strong>Payments Detail</strong></td>
-        </tr>
-        <tr class="metric-row">
-            <td class="metric-name">Bill Paid (Amount)</td>
-            <td class="metric-value amount">@Model.TotalBillAmountCollected.ToString("N0")</td>
-            <td class="metric-note">Bill Unpaid (Amount)</td>
-            <td class="metric-secondary amount">@Model.BillUnpaidAmount.ToString("N0")</td>
-        </tr>
-        <tr class="metric-row">
-            <td class="metric-name">Paid (No Of Bills)</td>
-            <td class="metric-value">@Model.TotalBillsPaid.ToString("N0")</td>
-            <td class="metric-note">Unpaid (No Of Bills)</td>
-            <td class="metric-secondary">@Model.UnpaidBillsCount.ToString("N0")</td>
-        </tr>
-
-
-
-
-
-        <!-- Generated Detail - Net Metering Section -->
-        <tr class="section-header">
-            <td colspan="4"><strong>Generated Detail - Net Metering</strong></td>
-        </tr>
-        <tr class="metric-row">
-            <td class="metric-name">Bills Generated</td>
-            <td class="metric-value">@Model.NetMeterBillsGenerated.ToString("N0")</td>
-            <td class="metric-note">Bills Units</td>
-            <td class="metric-secondary">@Model.NetMeterBillsUnits.ToString("N0")</td>
-        </tr>
-        <tr class="metric-row">
-            <td class="metric-name">Total Current Billing (Rs)</td>
-            <td class="metric-value amount">@Model.NetMeterTotalBilling.ToString("N0")</td>
-            <td class="metric-note"></td>
-            <td class="metric-secondary"></td>
-        </tr>
-    </table>
+            <tr class="eb-section-header eb-payments">
+                <td colspan="4">Payments Detail</td>
+            </tr>
+            <tr>
+                <td class="eb-metric-name">Bill Paid (Amount)</td>
+                <td class="eb-metric-value eb-amount">@Model.TotalBillAmountCollected.ToString("N0")</td>
+                <td class="eb-metric-note eb-important">Unpaid Amount (Rs)</td>
+                <td class="eb-metric-secondary eb-amount">@Model.BillUnpaidAmount.ToString("N0")</td>
+            </tr>
+            <tr>
+                <td class="eb-metric-name">Paid (No Of Bills)</td>
+                <td class="eb-metric-value">@Model.TotalBillsPaid.ToString("N0")</td>
+                <td class="eb-metric-note eb-important">Unpaid Bills (Number)</td>
+                <td class="eb-metric-secondary">@Model.UnpaidBillsCount.ToString("N0")</td>
+            </tr>
+        </table>
+    </div>
 </div>

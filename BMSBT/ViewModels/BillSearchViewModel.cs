@@ -9,6 +9,7 @@ namespace BMSBT.ViewModels
         public string SelectedYear { get; set; }
         public string SelectedSector { get; set; }
         public string BtnoSearch { get; set; }
+        public string SelectedPaymentStatus { get; set; }
 
         public List<string> Months { get; set; } = new List<string>();
         public List<string> Years { get; set; } = new List<string>();

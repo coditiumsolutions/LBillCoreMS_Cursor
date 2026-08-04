@@ -44,9 +44,14 @@ namespace BMSBT.Controllers
 
 
 
-        // Electricity billing summary — data from ElectricityBills + CustomersDetail
+        // Electricity Home dashboard
         public IActionResult Index(string month, string year, string project)
         {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
             var model = new DTO.DashboardViewModel();
 
             string currentMonth = DateTime.Now.ToString("MMMM");
@@ -85,7 +90,15 @@ namespace BMSBT.Controllers
                     "July", "August", "September", "October", "November", "December"
                 };
 
-                // Join bills to customers for project filter (ElectricityBills has no Project column)
+                var customersQuery = _dbContext.CustomersDetails.AsNoTracking().AsQueryable();
+                if (!string.IsNullOrWhiteSpace(project))
+                {
+                    customersQuery = customersQuery.Where(c =>
+                        c.Project != null && c.Project.Trim() == project);
+                }
+
+                model.TotalCustomers = customersQuery.Count();
+
                 var billsQuery =
                     from bill in _dbContext.ElectricityBills.AsNoTracking()
                     join customer in _dbContext.CustomersDetails.AsNoTracking()
@@ -101,30 +114,13 @@ namespace BMSBT.Controllers
                         x.customer.Project.Trim() == project);
                 }
 
-                // Materialize period bills (dedupe by bill uid)
-                var periodList = billsQuery
+                var periodBills = billsQuery
                     .AsEnumerable()
                     .GroupBy(x => x.bill.Uid)
                     .Select(g => g.First())
                     .ToList();
 
-                model.BscBillsExcluded = periodList.Count(x =>
-                    (!string.IsNullOrEmpty(x.bill.Block) && x.bill.Block.ToUpper().Contains("BSC"))
-                    || (!string.IsNullOrEmpty(x.customer.Block) && x.customer.Block.ToUpper().Contains("BSC"))
-                    || (!string.IsNullOrEmpty(x.customer.Category) && x.customer.Category.ToUpper().Contains("BSC")));
-
-                // BSC excluded from main generated totals
-                var mainBills = periodList
-                    .Where(x =>
-                        (x.bill.Block == null || !x.bill.Block.ToUpper().Contains("BSC")) &&
-                        (x.customer.Block == null || !x.customer.Block.ToUpper().Contains("BSC")) &&
-                        (x.customer.Category == null || !x.customer.Category.ToUpper().Contains("BSC")))
-                    .ToList();
-
-                static bool IsNetMeter(string? meterType) =>
-                    !string.IsNullOrWhiteSpace(meterType) &&
-                    meterType.Replace(" ", "", StringComparison.OrdinalIgnoreCase)
-                             .Contains("netmeter", StringComparison.OrdinalIgnoreCase);
+                model.TotalBillsGenerated = periodBills.Count;
 
                 static bool IsPaid(string? status)
                 {
@@ -144,30 +140,33 @@ namespace BMSBT.Controllers
                            || s == "paritally paid";
                 }
 
-                var standardBills = mainBills.Where(x =>
-                    !IsNetMeter(x.bill.MeterType) && !IsNetMeter(x.customer.MeterType)).ToList();
+                model.TotalBillsPaid = periodBills.Count(x => IsPaid(x.bill.PaymentStatus));
+                model.UnpaidBillsCount = periodBills.Count(x => IsUnpaid(x.bill.PaymentStatus));
 
-                var netMeterBills = mainBills.Where(x =>
-                    IsNetMeter(x.bill.MeterType) || IsNetMeter(x.customer.MeterType)).ToList();
+                var customerByProject = customersQuery
+                    .AsEnumerable()
+                    .GroupBy(c => string.IsNullOrWhiteSpace(c.Project) ? "Unknown" : c.Project.Trim())
+                    .Select(g => new { Project = g.Key, Count = g.Count() })
+                    .OrderBy(x => x.Project)
+                    .ToList();
 
-                model.TotalBillsGenerated = standardBills.Count;
-                model.TotalBillAmountGenerated = standardBills.Sum(x => x.bill.BillAmountInDueDate ?? x.bill.CurrentBill ?? 0);
-                model.BillsUnits = (int)standardBills.Sum(x => x.bill.TotalUnit ?? x.bill.Difference1 ?? 0);
+                var billsByProject = periodBills
+                    .GroupBy(x => string.IsNullOrWhiteSpace(x.customer.Project) ? "Unknown" : x.customer.Project.Trim())
+                    .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
 
-                model.NetMeterBillsGenerated = netMeterBills.Count;
-                model.NetMeterTotalBilling = netMeterBills.Sum(x => x.bill.BillAmountInDueDate ?? x.bill.CurrentBill ?? 0);
-                model.NetMeterBillsUnits = (int)netMeterBills.Sum(x => x.bill.TotalUnit ?? x.bill.Difference1 ?? 0);
+                var projectLabels = customerByProject.Select(x => x.Project)
+                    .Union(billsByProject.Keys, StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(p => p)
+                    .ToList();
 
-                var paidBills = mainBills.Where(x => IsPaid(x.bill.PaymentStatus)).ToList();
-                var unpaidBills = mainBills.Where(x => IsUnpaid(x.bill.PaymentStatus)).ToList();
-
-                model.TotalBillsPaid = paidBills.Count;
-                model.UnpaidBillsCount = unpaidBills.Count;
-                model.TotalBillAmountCollected = paidBills.Sum(x =>
-                    (x.bill.AmountPaid.HasValue && x.bill.AmountPaid.Value > 0)
-                        ? x.bill.AmountPaid.Value
-                        : (x.bill.BillAmountInDueDate ?? 0));
-                model.BillUnpaidAmount = unpaidBills.Sum(x => x.bill.BillAmountInDueDate ?? x.bill.CurrentBill ?? 0);
+                model.ChartProjectLabels = projectLabels;
+                model.ChartProjectCustomerCounts = projectLabels
+                    .Select(p => customerByProject.FirstOrDefault(c =>
+                        string.Equals(c.Project, p, StringComparison.OrdinalIgnoreCase))?.Count ?? 0)
+                    .ToList();
+                model.ChartProjectBillCounts = projectLabels
+                    .Select(p => billsByProject.TryGetValue(p, out var count) ? count : 0)
+                    .ToList();
 
                 ViewBag.SelectedMonth = month;
                 ViewBag.SelectedYear = year;
@@ -180,7 +179,7 @@ namespace BMSBT.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"An error occurred while loading the dashboard data: {ex.Message}");
+                ModelState.AddModelError(string.Empty, $"An error occurred while loading the dashboard: {ex.Message}");
                 ViewBag.SelectedMonth = month;
                 ViewBag.SelectedYear = year;
                 ViewBag.SelectedProject = project;
@@ -747,9 +746,15 @@ namespace BMSBT.Controllers
        
         //[HttpGet]
         //[Route("PrintBills")]
-        // GET: Reading/SearchPrintBills
-        public IActionResult SearchPrintBills(string selectedMonth, string selectedYear, string selectedSector, string btnoSearch)
+        // GET: EBillU/PayBills
+        public IActionResult PayBills(string? selectedMonth, string? selectedYear, string? selectedSector, string? btnoSearch, int? page, string? PaymentStatus)
         {
+            // Default filters
+            var currentMonth = DateTime.Now.ToString("MMMM");
+            var currentYear = DateTime.Now.Year.ToString();
+            selectedMonth = string.IsNullOrWhiteSpace(selectedMonth) ? currentMonth : selectedMonth.Trim();
+            selectedYear = string.IsNullOrWhiteSpace(selectedYear) ? currentYear : selectedYear.Trim();
+
             var model = new BillSearchViewModel
             {
                 Months = new List<string>
@@ -758,34 +763,168 @@ namespace BMSBT.Controllers
                 "July", "August", "September", "October", "November", "December"
             },
                 Years = Enumerable.Range(DateTime.Now.Year - 5, 6).Select(y => y.ToString()).ToList(),
-                Sectors = _dbContext.ElectricityBills.Select(b => b.Sector).Distinct().OrderBy(s => s).ToList()
+                Sectors = _dbContext.ElectricityBills
+                    .Where(b => b.Block != null && b.Block.Trim() != "")
+                    .Select(b => b.Block!)
+                    .Distinct()
+                    .OrderBy(s => s)
+                    .ToList(),
+                SelectedPaymentStatus = string.IsNullOrWhiteSpace(PaymentStatus) ? "" : PaymentStatus.Trim()
             };
 
-            if (!string.IsNullOrEmpty(btnoSearch))
+            static bool IsUnpaid(string? status)
             {
-                // Priority: Search by BTNo
-                model.Results = _dbContext.ElectricityBills
-                                        .Where(b => b.Btno == btnoSearch)
-                                        .ToList();
+                if (string.IsNullOrWhiteSpace(status)) return true;
+
+                var s = status.Trim().ToLowerInvariant();
+                return s == "unpaid";
             }
-            else if (!string.IsNullOrEmpty(selectedMonth) &&
-                     !string.IsNullOrEmpty(selectedYear) &&
-                     !string.IsNullOrEmpty(selectedSector))
+
+            var hasBtnoSearch = !string.IsNullOrWhiteSpace(btnoSearch);
+            var hasBlockFilter = !string.IsNullOrWhiteSpace(selectedSector);
+
+            if (!hasBtnoSearch && !hasBlockFilter)
             {
-                // Search by Month + Year + Sector
-                model.Results = _dbContext.ElectricityBills
-                                        .Where(b => b.BillingMonth == selectedMonth &&
-                                                    b.BillingYear == selectedYear &&
-                                                    b.Sector == selectedSector)
-                                        .ToList();
+                model.SelectedMonth = selectedMonth;
+                model.SelectedYear = selectedYear;
+                model.SelectedSector = selectedSector;
+                model.BtnoSearch = btnoSearch;
+                ViewBag.PageNumber = 1;
+                ViewBag.TotalPages = 0;
+                return View(model);
             }
+
+            IQueryable<ElectricityBill> billsQuery = _dbContext.ElectricityBills.AsQueryable();
+
+            // Always scope by month/year
+            billsQuery = billsQuery.Where(b =>
+                b.BillingMonth == selectedMonth &&
+                b.BillingYear == selectedYear);
+
+            if (hasBtnoSearch)
+            {
+                billsQuery = billsQuery.Where(b => b.Btno == btnoSearch);
+            }
+
+            if (hasBlockFilter)
+            {
+                billsQuery = billsQuery.Where(b => b.Block == selectedSector);
+            }
+
+            // Grid always shows unpaid bills only
+            var unpaidBills = billsQuery
+                .AsEnumerable()
+                .Where(b => IsUnpaid(b.PaymentStatus))
+                .ToList();
+
+            var pageSize = 20;
+            var pageNumber = page.GetValueOrDefault(1);
+            if (pageNumber < 1) pageNumber = 1;
+
+            var totalCount = unpaidBills.Count;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            model.Results = unpaidBills
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             model.SelectedMonth = selectedMonth;
             model.SelectedYear = selectedYear;
             model.SelectedSector = selectedSector;
             model.BtnoSearch = btnoSearch;
 
+            ViewBag.PageNumber = pageNumber;
+            ViewBag.TotalPages = totalPages;
+
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdatePayStatus(int selectedBillUid, string? paymentStatus,
+            string selectedMonth, string selectedYear, string? selectedSector, string? btnoSearch, int? page,
+            DateOnly? paidOn, string? bankBranch)
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            if (selectedBillUid <= 0)
+            {
+                TempData["ErrorMessage"] = "Please select a bill record to update payment status.";
+                return RedirectToAction("PayBills", new
+                {
+                    selectedMonth,
+                    selectedYear,
+                    selectedSector,
+                    btnoSearch,
+                    page,
+                    PaymentStatus = paymentStatus ?? ""
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(paymentStatus))
+            {
+                TempData["ErrorMessage"] = "Payment status should be selected.";
+                return RedirectToAction("PayBills", new
+                {
+                    selectedMonth,
+                    selectedYear,
+                    selectedSector,
+                    btnoSearch,
+                    page,
+                    PaymentStatus = ""
+                });
+            }
+
+            var normalized = paymentStatus.Trim().ToLowerInvariant();
+            var mappedStatus =
+                normalized == "paid" ? "Paid" :
+                (normalized == "paid with surcharge" || normalized == "paidwithsurcharge") ? "Paid with Surcharge" :
+                (normalized == "partially paid" || normalized == "paritally paid") ? "Partially Paid" :
+                paymentStatus.Trim();
+
+            var bill = _dbContext.ElectricityBills.FirstOrDefault(b => b.Uid == selectedBillUid);
+            if (bill == null)
+            {
+                TempData["ErrorMessage"] = "Selected bill not found.";
+                return RedirectToAction("PayBills", new
+                {
+                    selectedMonth,
+                    selectedYear,
+                    selectedSector,
+                    btnoSearch,
+                    page,
+                    PaymentStatus = paymentStatus
+                });
+            }
+
+            var updatedBy = HttpContext.Session.GetString("UserName") ?? "Unknown Operator";
+            var historyEntry = $"PaymentStatus Update by {updatedBy} on: {DateTime.Now:dd MMM, yyyy hh:mm:ss tt}";
+
+            bill.PaymentStatus = mappedStatus;
+            bill.PaymentDate = paidOn ?? DateOnly.FromDateTime(DateTime.Now);
+            if (!string.IsNullOrWhiteSpace(bankBranch))
+            {
+                bill.BankDetail = bankBranch.Trim();
+            }
+            bill.History = string.IsNullOrWhiteSpace(bill.History)
+                ? historyEntry
+                : bill.History + Environment.NewLine + historyEntry;
+            _dbContext.SaveChanges();
+
+            TempData["SuccessMessage"] = "Payment status updated successfully.";
+            return RedirectToAction("PayBills", new
+            {
+                selectedMonth,
+                selectedYear,
+                selectedSector,
+                btnoSearch,
+                page,
+                PaymentStatus = paymentStatus
+            });
         }
 
 
@@ -1678,6 +1817,73 @@ namespace BMSBT.Controllers
         }
 
         [HttpGet]
+        public IActionResult PaidDetails(string? search, string? month, string? year, int? page)
+        {
+            var pagedBills = BuildSearchBillByKeyword(search, month, year, page);
+            return View(pagedBills);
+        }
+
+        [HttpGet]
+        public IActionResult PaidDetailsView(int id)
+        {
+            var bill = (
+                from electricityBill in _dbContext.ElectricityBills
+                join customer in _dbContext.CustomersDetails
+                    on electricityBill.Btno equals customer.Btno into customerJoin
+                from customer in customerJoin.DefaultIfEmpty()
+                where electricityBill.Uid == id
+                select new BillDTO
+                {
+                    Uid = electricityBill.Uid,
+                    CustomerNo = customer != null ? customer.CustomerNo : string.Empty,
+                    Btno = electricityBill.Btno,
+                    CustomerName = customer != null ? customer.CustomerName : electricityBill.CustomerName,
+                    Cnicno = customer != null ? customer.Cnicno : null,
+                    FatherName = customer != null ? customer.FatherName : null,
+                    InstalledOn = customer != null ? customer.InstalledOn : null,
+                    MobileNo = customer != null ? customer.MobileNo : null,
+                    TelephoneNo = customer != null ? customer.TelephoneNo : null,
+                    Ntnnumber = customer != null ? customer.Ntnnumber : null,
+                    City = customer != null ? customer.City : null,
+                    Project = customer != null ? customer.Project : string.Empty,
+                    SubProject = customer != null ? customer.SubProject : string.Empty,
+                    TariffName = customer != null ? customer.TariffName : string.Empty,
+                    BankNo = customer != null ? customer.BankNo : null,
+                    BtnoMaintenance = customer != null ? customer.BtnoMaintenance : null,
+                    Category = customer != null ? customer.Category : string.Empty,
+                    Block = customer != null ? customer.Block : (electricityBill.Block ?? string.Empty),
+                    PlotType = customer != null ? customer.PlotType : null,
+                    Size = customer != null ? customer.Size : null,
+                    Sector = customer != null ? customer.Sector : string.Empty,
+                    PloNo = customer != null ? customer.PloNo : string.Empty,
+                    BillStatusMaint = customer != null ? customer.BillStatusMaint : null,
+                    BillStatus = customer != null ? customer.BillStatus : null,
+                    InvoiceNo = electricityBill.InvoiceNo,
+                    BillingMonth = electricityBill.BillingMonth,
+                    BillingYear = electricityBill.BillingYear,
+                    BillingDate = electricityBill.BillingDate,
+                    DueDate = electricityBill.DueDate,
+                    IssueDate = electricityBill.IssueDate,
+                    ValidDate = electricityBill.ValidDate,
+                    PaymentStatus = electricityBill.PaymentStatus,
+                    PaymentDate = electricityBill.PaymentDate,
+                    PaymentMethod = electricityBill.PaymentMethod,
+                    BankDetail = electricityBill.BankDetail,
+                    History = electricityBill.History,
+                    BillAmountInDueDate = electricityBill.BillAmountInDueDate,
+                    BillSurcharge = electricityBill.BillSurcharge,
+                    BillAmountAfterDueDate = electricityBill.BillAmountAfterDueDate
+                }).FirstOrDefault();
+
+            if (bill == null)
+            {
+                return NotFound();
+            }
+
+            return View(bill);
+        }
+
+        [HttpGet]
         public IActionResult PrintBill(string? month, string? year, string? BtNo, string? block, int? page)
         {
             var pagedBills = BuildBillSearchResults(month, year, BtNo, block, page);
@@ -1688,6 +1894,12 @@ namespace BMSBT.Controllers
         public IActionResult SearchBillPost(string? search, string? month, string? year)
         {
             return RedirectToAction(nameof(SearchBill), new { search, month, year, page = 1 });
+        }
+
+        [HttpPost]
+        public IActionResult PaidDetailsPost(string? search, string? month, string? year)
+        {
+            return RedirectToAction(nameof(PaidDetails), new { search, month, year, page = 1 });
         }
 
         /// <summary>
@@ -1846,6 +2058,7 @@ namespace BMSBT.Controllers
                     PaymentDate = x.bill.PaymentDate,
                     PaymentMethod = x.bill.PaymentMethod,
                     BankDetail = x.bill.BankDetail,
+                    History = x.bill.History,
                     BillAmountInDueDate = x.bill.BillAmountInDueDate,
                     BillSurcharge = x.bill.BillSurcharge,
                     BillAmountAfterDueDate = x.bill.BillAmountAfterDueDate

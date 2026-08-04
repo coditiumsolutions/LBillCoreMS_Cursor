@@ -1,57 +1,31 @@
 @model BMSBT.DTO.DashboardViewModel
 @{
-    ViewData["Title"] = "Electricity Billing Summary";
+    ViewData["Title"] = "Electricity Home";
     Layout = "~/Views/Shared/_LayoutEBills.cshtml";
-    var projects = Model.Projects ?? new List<string>();
-    var years = Model.Years ?? new List<string>();
+    var projects = Model?.Projects ?? new List<string>();
+    var years = Model?.Years ?? new List<string>();
     if (!years.Any())
     {
         years = Enumerable.Range(DateTime.Now.Year - 5, 8).Select(y => y.ToString()).Reverse().ToList();
     }
+
+    var totalCustomers = Model?.TotalCustomers ?? 0;
+    var totalBills = Model?.TotalBillsGenerated ?? 0;
+    var paidBills = Model?.TotalBillsPaid ?? 0;
+    var unpaidBills = Model?.UnpaidBillsCount ?? 0;
+    var projectLabels = Model?.ChartProjectLabels ?? new List<string>();
+    var projectCustomers = Model?.ChartProjectCustomerCounts ?? new List<int>();
+    var projectBills = Model?.ChartProjectBillCounts ?? new List<int>();
 }
 
 <style>
-    .eb-summary {
+    .eb-home {
         --eb-primary: #1e5f8a;
-        --eb-primary-soft: #e8f2f8;
         --eb-border: #d7e2ea;
         --eb-text: #1a1a1a;
         --eb-muted: #5a6a75;
-        --eb-success: #1b7a3d;
-        --eb-danger: #c62828;
         padding: 1rem 1.25rem 1.5rem;
         color: var(--eb-text);
-    }
-
-    .eb-summary-header {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.75rem;
-        background: linear-gradient(135deg, #1e5f8a 0%, #2a7aad 100%);
-        color: #fff;
-        padding: 0.9rem 1.25rem;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 8px rgba(30, 95, 138, 0.25);
-    }
-
-    .eb-summary-header h4 {
-        margin: 0;
-        font-size: 1.15rem;
-        font-weight: 400;
-        letter-spacing: 0.01em;
-    }
-
-    .eb-period-badge {
-        background: #fff;
-        color: var(--eb-primary);
-        padding: 0.4rem 0.9rem;
-        border-radius: 6px;
-        font-weight: 400;
-        font-size: 0.875rem;
-        border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .eb-filters {
@@ -73,7 +47,6 @@
     .eb-filter-field {
         flex: 1 1 0;
         min-width: 0;
-        max-width: none;
     }
 
     .eb-filter-field label {
@@ -92,21 +65,12 @@
         border: 1px solid var(--eb-border);
         border-radius: 6px;
         font-size: 0.85rem;
-        color: var(--eb-text);
         background: #fafcfd;
         padding: 0.25rem 0.5rem;
     }
 
-    .eb-filter-field .form-control:focus {
-        border-color: var(--eb-primary);
-        box-shadow: 0 0 0 0.15rem rgba(30, 95, 138, 0.2);
-        background: #fff;
-    }
-
     .eb-filter-actions {
         flex: 0 0 auto;
-        display: flex;
-        align-items: flex-end;
     }
 
     .eb-btn-generate {
@@ -115,109 +79,83 @@
         border: none;
         border-radius: 6px;
         padding: 0.4rem 0.9rem;
-        font-weight: 400;
         font-size: 0.85rem;
         height: 36px;
         white-space: nowrap;
-        transition: background 0.15s ease, transform 0.1s ease;
     }
 
     .eb-btn-generate:hover {
         background: #174d70;
         color: #fff;
-        text-decoration: none;
     }
 
-    .eb-report-card {
+    .eb-stat-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .eb-stat-card {
+        flex: 1 1 180px;
         background: #fff;
         border: 1px solid var(--eb-border);
         border-radius: 10px;
-        overflow: hidden;
+        padding: 1.1rem 1.25rem;
         box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
     }
 
-    .eb-report-table {
-        width: 100%;
-        border-collapse: collapse;
+    .eb-stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--eb-muted);
+        margin-bottom: 0.4rem;
+    }
+
+    .eb-stat-value {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: #1565c0;
+        font-variant-numeric: tabular-nums;
         margin: 0;
+    }
+
+    .eb-chart-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .eb-chart-card {
+        flex: 1 1 320px;
         background: #fff;
-    }
-
-    .eb-report-table td {
         border: 1px solid var(--eb-border);
-        padding: 0.85rem 1rem;
-        vertical-align: middle;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
     }
 
-    .eb-section-header {
-        background: #f1f5f9;
-        font-weight: 400;
-        color: #000000;
-        font-size: 0.95rem;
+    .eb-chart-card.eb-chart-wide {
+        flex: 1 1 100%;
     }
 
-    /* Generated Detail — white background as requested */
-    .eb-section-header.eb-generated,
-    .eb-report-table tr.eb-generated-row td {
-        background-color: #ffffff !important;
-    }
-
-    .eb-section-header.eb-generated {
-        border-bottom: 2px solid var(--eb-primary);
-        color: #000000;
-    }
-
-    .eb-section-header.eb-netmeter {
-        background: #f0f7fb;
-        color: #000000;
-    }
-
-    .eb-section-header.eb-payments {
-        background: #f3faf5;
-        color: #000000;
-    }
-
-    .eb-metric-name {
-        font-weight: 400;
-        color: #000000;
-        width: 28%;
-    }
-
-    .eb-metric-value {
-        font-weight: 400;
-        color: #1565c0;
-        text-align: right;
-        width: 22%;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .eb-metric-note {
-        color: #000000;
+    .eb-chart-header {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--eb-border);
         font-size: 0.9rem;
-        font-weight: 400;
-        width: 28%;
+        color: #334155;
+        background: #f8fafc;
     }
 
-    .eb-metric-secondary {
-        font-weight: 400;
-        color: #1565c0;
-        text-align: right;
-        width: 22%;
-        font-variant-numeric: tabular-nums;
+    .eb-chart-body {
+        padding: 1rem;
+        height: 320px;
+        position: relative;
     }
 
-    .eb-amount {
-        color: #1565c0 !important;
-    }
-
-    .eb-important {
-        color: #000000 !important;
-        font-weight: 400;
-        font-style: normal;
-    }
-
-    .eb-validation {
-        margin-bottom: 1rem;
+    .eb-chart-body-tall {
+        height: 380px;
     }
 
     @@media (max-width: 768px) {
@@ -239,25 +177,13 @@
     }
 </style>
 
-<div class="eb-summary">
-    <div class="eb-summary-header">
-        <h4><i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>Electricity Billing Summary</h4>
-        <div class="eb-period-badge">@ViewBag.BillingPeriod</div>
-    </div>
-
-    @if (!ViewData.ModelState.IsValid)
-    {
-        <div class="alert alert-danger eb-validation">
-            @Html.ValidationSummary(false)
-        </div>
-    }
-
+<div class="eb-home">
     <div class="eb-filters">
         @using (Html.BeginForm("Index", "EBillU", FormMethod.Get))
         {
             <div class="eb-filter-row">
                 <div class="eb-filter-field">
-                    <label for="month">Month</label>
+                    <label for="month">Billing Month</label>
                     @Html.DropDownList(
                         "month",
                         new SelectList(
@@ -270,7 +196,7 @@
                 </div>
 
                 <div class="eb-filter-field">
-                    <label for="year">Year</label>
+                    <label for="year">Billing Year</label>
                     @Html.DropDownList(
                         "year",
                         new SelectList(
@@ -292,63 +218,152 @@
                 </div>
 
                 <div class="eb-filter-actions">
-                    <button type="submit" class="btn eb-btn-generate">
-                        Generate
-                    </button>
+                    <button type="submit" class="btn eb-btn-generate">Generate</button>
                 </div>
             </div>
         }
     </div>
 
-    <div class="eb-report-card">
-        <table class="eb-report-table">
-            <tr class="eb-section-header eb-generated">
-                <td colspan="4">Generated Detail</td>
-            </tr>
-            <tr class="eb-generated-row">
-                <td class="eb-metric-name">Bills Generated</td>
-                <td class="eb-metric-value">@Model.TotalBillsGenerated.ToString("N0")</td>
-                <td class="eb-metric-note eb-important">Important: BSC Excluded</td>
-                <td class="eb-metric-secondary">@Model.BscBillsExcluded.ToString("N0")</td>
-            </tr>
-            <tr class="eb-generated-row">
-                <td class="eb-metric-name">Total Current Billing (Rs)</td>
-                <td class="eb-metric-value eb-amount">@Model.TotalBillAmountGenerated.ToString("N0")</td>
-                <td class="eb-metric-note">Bills Units</td>
-                <td class="eb-metric-secondary">@Model.BillsUnits.ToString("N0")</td>
-            </tr>
+    <div class="eb-stat-row">
+        <div class="eb-stat-card">
+            <div class="eb-stat-label">Total Customers</div>
+            <p class="eb-stat-value">@totalCustomers.ToString("N0")</p>
+        </div>
+        <div class="eb-stat-card">
+            <div class="eb-stat-label">Total Bills Generated</div>
+            <p class="eb-stat-value">@totalBills.ToString("N0")</p>
+        </div>
+        <div class="eb-stat-card">
+            <div class="eb-stat-label">Paid Bills</div>
+            <p class="eb-stat-value">@paidBills.ToString("N0")</p>
+        </div>
+        <div class="eb-stat-card">
+            <div class="eb-stat-label">Unpaid Bills</div>
+            <p class="eb-stat-value">@unpaidBills.ToString("N0")</p>
+        </div>
+    </div>
 
-            <tr class="eb-section-header eb-netmeter">
-                <td colspan="4">Net Metering Detail</td>
-            </tr>
-            <tr>
-                <td class="eb-metric-name">Net Meter Bills Generated</td>
-                <td class="eb-metric-value">@Model.NetMeterBillsGenerated.ToString("N0")</td>
-                <td class="eb-metric-note">Net Meter Units</td>
-                <td class="eb-metric-secondary">@Model.NetMeterBillsUnits.ToString("N0")</td>
-            </tr>
-            <tr>
-                <td class="eb-metric-name">Total Net Meter Billing (Rs)</td>
-                <td class="eb-metric-value eb-amount">@Model.NetMeterTotalBilling.ToString("N0")</td>
-                <td class="eb-metric-note"></td>
-                <td class="eb-metric-secondary"></td>
-            </tr>
-
-            <tr class="eb-section-header eb-payments">
-                <td colspan="4">Payments Detail</td>
-            </tr>
-            <tr>
-                <td class="eb-metric-name">Bill Paid (Amount)</td>
-                <td class="eb-metric-value eb-amount">@Model.TotalBillAmountCollected.ToString("N0")</td>
-                <td class="eb-metric-note eb-important">Unpaid Amount (Rs)</td>
-                <td class="eb-metric-secondary eb-amount">@Model.BillUnpaidAmount.ToString("N0")</td>
-            </tr>
-            <tr>
-                <td class="eb-metric-name">Paid (No Of Bills)</td>
-                <td class="eb-metric-value">@Model.TotalBillsPaid.ToString("N0")</td>
-                <td class="eb-metric-note eb-important">Unpaid Bills (Number)</td>
-                <td class="eb-metric-secondary">@Model.UnpaidBillsCount.ToString("N0")</td>
-            </tr>
-        </table>
+    <div class="eb-chart-row">
+        <div class="eb-chart-card">
+            <div class="eb-chart-header">Customers vs Bills Generated</div>
+            <div class="eb-chart-body">
+                <canvas id="overviewBarChart"></canvas>
+            </div>
+        </div>
+        <div class="eb-chart-card">
+            <div class="eb-chart-header">Payment Status</div>
+            <div class="eb-chart-body">
+                <canvas id="paymentStatusChart"></canvas>
+            </div>
+        </div>
+        <div class="eb-chart-card eb-chart-wide">
+            <div class="eb-chart-header">Customers &amp; Bills by Project</div>
+            <div class="eb-chart-body eb-chart-body-tall">
+                <canvas id="projectBarChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function () {
+            const overviewCtx = document.getElementById('overviewBarChart');
+            const paymentCtx = document.getElementById('paymentStatusChart');
+            const projectCtx = document.getElementById('projectBarChart');
+
+            if (overviewCtx) {
+                new Chart(overviewCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total Customers', 'Bills Generated'],
+                        datasets: [{
+                            label: 'Count',
+                            data: [@totalCustomers, @totalBills],
+                            backgroundColor: ['#1e5f8a', '#2a9d8f'],
+                            borderRadius: 6,
+                            maxBarThickness: 64
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (paymentCtx) {
+                new Chart(paymentCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Paid', 'Unpaid'],
+                        datasets: [{
+                            data: [@paidBills, @unpaidBills],
+                            backgroundColor: ['#2a9d8f', '#e76f51'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (projectCtx) {
+                new Chart(projectCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(projectLabels)),
+                        datasets: [
+                            {
+                                label: 'Customers',
+                                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(projectCustomers)),
+                                backgroundColor: '#1e5f8a',
+                                borderRadius: 4,
+                                maxBarThickness: 40
+                            },
+                            {
+                                label: 'Bills Generated',
+                                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(projectBills)),
+                                backgroundColor: '#2a9d8f',
+                                borderRadius: 4,
+                                maxBarThickness: 40
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+}

@@ -159,18 +159,43 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="EBillU" asp-action="SearchBill">
-                            <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
-                            Search
+                    <!-- Bill Payments with collapsible internal links -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#billPaymentsSubMenu"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="billPaymentsSubMenu">
+                            <span>
+                                <i class="fas fa-money-bill" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Bill Payments
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
-                    </li>
 
-                    <li>
-                        <a asp-controller="EBillU" asp-action="PrintBill">
-                            <i class="fas fa-print" style="color: yellowgreen; font-size: 14px;"></i>
-                            Print Bill
-                        </a>
+                        <div class="collapse" id="billPaymentsSubMenu">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="PayBills">
+                                        <i class="fas fa-money-bill" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Pay Bill(s)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="PaidDetails">
+                                        <i class="fas fa-file-alt" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Paid Detail
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="BillPayment" asp-action="PaymentForm">
+                                        <i class="fas fa-barcode" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Pay Barcode
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
                     <!-- Printing with collapsible internal links -->
@@ -190,6 +215,18 @@
 
                         <div class="collapse" id="printingSubMenu">
                             <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="SearchBill">
+                                        <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Search
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="EBillU" asp-action="PrintBill">
+                                        <i class="fas fa-print" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Print Bill
+                                    </a>
+                                </li>
                                 <li>
                                     <a asp-controller="EBillU" asp-action="EBill">
                                         <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
@@ -265,23 +302,6 @@
 
                         <div class="collapse" id="twisteeSubMenu">
                             <ul class="nav flex-column ml-3">
-                               
-                              
-                                <li>
-                                    <a asp-controller="SGEBills" asp-action="SGEBills">
-                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                                        E-Bills
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a asp-controller="SGEBillingHistory" asp-action="SGEBillHistory">
-                                        <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Bills History
-                                    </a>
-                                </li>
-
-
                                 <li>
                                     <a asp-controller="EBillU" asp-action="SearchBills">
                                         <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
@@ -302,14 +322,6 @@
                                         Generate Bills
                                     </a>
                                 </li>
-
-                                <li>
-                                    <a asp-controller="EBillU" asp-action="SearchPrintBills">
-                                        <i class='fas fa-money-bill' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Print New Bill
-                                    </a>
-                                </li>
-
 
                             </ul>
                         </div>
@@ -357,27 +369,9 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a asp-controller="Fine" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Fine
-                                    </a>
-                                </li>
-                                <li>
-                                    <a asp-controller="Setup" asp-action="Index">
-                                        <i class='fas fa-cog' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Setups
-                                    </a>
-                                </li>
-                                <li>
-                                    <a asp-controller="Reports" asp-action="Index">
-                                        <i class='fas fa-chart-line' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Reports
-                                    </a>
-                                </li>
-                                <li>
-                                    <a asp-controller="Audit" asp-action="Index">
-                                        <i class='fas fa-balance-scale' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Audit
+                                    <a asp-controller="OperatorSetup" asp-action="Index">
+                                        <i class="fas fa-cog" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Operator Setup
                                     </a>
                                 </li>
                             </ul>
@@ -449,6 +443,14 @@
         });
 
         $(document).on('hide.bs.collapse', '#printingSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
+
+        $(document).on('show.bs.collapse', '#billPaymentsSubMenu', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+
+        $(document).on('hide.bs.collapse', '#billPaymentsSubMenu', function () {
             $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
         });
 

@@ -81,7 +81,7 @@ namespace BMSBT.DTO
 
         public string? BankDetail { get; set; }
 
-    
+        public string? History { get; set; }
 
         public decimal? TaxAmount { get; set; }
 

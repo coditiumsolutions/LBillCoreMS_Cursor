@@ -53,6 +53,14 @@
             margin: 0;
             padding: 0;
         }
+
+        .sidebar h4 {
+            font-size: 1.3rem;
+        }
+
+        .sidebar ul li a.sidebar-exit-link {
+            border-bottom: none;
+        }
     </style>
 
 </head>
@@ -104,15 +112,12 @@
 
                 <ul class="nav flex-column">
 
-
-
                     <li>
                         <a asp-controller="EBillU" asp-action="Index">
                             <i class='fas fa-bolt' style="color: yellowgreen; font-size: 14px;"></i>
                             Electricity
                         </a>
                     </li>
-
 
                     <li>
                         <a asp-controller="MaintenanceNew" asp-action="Index">
@@ -121,40 +126,16 @@
                         </a>
                     </li>
 
-                    <li class="sidebar-nav-spacer" aria-hidden="true"></li>
-
-                </ul>
-
-                <h4>Modules</h4>
-
-                <ul class="nav flex-column">
-
                     <li>
-                        <a asp-controller="Adjustments" asp-action="Index">
-                            <i class="fas fa-sliders-h" style="color: yellowgreen; font-size: 14px;"></i>
-                            Adjustments
+                        <a asp-controller="AllModules" asp-action="Index">
+                            <i class="fas fa-th" style="color: yellowgreen; font-size: 14px;"></i>
+                            All Modules
                         </a>
                     </li>
-
-                    <li>
-                        <a asp-controller="Fine" asp-action="Index">
-                            <i class="fas fa-gavel" style="color: yellowgreen; font-size: 14px;"></i>
-                            Fine
-                        </a>
-                    </li>
-
-                    <li>
-                        <a asp-controller="Activities" asp-action="Index">
-                            <i class="fas fa-clipboard-list" style="color: yellowgreen; font-size: 14px;"></i>
-                            Activities
-                        </a>
-                    </li>
-
-                    <li class="sidebar-nav-spacer" aria-hidden="true"></li>
-                    <li class="sidebar-nav-spacer" aria-hidden="true"></li>
 
                     <li>
                         <a asp-controller="Login" asp-action="Logout"
+                           class="sidebar-exit-link"
                            onclick="return confirm('Are you sure you want to log out?');">
                             <i class="fas fa-sign-out-alt" style="color: yellowgreen; font-size: 14px;"></i>
                             Exit

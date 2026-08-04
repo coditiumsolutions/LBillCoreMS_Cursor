@@ -7,6 +7,7 @@ namespace BMSBT.DTO
         public List<string> Months { get; set; } = new List<string>();
 
         // Generated Detail
+        public int TotalCustomers { get; set; }
         public int TotalBillsGenerated { get; set; }
         public decimal TotalBillAmountGenerated { get; set; }
         public int BillsUnits { get; set; }
@@ -26,6 +27,11 @@ namespace BMSBT.DTO
         // Raw data from SP
         public List<BillingReportData> BillingReportData { get; set; } = new List<BillingReportData>();
         public List<BillingData> BillingData { get; set; } = new List<BillingData>();
+
+        // Chart series for EBill home dashboard
+        public List<string> ChartProjectLabels { get; set; } = new List<string>();
+        public List<int> ChartProjectCustomerCounts { get; set; } = new List<int>();
+        public List<int> ChartProjectBillCounts { get; set; } = new List<int>();
     }
 
     public class BillingData

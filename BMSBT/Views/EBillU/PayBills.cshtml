@@ -1,0 +1,253 @@
+@model BMSBT.ViewModels.BillSearchViewModel
+@{
+    ViewData["Title"] = "Pay Bill(s)";
+    Layout = "~/Views/Shared/_LayoutEBills.cshtml";
+}
+
+<style>
+    .search-row {
+        margin-bottom: 1rem;
+    }
+
+    .search-row .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .search-row .form-control,
+    .search-row .form-select {
+        padding: 4px 10px;
+        font-size: 0.88rem;
+        height: 34px;
+        width: 100%;
+    }
+
+    .search-row .btn-search {
+        padding: 6px 16px;
+        font-size: 0.88rem;
+        width: 100%;
+    }
+
+    .search-actions-row {
+        margin-top: 0.5rem;
+    }
+</style>
+
+
+
+<h4>Pay Bill(s)</h4>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @Html.ValidationSummary(false)
+    </div>
+}
+
+@{
+    var pageNumber = (ViewBag.PageNumber as int?) ?? 1;
+    var totalPages = (ViewBag.TotalPages as int?) ?? 0;
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-2">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mt-2">@TempData["SuccessMessage"]</div>
+}
+
+<form asp-action="PayBills" method="get" class="mb-4">
+    <div class="row g-2 search-row align-items-end">
+        <div class="col-md-2">
+            <label class="form-label">Billing Month</label>
+            <select class="form-select" name="selectedMonth">
+                <option value="">-- Select Month --</option>
+                @foreach (var month in Model.Months)
+                {
+                    <option value="@month" selected="@(Model.SelectedMonth == month ? "selected" : null)">@month</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Billing Year</label>
+            <select class="form-select" name="selectedYear">
+                <option value="">-- Select Year --</option>
+                @foreach (var year in Model.Years)
+                {
+                    <option value="@year" selected="@(Model.SelectedYear == year ? "selected" : null)">@year</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Block</label>
+            <select class="form-select" name="selectedSector">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(Model.SelectedSector) ? "selected" : null)">-- Select Block --</option>
+                @foreach (var sector in Model.Sectors)
+                {
+                    <option value="@sector" selected="@(Model.SelectedSector == sector ? "selected" : null)">@sector</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Search by BT No (optional)</label>
+            <input type="text" name="btnoSearch" class="form-control" value="@Model.BtnoSearch" placeholder="Enter BT No" />
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-search">Search</button>
+        </div>
+    </div>
+</form>
+
+<div class="row g-2 search-row align-items-end mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Payment Status</label>
+        <select class="form-select" id="PaymentStatus" name="PaymentStatus">
+            <option value="">-- Select Payment Status --</option>
+            <option value="paid" selected="@(Model.SelectedPaymentStatus == "paid" ? "selected" : null)">paid</option>
+            <option value="paid with surcharge" selected="@(Model.SelectedPaymentStatus == "paid with surcharge" ? "selected" : null)">
+                paid with surcharge
+            </option>
+            <option value="partially paid" selected="@(Model.SelectedPaymentStatus == "partially paid" ? "selected" : null)">partially paid</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Paid On</label>
+        <input type="date" id="PaidOn" name="PaidOn" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Bank Branch</label>
+        <select id="BankBranch" name="BankBranch" class="form-select">
+            <option value="">-- Select Bank Branch --</option>
+            <option value="Allied Bank">Allied Bank</option>
+            <option value="UBL Bank">UBL Bank</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="button" id="updatePayStatusBtn" class="btn btn-warning btn-search" style="width: 100%;">
+            Update Pay Status
+        </button>
+    </div>
+</div>
+
+<form asp-action="UpdatePayStatus" asp-controller="EBillU" method="post" id="updatePayStatusForm" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="selectedMonth" value="@Model.SelectedMonth" />
+    <input type="hidden" name="selectedYear" value="@Model.SelectedYear" />
+    <input type="hidden" name="selectedSector" value="@Model.SelectedSector" />
+    <input type="hidden" name="btnoSearch" value="@Model.BtnoSearch" />
+    <input type="hidden" name="page" value="@pageNumber" />
+
+    <input type="hidden" name="selectedBillUid" id="selectedBillUidInput" value="" />
+    <input type="hidden" name="paymentStatus" id="paymentStatusInput" value="" />
+    <input type="hidden" name="paidOn" id="paidOnInput" value="" />
+    <input type="hidden" name="bankBranch" id="bankBranchInput" value="" />
+</form>
+
+@if (Model.Results != null && Model.Results.Any())
+{
+    <table class="table table-bordered table-striped mt-4">
+        <thead class="table-light">
+            <tr>
+                <th class="text-center" style="width:70px;">Select</th>
+                <th>Invoice No</th>
+                <th>BT No</th>
+                <th>Billing Month</th>
+                <th>Billing Year</th>
+                <th>Bill Amount</th>
+                <th>Block</th>
+                <th>Payment Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model.Results)
+            {
+                <tr ondblclick="window.location.href='@Url.Action("PrintView", "EBillU", new { id = bill.Uid })'" style="cursor: pointer;">
+                    <td class="text-center">
+                        <input type="radio" name="selectedBillUid" value="@bill.Uid" />
+                    </td>
+                    <td>@bill.InvoiceNo</td>
+                    <td>@bill.Btno</td>
+                    <td>@bill.BillingMonth</td>
+                    <td>@bill.BillingYear</td>
+                    <td>@bill.BillAmount</td>
+                    <td>@bill.Block</td>
+                    <td>@(string.IsNullOrWhiteSpace(bill.PaymentStatus) ? "Unpaid" : bill.PaymentStatus)</td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="Pay bills pagination" class="mt-3">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(pageNumber <= 1 ? "disabled" : null)">
+                    <a class="page-link"
+                       href="@Url.Action("PayBills", "EBillU", new { selectedMonth = Model.SelectedMonth, selectedYear = Model.SelectedYear, selectedSector = Model.SelectedSector, btnoSearch = Model.BtnoSearch, page = pageNumber - 1 })">
+                        Previous
+                    </a>
+                </li>
+
+                @for (int p = 1; p <= totalPages; p++)
+                {
+                    <li class="page-item @(p == pageNumber ? "active" : null)">
+                        <a class="page-link"
+                           href="@Url.Action("PayBills", "EBillU", new { selectedMonth = Model.SelectedMonth, selectedYear = Model.SelectedYear, selectedSector = Model.SelectedSector, btnoSearch = Model.BtnoSearch, page = p })">
+                            @p
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item @(pageNumber >= totalPages ? "disabled" : null)">
+                    <a class="page-link"
+                       href="@Url.Action("PayBills", "EBillU", new { selectedMonth = Model.SelectedMonth, selectedYear = Model.SelectedYear, selectedSector = Model.SelectedSector, btnoSearch = Model.BtnoSearch, page = pageNumber + 1 })">
+                        Next
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+else if (!string.IsNullOrWhiteSpace(Model.SelectedSector) || !string.IsNullOrWhiteSpace(Model.BtnoSearch))
+{
+    <p class="text-danger">No records found for the given criteria.</p>
+}
+
+<script>
+    function openBill(id) {
+        if (id) {
+            window.location.href = '/EBillU/PrintBill/' + id;
+        }
+    }
+
+    const updateBtn = document.getElementById('updatePayStatusBtn');
+    updateBtn?.addEventListener('click', function () {
+        const paymentStatus = document.getElementById('PaymentStatus')?.value || '';
+        const selectedRadio = document.querySelector('input[name="selectedBillUid"]:checked');
+        const selectedBillUid = selectedRadio ? selectedRadio.value : '';
+
+        if (!paymentStatus) {
+            alert('Payment status should be selected.');
+            return;
+        }
+
+        if (!selectedBillUid) {
+            alert('Please select a bill record to update payment status.');
+            return;
+        }
+
+        document.getElementById('paymentStatusInput').value = paymentStatus;
+        document.getElementById('selectedBillUidInput').value = selectedBillUid;
+        document.getElementById('paidOnInput').value = document.getElementById('PaidOn')?.value || '';
+        document.getElementById('bankBranchInput').value = document.getElementById('BankBranch')?.value || '';
+        document.getElementById('updatePayStatusForm').submit();
+    });
+</script>
