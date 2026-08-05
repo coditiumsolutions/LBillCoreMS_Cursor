@@ -15,7 +15,6 @@
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
 
-
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
@@ -29,42 +28,10 @@
             height: auto !important;
             background-color: #00203FFF;
         }
-
-        .navbar2-top {
-            background-color: #f8f9fa;
-            padding: 0;
-        }
-
-        .navbar2-top .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar2-top .left-section {
-            font-weight: bold;
-        }
-
-        .navbar2-top .right-section {
-            text-align: right;
-            flex-grow: 1;
-        }
-
-        .navbar2-top .left-section a {
-            color: #0056b3;
-        }
-
-        a {
+a {
             text-decoration: none !important;
         }
-
-        .user-info {
-            color: #0056b3;
-            font-size: 16px;
-            font-weight: normal;
-        }
-
-        .audit-nav .collapse,
+.audit-nav .collapse,
         .audit-nav .collapse ul,
         .audit-nav .collapse li {
             background-color: #00203FFF;
@@ -115,43 +82,7 @@
 </head>
 <body class="audit-shell">
 
-    <!-- First Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
-            </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
-        </div>
-    </nav>
-
-    <!-- Second Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar2-top">
-        <div class="container">
-            <!-- Left-aligned text -->
-            <div class="left-section">
-                <a asp-controller="Home" asp-action="Index">
-                    Back Main Menu
-                </a>
-            </div>
-            <!-- Right-aligned text -->
-            <div class="right-section">
-                <span class="user-info"> Logged-in as @ViewBag.UserName at @ViewBag.LoginTime</span>
-                <a asp-controller="Login" asp-action="Logout"
-                   class="btn btn-link text-black"
-                   onclick="return confirm('Are you sure you want to log out?');">
-                    Logout
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Third Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar3-top">
-        <div class="container">
-            <span class="navbar-text text-white"></span>
-        </div>
-    </nav>
+    @await Html.PartialAsync("_TopBars", "Audit")
 
     <div class="container-fluid">
         <div class="row">

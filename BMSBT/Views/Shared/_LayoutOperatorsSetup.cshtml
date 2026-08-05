@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html>
 <head>
@@ -16,34 +16,7 @@
 
 
 <body>
-    <!-- First Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
-            </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
-        </div>
-    </nav>
-
-    <!-- Second Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar2-top">
-        <div class="container">
-            <span class="navbar-text text-black">
-                <a asp-controller="Home" asp-action="Index">
-                    Back Main Menu
-                </a> -
-                You are logged in as Operatior 1 at 9:05 AM
-            </span>
-        </div>
-    </nav>
-
-    <!-- Third Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar3-top">
-        <div class="container">
-            <span class="navbar-text text-white"></span>
-        </div>
-    </nav>
+    @await Html.PartialAsync("_TopBars", "Operators Setup")
 
     <div class="container-fluid">
         <div class="row">

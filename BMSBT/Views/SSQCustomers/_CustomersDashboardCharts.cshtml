@@ -1,0 +1,259 @@
+@model BMSBT.ViewModels.CustomersDashboardViewModel
+@using System.Text.Json
+@{
+    var formAction = ViewData["DashboardFormAction"] as string ?? "Dashboard";
+    var projectLabels = JsonSerializer.Serialize(Model.ByProject.Select(x => x.Name).ToList());
+    var projectCounts = JsonSerializer.Serialize(Model.ByProject.Select(x => x.Count).ToList());
+    var blockLabels = JsonSerializer.Serialize(Model.ByBlock.Select(x => x.Name).ToList());
+    var blockCounts = JsonSerializer.Serialize(Model.ByBlock.Select(x => x.Count).ToList());
+    var categoryLabels = JsonSerializer.Serialize(Model.ByCategory.Select(x => x.Name).ToList());
+    var categoryCounts = JsonSerializer.Serialize(Model.ByCategory.Select(x => x.Count).ToList());
+}
+
+<style>
+    .dash-wrap { max-width: 1200px; }
+    .dash-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+        background: #f7f9fc;
+        border: 1px solid #d9e0ea;
+        border-radius: 8px;
+        padding: 0.45rem 0.75rem;
+        margin-bottom: 0.85rem;
+    }
+    .dash-top .dash-type-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #5a6a7a;
+        margin: 0;
+        white-space: nowrap;
+    }
+    .dash-top #customerType {
+        width: auto;
+        min-width: 140px;
+        height: 30px;
+        padding: 0.15rem 0.5rem;
+        font-size: 0.85rem;
+    }
+    .dash-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        flex: 1;
+        justify-content: flex-end;
+    }
+    .dash-stat {
+        border: 1px solid #d9e0ea;
+        border-radius: 6px;
+        background: #fff;
+        padding: 0.25rem 0.65rem;
+        min-width: 110px;
+        line-height: 1.15;
+    }
+    .dash-stat .label {
+        color: #5a6a7a;
+        font-size: 0.7rem;
+        margin: 0;
+    }
+    .dash-stat .value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #00203F;
+        margin: 0;
+    }
+    .dash-stat .hint {
+        font-size: 0.65rem;
+        color: #8896a6;
+        margin: 0;
+    }
+    .dash-chart-card {
+        border: 1px solid #d9e0ea;
+        border-radius: 10px;
+        background: #fff;
+        padding: 1rem;
+        height: 100%;
+    }
+    .dash-chart-card h5 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #00203F;
+        margin-bottom: 0.75rem;
+    }
+    .chart-box {
+        position: relative;
+        height: 280px;
+    }
+</style>
+
+<div class="container-fluid dash-wrap px-2">
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+        <h5 class="mb-0">
+            <i class="fas fa-chart-pie" style="color:#00203F;"></i>
+            Customers Overview
+        </h5>
+        <span class="badge badge-secondary">Source: @Model.SourceTable</span>
+    </div>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger py-2">@ViewBag.ErrorMessage</div>
+    }
+
+    <form method="get" asp-action="@formAction" class="dash-top">
+        <label for="customerType" class="dash-type-label">Customer Type</label>
+        <select id="customerType" name="customerType" class="form-control form-control-sm" onchange="this.form.submit()">
+            @if (Model.CustomerType == "E")
+            {
+                <option value="E" selected>E-Customers</option>
+                <option value="M">M-Customers</option>
+            }
+            else
+            {
+                <option value="E">E-Customers</option>
+                <option value="M" selected>M-Customers</option>
+            }
+        </select>
+
+        <div class="dash-stats">
+            <div class="dash-stat">
+                <div class="label">Customers</div>
+                <div class="value">@Model.TotalCustomers.ToString("N0")</div>
+                <div class="hint">@Model.CustomerTypeLabel</div>
+            </div>
+            <div class="dash-stat">
+                <div class="label">Projects</div>
+                <div class="value">@Model.TotalProjects</div>
+                <div class="hint">Distinct</div>
+            </div>
+            <div class="dash-stat">
+                <div class="label">Blocks</div>
+                <div class="value">@Model.TotalBlocks</div>
+                <div class="hint">Distinct</div>
+            </div>
+            <div class="dash-stat">
+                <div class="label">Categories</div>
+                <div class="value">@Model.TotalCategories</div>
+                <div class="hint">Distinct</div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="dash-chart-card">
+                <h5><i class="fas fa-building"></i> Customers by Project</h5>
+                <div class="chart-box">
+                    <canvas id="projectChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="dash-chart-card">
+                <h5><i class="fas fa-tags"></i> Customers by Category</h5>
+                <div class="chart-box">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 mb-3">
+            <div class="dash-chart-card">
+                <h5><i class="fas fa-th-large"></i> Customers by Block (Top 12)</h5>
+                <div class="chart-box" style="height:320px;">
+                    <canvas id="blockChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    (function () {
+        var palette = ['#00203F', '#3B559E', '#DAA03D', '#2a9d8f', '#e76f51', '#457b9d', '#6c757d', '#1d3557', '#f4a261', '#264653', '#a8dadc', '#e9c46a'];
+
+        function colors(n) {
+            var out = [];
+            for (var i = 0; i < n; i++) out.push(palette[i % palette.length]);
+            return out;
+        }
+
+        function emptyMessage(canvasId) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8896a6';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+        }
+
+        var projectLabels = @Html.Raw(projectLabels);
+        var projectCounts = @Html.Raw(projectCounts);
+        var blockLabels = @Html.Raw(blockLabels);
+        var blockCounts = @Html.Raw(blockCounts);
+        var categoryLabels = @Html.Raw(categoryLabels);
+        var categoryCounts = @Html.Raw(categoryCounts);
+
+        if (projectLabels.length) {
+            new Chart(document.getElementById('projectChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: projectLabels,
+                    datasets: [{ data: projectCounts, backgroundColor: colors(projectLabels.length) }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        } else {
+            emptyMessage('projectChart');
+        }
+
+        if (categoryLabels.length) {
+            new Chart(document.getElementById('categoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{ data: categoryCounts, backgroundColor: colors(categoryLabels.length) }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        } else {
+            emptyMessage('categoryChart');
+        }
+
+        if (blockLabels.length) {
+            new Chart(document.getElementById('blockChart'), {
+                type: 'bar',
+                data: {
+                    labels: blockLabels,
+                    datasets: [{
+                        label: 'Customers',
+                        data: blockCounts,
+                        backgroundColor: '#3B559E'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                        x: { ticks: { maxRotation: 45, minRotation: 0 } }
+                    }
+                }
+            });
+        } else {
+            emptyMessage('blockChart');
+        }
+    })();
+</script>

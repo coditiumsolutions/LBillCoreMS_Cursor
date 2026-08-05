@@ -36,57 +36,10 @@
             height: auto;
             margin: 0 auto 12px auto;
         }
-
-        .navbar2-top {
-            background-color: #f8f9fa; /* Light background color */
-            padding: 0px 0;
-        }
-
-            .navbar2-top .container {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                position: relative;
-            }
-
-            .navbar2-top .left-section {
-                font-weight: bold;
-                z-index: 1;
-            }
-
-            .navbar2-top .center-section {
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                font-weight: 700;
-                font-size: 1.15rem;
-                color: #000;
-                white-space: nowrap;
-            }
-
-            .navbar2-top .right-section {
-                text-align: right;
-                flex-grow: 1;
-                z-index: 1;
-            }
-
-            .navbar2-top .left-section a,
-            .navbar2-top .right-section a,
-            .navbar2-top .user-info {
-                color: #000 !important;
-            }
-
-        a {
+a {
             text-decoration: none !important;
         }
-
-        .user-info {
-            color: #000;
-            font-size: 16px;
-            font-weight: normal;
-        }
-
-        /* Hide Quick Links block on Maintenance sidebar */
+/* Hide Quick Links block on Maintenance sidebar */
         .quick-links-block {
             display: none !important;
         }
@@ -95,42 +48,7 @@
 </head>
 <body>
 
-    <!-- First Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
-            </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
-        </div>
-    </nav>
-
-    <!-- Second Top Bar -->
-     <nav class="navbar navbar-expand-lg navbar2-top">
-        <div class="container">
-            <!-- Left-aligned text -->
-            <div class="left-section">
-                <a asp-controller="Home" asp-action="Index">Back Main Menu</a>
-            </div>
-            <div class="center-section">Maintenance</div>
-            <!-- Right-aligned text -->
-            <div class="right-section">
-                <span class="user-info"> Logged-in as @ViewBag.UserName at @ViewBag.LoginTime</span>
-                <a asp-controller="Login" asp-action="Logout"
-                   class="btn btn-link"
-                   onclick="return confirm('Are you sure you want to log out?');">
-                    Logout
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Third Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar3-top">
-        <div class="container">
-            <span class="navbar-text text-white"></span>
-        </div>
-    </nav>
+    @await Html.PartialAsync("_TopBars", "Maintenance")
 
     <div class="container-fluid">
         <div class="row">
@@ -138,7 +56,6 @@
             <!-- Left Sidebar -->
             <div class="col-md-3 col-lg-2 p-3 sidebar">
                 <img src="~/images/homelogo03.png" alt="Home Logo" class="sidebar-home-logo" />
-
 
                 <ul class="nav flex-column">
                     @* <li>
@@ -156,11 +73,36 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a asp-controller="MaintenanceDashboards" asp-action="Customers">
-                            <i class="fas fa-chart-bar" style="color: yellowgreen; font-size: 14px;"></i>
-                            Dashboards
+                    <li class="nav-item">
+                        <a class="nav-link d-flex justify-content-between align-items-center"
+                           data-toggle="collapse"
+                           href="#billPaymentsSubMenuMaint"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="billPaymentsSubMenuMaint">
+                            <span>
+                                <i class="fas fa-money-bill" style="color: yellowgreen; font-size: 14px;"></i>
+                                &nbsp; Bill Payments
+                            </span>
+                            <i class="fas fa-chevron-down twistee-caret"></i>
                         </a>
+
+                        <div class="collapse" id="billPaymentsSubMenuMaint">
+                            <ul class="nav flex-column ml-3">
+                                <li>
+                                    <a asp-controller="MaintenanceNew" asp-action="Operations">
+                                        <i class="fas fa-tasks" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Payment Status
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-controller="MaintenanceBill" asp-action="PaymentForm">
+                                        <i class="fas fa-edit" style="color: yellowgreen; font-size: 14px;"></i>
+                                        Pay Bill(s)
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
                     <li>
@@ -176,8 +118,6 @@
                             All Bills
                         </a>
                     </li>
-
-
 
                     <li>
                         <a asp-controller="MaintenanceNew" asp-action="GenerateBill">
@@ -205,13 +145,6 @@
                 <h4>Modules</h4>
 
                 <ul class="nav flex-column">
-                    <li>
-                        <a asp-controller="MaintenanceNew" asp-action="Operations">
-                            <i class="fas fa-tasks" style="color: yellowgreen; font-size: 14px;"></i>
-                            Payment Status
-                        </a>
-                    </li>
-
                     <!-- Twistee with collapsible internal links (Maintenance) -->
                     <li class="nav-item">
                         <a class="nav-link d-flex justify-content-between align-items-center"
@@ -229,13 +162,6 @@
 
                         <div class="collapse" id="twisteeSubMenuMaintenance">
                             <ul class="nav flex-column ml-3">
-                                <li>
-                                    <a asp-controller="MaintenanceBill" asp-action="PaymentForm">
-                                        <i class='fas fa-edit' style="color: yellowgreen; font-size: 14px;"></i>
-                                        Pay Bill(s)
-                                    </a>
-                                </li>
-
                                 <li>
                                     <a asp-controller="AdditionalCharges" asp-action="Index">
                                         <i class='fas fa-plus-circle' style="color: yellowgreen; font-size: 14px;"></i>
@@ -289,8 +215,6 @@
 
                 </ul>
 
-
-
                 <!-- Separate Quick Links Block -->
                 <div class="quick-links-block">
                     <h4>Quick Links</h4>
@@ -312,9 +236,6 @@
                     </ul>
                 </div>
 
-
-
-
             </div>
 
             <!-- Right Content Area -->
@@ -334,6 +255,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
+        $(document).on('show.bs.collapse', '#billPaymentsSubMenuMaint', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+        $(document).on('hide.bs.collapse', '#billPaymentsSubMenuMaint', function () {
+            $(this).prev().find('.twistee-caret').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        });
         $(document).on('show.bs.collapse', '#twisteeSubMenuMaintenance', function () {
             $(this).prev().find('.twistee-caret').removeClass('fa-chevron-down').addClass('fa-chevron-up');
         });

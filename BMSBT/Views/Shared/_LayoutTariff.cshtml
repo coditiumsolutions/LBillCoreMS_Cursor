@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -27,40 +27,7 @@
 </head>
 <body>
 
-    <!-- First Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
-            </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
-        </div>
-    </nav>
-
-    <!-- Second Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar2-top">
-        <div class="container">
-            <span class="navbar-text text-black">
-                <a asp-controller="Home" asp-action="Index">
-                    Back Main Menu - Welcome, @ViewBag.UserName
-                </a> -
-
-
-                <a asp-controller="Login" asp-action="Logout"
-                   class="btn btn-link text-black"
-                   onclick="return confirm('Are you sure you want to log out?');">Logout</a>
-            </span>
-        </div>
-
-
-    </nav>
-
-    <!-- Third Top Bar -->
-    <nav class="navbar navbar-expand-lg navbar3-top">
-        <div class="container">
-            <span class="navbar-text text-white"></span>
-        </div>
-    </nav>
+    @await Html.PartialAsync("_TopBars", "Tariff")
 
     <div class="container-fluid">
         <div class="row">

@@ -1,0 +1,40 @@
+@{
+    var moduleTitle = Model as string ?? ViewData["ModuleTitle"] as string ?? "";
+    var userName = ViewBag.UserName ?? ViewBag.Username;
+    var loginTime = ViewBag.LoginTime;
+}
+
+<!-- First Top Bar -->
+<nav class="navbar navbar-expand-lg navbar1-top navbar-top">
+    <div class="container-fluid">
+        <span class="navbar-text text-white">Bahria Town Lahore: Billing System</span>
+    </div>
+</nav>
+
+<!-- Second Top Bar -->
+<nav class="navbar navbar-expand-lg navbar2-top">
+    <div class="container-fluid">
+        <div class="left-section">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-sm btn-topbar">Back Main Menu</a>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(moduleTitle))
+        {
+            <div class="center-section">@moduleTitle</div>
+        }
+        <div class="right-section">
+            <span class="user-info"> Logged-in as @userName at @loginTime</span>
+            <a asp-controller="Login" asp-action="Logout"
+               class="btn btn-sm btn-topbar"
+               onclick="return confirm('Are you sure you want to log out?');">
+                Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Third Top Bar (golden strip) -->
+<nav class="navbar navbar-expand-lg navbar3-top">
+    <div class="container-fluid">
+        <span class="navbar-text text-white"></span>
+    </div>
+</nav>

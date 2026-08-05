@@ -17,80 +17,17 @@
         .sidebar {
             position: absolute;
         }
-
-        .navbar2-top {
-            background-color: #f8f9fa;
-            padding: 0px 0;
-        }
-
-        .navbar2-top .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar2-top .left-section {
-            font-weight: bold;
-        }
-
-        .navbar2-top .right-section {
-            text-align: right;
-            flex-grow: 1;
-        }
-
-        .navbar2-top .left-section a {
-            color: #0056b3;
-        }
-
-        a {
+a {
             text-decoration: none !important;
         }
-
-        .user-info {
-            color: #0056b3;
-            font-size: 16px;
-            font-weight: normal;
-        }
-
-        .sidebar h4 {
+.sidebar h4 {
             font-size: 1.3rem;
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
-            </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
-        </div>
-    </nav>
-
-    <nav class="navbar navbar-expand-lg navbar2-top">
-        <div class="container">
-            <div class="left-section">
-                <a asp-controller="Home" asp-action="Index">
-                    Back Main Menu
-                </a>
-            </div>
-            <div class="right-section">
-                <span class="user-info"> Logged-in as @ViewBag.UserName at @ViewBag.LoginTime</span>
-                <a asp-controller="Login" asp-action="Logout"
-                   class="btn btn-link text-black"
-                   onclick="return confirm('Are you sure you want to log out?');">
-                    Logout
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <nav class="navbar navbar-expand-lg navbar3-top">
-        <div class="container">
-            <span class="navbar-text text-white"></span>
-        </div>
-    </nav>
+    @await Html.PartialAsync("_TopBars", "History/Logs")
 
     <div class="container-fluid">
         <div class="row">

@@ -37,25 +37,125 @@
     background-color: #000000FF;
 }
 
+/* ========== Global Top Bars ========== */
 .navbar1-top {
-    background-color: #F2AA4CFF;
-    background-color: #FFD700;
     background-color: #00203FFF;
-    height: 60px; /* Adjust as needed */
-    line-height: 60px; /* Vertically centers text in the navbar */
+    height: 36px;
+    min-height: 36px;
+    line-height: 36px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.navbar1-top .container,
+.navbar1-top .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+}
+
+.navbar1-top .navbar-text {
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    line-height: 36px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
 }
 
 .navbar2-top {
-    background-color: #00203FFF;
-    background-color: #FFF;
-    height: 40px; /* Adjust as needed */
-    line-height: 40px; /* Vertically centers text in the navbar */
+    background-color: #f8f9fa;
+    height: 40px;
+    min-height: 40px;
+    line-height: 40px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.navbar2-top .container,
+.navbar2-top .container-fluid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+    width: 100%;
+}
+
+.navbar2-top .left-section {
+    font-weight: bold;
+    z-index: 1;
+}
+
+.navbar2-top .center-section {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #000;
+    white-space: nowrap;
+}
+
+.navbar2-top .right-section {
+    text-align: right;
+    flex-grow: 1;
+    z-index: 1;
+}
+
+.navbar2-top .left-section a:not(.btn-topbar),
+.navbar2-top .right-section a:not(.btn-topbar),
+.navbar2-top .user-info {
+    color: #000 !important;
+}
+
+.navbar2-top .left-section a.btn-topbar,
+.navbar2-top .right-section a.btn-topbar {
+    padding: 2px 12px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    vertical-align: middle;
+    border: 1px solid #00203F;
+    background-color: #00203F;
+    color: #fff !important;
+    text-decoration: none !important;
+}
+
+.navbar2-top .left-section a.btn-topbar:hover,
+.navbar2-top .right-section a.btn-topbar:hover {
+    background-color: #DAA03D;
+    border-color: #DAA03D;
+    color: #00203F !important;
+}
+
+.navbar2-top .right-section .btn-topbar {
+    margin-left: 8px;
+}
+
+.navbar2-top .user-info {
+    color: #000;
+    font-size: 16px;
+    font-weight: normal;
 }
 
 .navbar3-top {
     background-color: #DAA03DFF;
-    height: 10px; /* Adjust as needed */
-    line-height: 10px; /* Vertically centers text in the navbar */
+    height: 5px;
+    min-height: 5px;
+    line-height: 5px;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .footerarea {

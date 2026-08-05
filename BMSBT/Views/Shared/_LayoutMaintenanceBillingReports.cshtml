@@ -11,56 +11,11 @@
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
     <style>
         .reports-shell .sidebar { position: absolute; }
-        .navbar2-top { background-color: #f8f9fa; padding: 0; }
-        .navbar2-top .container { display: flex; justify-content: space-between; align-items: center; }
-        .navbar2-top .left-section { font-weight: bold; }
-        .navbar2-top .right-section { text-align: right; flex-grow: 1; }
-        .navbar2-top .left-section a { color: #0056b3; }
-        a { text-decoration: none !important; }
-        .user-info { color: #0056b3; font-size: 16px; font-weight: normal; }
-        .maint-report-nav ul.nav.flex-column > li > a {
-            display: block; padding: 0.45rem 0.25rem; border-radius: 6px; color: inherit;
-        }
-        .maint-report-nav ul.nav.flex-column > li > a:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-        .maint-report-nav ul.nav.flex-column > li > a.active {
-            background: rgba(37, 99, 235, 0.35); font-weight: 600;
-        }
-        .report-chart-card canvas { max-height: 420px; }
-        .report-kpi-card { border-radius: 10px; border: 1px solid #e2e8f0; }
-        .report-kpi-card .kpi-value { font-size: 1.35rem; font-weight: 600; color: #0f172a; }
-        .report-back-link {
-            font-size: 0.9rem; border-top: 1px solid rgba(255, 255, 255, 0.12);
-            margin-top: 1rem; padding-top: 1rem;
-        }
     </style>
     @RenderSection("Head", required: false)
 </head>
 <body class="reports-shell">
-    <nav class="navbar navbar-expand-lg navbar1-top navbar-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <img src="~/images/logo.png" alt="Logo" style="height: 70px; margin-left: 10px;">
-            </a>
-            <span class="navbar-text text-white">Bahria Town: Billing System</span>
-        </div>
-    </nav>
-    <nav class="navbar navbar-expand-lg navbar2-top">
-        <div class="container">
-            <div class="left-section">
-                <a asp-controller="Home" asp-action="Index">Back Main Menu</a>
-            </div>
-            <div class="right-section">
-                <span class="user-info"> Logged-in as @ViewBag.UserName at @ViewBag.LoginTime</span>
-                <a asp-controller="Login" asp-action="Logout" class="btn btn-link text-black"
-                   onclick="return confirm('Are you sure you want to log out?');">Logout</a>
-            </div>
-        </div>
-    </nav>
-    <nav class="navbar navbar-expand-lg navbar3-top">
-        <div class="container"><span class="navbar-text text-white"></span></div>
-    </nav>
+    @await Html.PartialAsync("_TopBars", "Maintenance")
 
     <div class="container-fluid">
         <div class="row">

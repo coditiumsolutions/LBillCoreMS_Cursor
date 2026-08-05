@@ -28,7 +28,7 @@ namespace BMSBT.Controllers
         }
 
         // GET: SSQCustomers
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string customerType = "E")
         {
             if (HttpContext.Session.GetString("UserName") == null)
             {
@@ -37,7 +37,18 @@ namespace BMSBT.Controllers
 
             ViewBag.Username = HttpContext.Session.GetString("UserName");
             ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
-            return View();
+            ViewData["DashboardFormAction"] = "Index";
+
+            try
+            {
+                var model = await BuildCustomersDashboardAsync(customerType);
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "Error loading dashboard data: " + ex.Message;
+                return View(new CustomersDashboardViewModel { CustomerType = "E" });
+            }
         }
 
         public async Task<IActionResult> List(string searchString, string sortOrder, int page = 1, int pageSize = 10)
@@ -736,83 +747,120 @@ namespace BMSBT.Controllers
 
 
 
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> Dashboard(string customerType = "E")
         {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Index", "Login");
+            }
+
+            ViewBag.Username = HttpContext.Session.GetString("UserName");
+            ViewBag.LoginTime = HttpContext.Session.GetString("LoginTime");
+            ViewData["DashboardFormAction"] = "Dashboard";
+
             try
             {
-                // Get all projects from Configurations table where ConfigKey = "project"
-                var projects = await _context.Configurations
-                    .Where(c => c.ConfigKey == "project")
-                    .Select(c => c.ConfigValue)
-                    .Distinct()
-                    .OrderBy(p => p)
-                    .ToListAsync();
-
-                // Get blocks from Configurations table for specific keys
-                var mohlanwalBlocks = await _context.Configurations
-                    .Where(c => c.ConfigKey == "BlockMohlanwal")
-                    .Select(c => c.ConfigValue)
-                    .Distinct()
-                    .ToListAsync();
-
-                var orchardsBlocks = await _context.Configurations
-                    .Where(c => c.ConfigKey == "BlockOrchards")
-                    .Select(c => c.ConfigValue)
-                    .Distinct()
-                    .ToListAsync();
-
-                // Combine all blocks
-                var allBlocks = new List<string>();
-                allBlocks.AddRange(mohlanwalBlocks ?? new List<string>());
-                allBlocks.AddRange(orchardsBlocks ?? new List<string>());
-
-                // Remove duplicates and sort
-                var blocks = allBlocks.Distinct().OrderBy(b => b).ToList();
-
-                // Get total customers count for all projects
-                var totalCustomers = await _context.CustomersDetails.CountAsync();
-
-                // Get customers count by project
-                var projectStats = await _context.CustomersDetails
-                    .Where(c => !string.IsNullOrEmpty(c.Project))
-                    .GroupBy(c => c.Project)
-                    .Select(g => new ProjectStatisticsViewModel
-                    {
-                        ProjectName = g.Key,
-                        TotalCustomers = g.Count()
-                    })
-                    .OrderBy(p => p.ProjectName)
-                    .ToListAsync();
-
-                // Get customers count by block
-                var blockStats = await _context.CustomersDetails
-                    .Where(c => !string.IsNullOrEmpty(c.Block))
-                    .GroupBy(c => c.Block)
-                    .Select(g => new BlockStatisticsViewModel
-                    {
-                        BlockName = g.Key,
-                        TotalCustomers = g.Count()
-                    })
-                    .OrderBy(b => b.BlockName)
-                    .ToListAsync();
-
-                // Prepare data for view
-                ViewBag.Projects = projects ?? new List<string>();
-                ViewBag.Blocks = blocks ?? new List<string>();
-                ViewBag.MohlanwalBlocks = mohlanwalBlocks ?? new List<string>();
-                ViewBag.OrchardsBlocks = orchardsBlocks ?? new List<string>();
-                ViewBag.TotalAllCustomers = totalCustomers;
-                ViewBag.ProjectStatistics = projectStats ?? new List<ProjectStatisticsViewModel>();
-                ViewBag.BlockStatistics = blockStats ?? new List<BlockStatisticsViewModel>();
-
-                return View();
+                var model = await BuildCustomersDashboardAsync(customerType);
+                return View(model);
             }
             catch (Exception ex)
             {
-                // Log error if needed
                 ViewBag.ErrorMessage = "Error loading dashboard data: " + ex.Message;
-                return View();
+                return View(new CustomersDashboardViewModel { CustomerType = "E" });
             }
+        }
+
+        private async Task<CustomersDashboardViewModel> BuildCustomersDashboardAsync(string customerType)
+        {
+            var type = string.Equals(customerType, "M", StringComparison.OrdinalIgnoreCase) ? "M" : "E";
+            var model = new CustomersDashboardViewModel { CustomerType = type };
+
+            if (type == "E")
+            {
+                // E-Customers → Customer Details table
+                model.TotalCustomers = await _context.CustomersDetails.CountAsync();
+                model.TotalProjects = await _context.CustomersDetails
+                    .Where(c => c.Project != null && c.Project != "")
+                    .Select(c => c.Project)
+                    .Distinct()
+                    .CountAsync();
+                model.TotalBlocks = await _context.CustomersDetails
+                    .Where(c => c.Block != null && c.Block != "")
+                    .Select(c => c.Block)
+                    .Distinct()
+                    .CountAsync();
+                model.TotalCategories = await _context.CustomersDetails
+                    .Where(c => c.Category != null && c.Category != "")
+                    .Select(c => c.Category)
+                    .Distinct()
+                    .CountAsync();
+
+                model.ByProject = await _context.CustomersDetails
+                    .Where(c => c.Project != null && c.Project != "")
+                    .GroupBy(c => c.Project)
+                    .Select(g => new NamedCountViewModel { Name = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+
+                model.ByBlock = await _context.CustomersDetails
+                    .Where(c => c.Block != null && c.Block != "")
+                    .GroupBy(c => c.Block)
+                    .Select(g => new NamedCountViewModel { Name = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(12)
+                    .ToListAsync();
+
+                model.ByCategory = await _context.CustomersDetails
+                    .Where(c => c.Category != null && c.Category != "")
+                    .GroupBy(c => c.Category)
+                    .Select(g => new NamedCountViewModel { Name = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+            }
+            else
+            {
+                // M-Customers → Customers Maintenance table
+                model.TotalCustomers = await _context.CustomersMaintenance.CountAsync();
+                model.TotalProjects = await _context.CustomersMaintenance
+                    .Where(c => c.Project != null && c.Project != "")
+                    .Select(c => c.Project)
+                    .Distinct()
+                    .CountAsync();
+                model.TotalBlocks = await _context.CustomersMaintenance
+                    .Where(c => c.Block != null && c.Block != "")
+                    .Select(c => c.Block)
+                    .Distinct()
+                    .CountAsync();
+                model.TotalCategories = await _context.CustomersMaintenance
+                    .Where(c => c.Category != null && c.Category != "")
+                    .Select(c => c.Category)
+                    .Distinct()
+                    .CountAsync();
+
+                model.ByProject = await _context.CustomersMaintenance
+                    .Where(c => c.Project != null && c.Project != "")
+                    .GroupBy(c => c.Project)
+                    .Select(g => new NamedCountViewModel { Name = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+
+                model.ByBlock = await _context.CustomersMaintenance
+                    .Where(c => c.Block != null && c.Block != "")
+                    .GroupBy(c => c.Block)
+                    .Select(g => new NamedCountViewModel { Name = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(12)
+                    .ToListAsync();
+
+                model.ByCategory = await _context.CustomersMaintenance
+                    .Where(c => c.Category != null && c.Category != "")
+                    .GroupBy(c => c.Category)
+                    .Select(g => new NamedCountViewModel { Name = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+            }
+
+            return model;
         }
 
         // Update the GetAllBlocksStatistics method

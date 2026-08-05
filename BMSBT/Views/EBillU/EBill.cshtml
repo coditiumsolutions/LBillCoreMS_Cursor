@@ -99,10 +99,10 @@
 {
      <div class="alert alert-success">@ViewBag.SuccessMessage</div>
 }
-<h3>Electricity Bill</h3>
+<h3>Generate Bill(s)</h3>
 <form id="filterForm" method="post" asp-action="EBill" asp-controller="EBillU">
     <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col">
             <select id="Project" name="Project" class="form-control" onchange="loadSectorsAndBlocks()">
                 <option value="">Select Project</option>
                 @foreach (var project in (List<string>)ViewBag.Projects)
@@ -111,9 +111,7 @@
                 }
             </select>
         </div>
-      
-        
-        <div class="col-md-3">
+        <div class="col">
             <select id="month" name="month" class="form-control" required>
                 <option value="">-- Month --</option>
                 @foreach (var name in CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12))
@@ -122,12 +120,7 @@
                 }
             </select>
         </div>
-
-
-
-    </div>
-        <div class="row" style="margin-top:20px">      
-            <div class="col-md-3" >
+        <div class="col">
             <select id="year" name="year" class="form-control" required>
                 <option value="">-- Year --</option>
                 @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 10; y--)
@@ -136,29 +129,24 @@
                 }
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col">
             <select id="BlockDropdown" name="Block" class="form-control"><option value="">Select Block</option></select>
         </div>
-        <div class="col-md-3">
+        <div class="col">
             <select id="Category" name="Category" class="form-control">
                 <option value="">Select Category</option>
                 <option value="Residential">Residential</option>
                 <option value="Commercial">Commercial</option>
-                <option value="Bahria Self Consumption">Bahria Self Consumption</option>>
+                <option value="Bahria Self Consumption">Bahria Self Consumption</option>
             </select>
         </div>
-
-
-
-
-
-        <div class="col-md-2 d-flex align-items-end gap-2">
-            <button id="PrintButton" type="button" class="btn btn-primary flex-fill">Print</button>
-            @* <button id="PayRecordsButton" type="button" class="btn btn-success flex-fill">Pay</button> *@
+    </div>
+    <div class="row g-3" style="margin-top:20px">
+        <div class="col-md-2">
+            <button id="PrintButton" type="button" class="btn btn-primary">Print</button>
+            @* <button id="PayRecordsButton" type="button" class="btn btn-success">Pay</button> *@
         </div>
-        </div>
-
-   
+    </div>
 </form>
 
 @section Scripts {

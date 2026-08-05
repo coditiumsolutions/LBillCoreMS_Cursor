@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 	<title>Sidebar 02</title>
@@ -11,29 +11,7 @@
 </head>
 <body>
 
-	<!-- First Top Bar -->
-	<nav  style="background-color: #00203FFF;">
-		<div class="container">
-			<a class="navbar-brand" href="#">
-				<img src="~/images/logo.png" alt="Logo" class="logo-margin" style="height: 70px; margin-left: 10px;">
-			</a>
-			<span class="navbar-text text-white">Bahria Town: Billing System</span>
-		</div>
-	</nav>
-
-	<!-- Second Top Bar -->
-	<nav  style="background-color: #FFF;">
-		<div class="container">
-			<span class="navbar-text text-black">You are logged in as Operatior 1 at 9:05 AM</span>
-		</div>
-	</nav>
-
-	<!-- Third Top Bar -->
-	<nav style="background-color: #DAA03DFF;">
-		<div class="container">
-			<span class="navbar-text text-white"></span>
-		</div>
-	</nav>
+	@await Html.PartialAsync("_TopBars", "RND01")
 
 
 	<div class="wrapper d-flex align-items-stretch">

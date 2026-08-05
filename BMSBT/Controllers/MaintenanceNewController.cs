@@ -52,18 +52,37 @@ namespace BMSBT.Controllers
 
 
 
-        public IActionResult Index(string selectedYear, string selectedMonth)
+        public IActionResult Index(string selectedYear, string selectedMonth, string project)
         {
             // Defaults to current month/year if none provided
             if (string.IsNullOrEmpty(selectedYear)) selectedYear = DateTime.Now.Year.ToString();
             if (string.IsNullOrEmpty(selectedMonth)) selectedMonth = DateTime.Now.ToString("MMMM");
+            project = string.IsNullOrWhiteSpace(project) ? null : project.Trim();
 
             // Retain the selected values
             ViewBag.SelectedYear = selectedYear;
             ViewBag.SelectedMonth = selectedMonth;
+            ViewBag.SelectedProject = project;
 
-            // Display total number of customers by project
-            var customerCountsByProject = _dbContext.CustomersMaintenance
+            var projects = _dbContext.CustomersMaintenance
+                .AsNoTracking()
+                .Where(c => c.Project != null && c.Project.Trim() != "")
+                .Select(c => c.Project.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+            ViewBag.Projects = projects;
+
+            // Customers (optionally filtered by project)
+            var customersQuery = _dbContext.CustomersMaintenance.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(project))
+            {
+                customersQuery = customersQuery.Where(c =>
+                    c.Project != null && c.Project.Trim() == project);
+            }
+
+            var customerCountsByProject = customersQuery
+                .Where(c => c.Project != null && c.Project != "")
                 .GroupBy(c => c.Project)
                 .Select(g => new
                 {
@@ -75,64 +94,96 @@ namespace BMSBT.Controllers
 
             ViewBag.ProjectCustomerCounts = customerCountsByProject;
 
+            // Maintenance Bills summary (Generated, Paid, Unpaid) based on selected month/year/project
+            var billsQuery =
+                from bill in _dbContext.MaintenanceBills.AsNoTracking()
+                join customer in _dbContext.CustomersMaintenance.AsNoTracking()
+                    on bill.Btno equals customer.BTNo
+                where bill.BillingYear == selectedYear
+                      && bill.BillingMonth == selectedMonth
+                select new { bill, customer };
 
-            // Maintenance Bills summary (Generated, Paid, Unpaid) based on selected month/year
-            var billsQuery = _dbContext.MaintenanceBills.AsQueryable();
-
-            if (!string.IsNullOrEmpty(selectedYear))
+            if (!string.IsNullOrWhiteSpace(project))
             {
-                billsQuery = billsQuery.Where(b => b.BillingYear == selectedYear);
+                billsQuery = billsQuery.Where(x =>
+                    x.customer.Project != null &&
+                    x.customer.Project.Trim() == project);
             }
 
-            if (!string.IsNullOrEmpty(selectedMonth))
-            {
-                billsQuery = billsQuery.Where(b => b.BillingMonth == selectedMonth);
-            }
+            var billsJoined = billsQuery.ToList();
+            var billsData = billsJoined
+                .GroupBy(x => x.bill.Uid)
+                .Select(g => g.First())
+                .ToList();
 
-            int totalBills = billsQuery.Count();
-            
-            // Materialize query - now using int? types that match the database
-            var billsData = billsQuery.AsNoTracking().ToList();
-            
-            int totalAmountGenerated = billsData.Sum(b => b.BillAmountInDueDate ?? 0);
+            int totalBills = billsData.Count;
+            int totalAmountGenerated = billsData.Sum(x => x.bill.BillAmountInDueDate ?? 0);
 
             // Individual Status Calculations
-            var paidBills = billsData.Where(b => b.PaymentStatus == "paid" || b.PaymentStatus == "Paid").ToList();
-            var surchargeBills = billsData.Where(b => 
-                b.PaymentStatus == "paid with surcharge" || 
-                b.PaymentStatus == "Paid with Surcharge" || 
-                b.PaymentStatus == "PaidWithSurcharge" ||
-                b.PaymentStatus == "Paid with surcharge").ToList();
-            var partialBills = billsData.Where(b => b.PaymentStatus == "paritally paid" || b.PaymentStatus == "Partially Paid" || b.PaymentStatus == "partially paid").ToList();
-            var unpaidBills = billsData.Where(b => b.PaymentStatus == "unpaid" || b.PaymentStatus == "Unpaid" || string.IsNullOrEmpty(b.PaymentStatus)).ToList();
+            var paidBills = billsData.Where(x => x.bill.PaymentStatus == "paid" || x.bill.PaymentStatus == "Paid").ToList();
+            var surchargeBills = billsData.Where(x =>
+                x.bill.PaymentStatus == "paid with surcharge" ||
+                x.bill.PaymentStatus == "Paid with Surcharge" ||
+                x.bill.PaymentStatus == "PaidWithSurcharge" ||
+                x.bill.PaymentStatus == "Paid with surcharge").ToList();
+            var partialBills = billsData.Where(x =>
+                x.bill.PaymentStatus == "paritally paid" ||
+                x.bill.PaymentStatus == "Partially Paid" ||
+                x.bill.PaymentStatus == "partially paid").ToList();
+            var unpaidBills = billsData.Where(x =>
+                x.bill.PaymentStatus == "unpaid" ||
+                x.bill.PaymentStatus == "Unpaid" ||
+                string.IsNullOrEmpty(x.bill.PaymentStatus)).ToList();
+
             var paidCustomersCount = paidBills
-                .Where(b => !string.IsNullOrWhiteSpace(b.Btno))
-                .Select(b => b.Btno!.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x.bill.Btno))
+                .Select(x => x.bill.Btno!.Trim())
                 .Distinct()
                 .Count();
             var unpaidCustomersCount = unpaidBills
-                .Where(b => !string.IsNullOrWhiteSpace(b.Btno))
-                .Select(b => b.Btno!.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x.bill.Btno))
+                .Select(x => x.bill.Btno!.Trim())
                 .Distinct()
                 .Count();
 
-            ViewBag.TotalCustomers = _dbContext.CustomersMaintenance.Count();
+            // Bills by project for charts
+            var billsByProject = billsData
+                .GroupBy(x =>
+                    string.IsNullOrWhiteSpace(x.customer.Project) ? "Unknown" : x.customer.Project.Trim())
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+
+            var projectLabels = customerCountsByProject
+                .Select(x => x.Project)
+                .Union(billsByProject.Keys, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(p => p)
+                .ToList();
+
+            ViewBag.ChartProjectLabels = projectLabels;
+            ViewBag.ChartProjectCustomerCounts = projectLabels
+                .Select(p => customerCountsByProject.FirstOrDefault(c =>
+                    string.Equals(c.Project, p, StringComparison.OrdinalIgnoreCase))?.Count ?? 0)
+                .ToList();
+            ViewBag.ChartProjectBillCounts = projectLabels
+                .Select(p => billsByProject.TryGetValue(p, out var count) ? count : 0)
+                .ToList();
+
+            ViewBag.TotalCustomers = customersQuery.Count();
             ViewBag.TotalBills = totalBills;
             ViewBag.TotalAmountGenerated = totalAmountGenerated;
             ViewBag.PaidCustomersCount = paidCustomersCount;
             ViewBag.UnpaidCustomersCount = unpaidCustomersCount;
 
             ViewBag.PaidCount = paidBills.Count;
-            ViewBag.PaidAmount = paidBills.Sum(b => b.BillAmountInDueDate ?? 0);
+            ViewBag.PaidAmount = paidBills.Sum(x => x.bill.BillAmountInDueDate ?? 0);
 
             ViewBag.SurchargeCount = surchargeBills.Count;
-            ViewBag.SurchargeAmount = surchargeBills.Sum(b => b.BillAmountInDueDate ?? 0);
+            ViewBag.SurchargeAmount = surchargeBills.Sum(x => x.bill.BillAmountInDueDate ?? 0);
 
             ViewBag.PartialCount = partialBills.Count;
-            ViewBag.PartialAmount = partialBills.Sum(b => b.BillAmountInDueDate ?? 0);
+            ViewBag.PartialAmount = partialBills.Sum(x => x.bill.BillAmountInDueDate ?? 0);
 
             ViewBag.UnpaidBillsCount = unpaidBills.Count;
-            ViewBag.BillUnpaidAmount = unpaidBills.Sum(b => b.BillAmountInDueDate ?? 0);
+            ViewBag.BillUnpaidAmount = unpaidBills.Sum(x => x.bill.BillAmountInDueDate ?? 0);
 
             return View();
         }
